@@ -1,0 +1,29 @@
+/* index.css */
+@import 'tailwindcss';
+
+:root {
+  --rc-bg: #f3f4ff;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* Globale styles ved behov */
+
+/* ? Animasjon for toast (ProtectedRoute) */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -10px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}

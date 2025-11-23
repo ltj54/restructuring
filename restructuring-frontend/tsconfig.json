@@ -1,0 +1,47 @@
+{
+  "compilerOptions": {
+    /* ============================================================
+       🧩 Generelt oppsett for Vite + React + Tailwind
+       ============================================================ */
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "strict": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+
+    /* ============================================================
+       ⚛️ JSX og typer
+       ============================================================ */
+    "jsx": "react-jsx",
+    "types": ["vite/client", "vitest/globals", "@testing-library/jest-dom", "node", "react", "react-dom"],
+
+    /* ============================================================
+       📁 Paths og output
+       ============================================================ */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "outDir": "dist"
+  },
+
+  /* ============================================================
+     🌍 Inkluder kun kildekode og konfigurasjon
+     ============================================================ */
+  "include": [
+    "src",
+    "vite.config.ts",
+    "tailwind.config.js",
+    "postcss.config.js"
+  ],
+
+  /* ============================================================
+     🚫 Ekskluder midlertidige byggfiler
+     ============================================================ */
+  "exclude": ["node_modules", "dist", "target"]
+}

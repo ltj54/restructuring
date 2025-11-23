@@ -1,0 +1,68 @@
+# ============================================
+# 📦 Restructuring – .gitignore (root)
+# Spring Boot + React + Vite
+# ============================================
+
+############################
+# OS / Editor
+############################
+.DS_Store
+Thumbs.db
+
+.idea/
+.vscode/
+*.iml
+
+############################
+# Logs
+############################
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+############################
+# Node / Frontend
+############################
+restructuring-frontend/node_modules/
+restructuring-frontend/dist/
+restructuring-frontend/.vite/
+restructuring-frontend/coverage/
+restructuring-frontend/.eslintcache
+restructuring-frontend/.parcel-cache/
+restructuring-frontend/.turbo/
+
+# Hvis du senere får flere frontend-mapper, legg tilsvarende linjer for dem.
+
+############################
+# Java / Backend (Maven)
+############################
+restructuring-backend/target/
+restructuring-backend/.mvn/wrapper/maven-wrapper.jar
+
+# Hvis du ikke bruker maven-wrapper, kan du også ignorere:
+# restructuring-backend/mvnw
+# restructuring-backend/mvnw.cmd
+
+############################
+# Environment-filer
+############################
+.env
+.env.*
+!.env.example
+!.env.template
+
+############################
+# Build artefakter / pakker
+############################
+restructuring-dev-*.zip
+*.zip
+
+############################
+# Misc
+############################
+*.swp
+*.swo
+*.tmp
