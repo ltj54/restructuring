@@ -1,0 +1,120 @@
+name: Full Deploy (Frontend + Backend)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  actions: write
+
+env:
+  NODE_VERSION: "22"
+  FRONTEND_DIR: frontend
+  BACKEND_DIR: backend
+
+jobs:
+  # ---------------------------------------------------------
+  # 1) Finn ut om backend/ er endret i siste commit
+  # ---------------------------------------------------------
+  detect-backend-changes:
+    name: Detect backend changes
+    runs-on: ubuntu-latest
+    outputs:
+      backend_changed: ${{ steps.detect.outputs.backend_changed }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Check if backend/ changed
+        id: detect
+        run: |
+          echo "Checking for changes in backend/..."
+          if git rev-parse HEAD^ >/dev/null 2>&1; then
+            if git diff --name-only HEAD^ HEAD | grep '^backend/'; then
+              echo "backend_changed=true" >> $GITHUB_OUTPUT
+              echo "Backend changed."
+            else
+              echo "backend_changed=false" >> $GITHUB_OUTPUT
+              echo "No backend changes."
+            fi
+          else
+            # First commit ever → treat as changed
+            echo "backend_changed=true" >> $GITHUB_OUTPUT
+            echo "No previous commit, treating backend as changed."
+
+  # ---------------------------------------------------------
+  # 2) Bygg frontend og forbered GitHub Pages
+  # ---------------------------------------------------------
+  build-frontend:
+    name: Build Frontend (GitHub Pages)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: |
+            ${{ env.FRONTEND_DIR }}/package-lock.json
+            ${{ env.FRONTEND_DIR }}/pnpm-lock.yaml
+            ${{ env.FRONTEND_DIR }}/yarn.lock
+
+      - name: Install dependencies
+        working-directory: ${{ env.FRONTEND_DIR }}
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Build frontend
+        working-directory: ${{ env.FRONTEND_DIR }}
+        run: npm run build
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ env.FRONTEND_DIR }}/dist
+
+  # ---------------------------------------------------------
+  # 3) Deploy til GitHub Pages
+  # ---------------------------------------------------------
+  deploy-frontend:
+    name: Deploy to GitHub Pages
+    needs: build-frontend
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  # ---------------------------------------------------------
+  # 4) Backend deploy til Render (kun ved backend-endringer)
+  # ---------------------------------------------------------
+  deploy-backend:
+    name: Deploy Backend to Render
+    needs: detect-backend-changes
+    runs-on: ubuntu-latest
+    if: needs.detect-backend-changes.outputs.backend_changed == 'true'
+    steps:
+      - name: Trigger deploy on Render
+        run: |
+          echo "Triggering deploy on Render..."
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"clearCache": true}' \
+            https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys
+
+          echo "Render deploy triggered."
