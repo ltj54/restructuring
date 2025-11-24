@@ -18,40 +18,49 @@ env:
 
 jobs:
   # ---------------------------------------------------------
-  # 1) Finn ut om backend/ er endret i siste commit
+  # 1) Sikker og robust deteksjon av backend-endringer
   # ---------------------------------------------------------
   detect-backend-changes:
     name: Detect backend changes
     runs-on: ubuntu-latest
     outputs:
       backend_changed: ${{ steps.detect.outputs.backend_changed }}
+
     steps:
-      - name: Checkout repo
+      - name: Checkout repo (depth=2 to allow HEAD^)
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
       - name: Check if backend/ changed
         id: detect
+        shell: bash
         run: |
           echo "Checking for changes in backend/..."
-          if git rev-parse HEAD^ >/dev/null 2>&1; then
-            if git diff --name-only HEAD^ HEAD | grep '^backend/'; then
-              echo "backend_changed=true" >> $GITHUB_OUTPUT
-              echo "Backend changed."
-            else
-              echo "backend_changed=false" >> $GITHUB_OUTPUT
-              echo "No backend changes."
-            fi
+
+          # Hvis HEAD^ ikke finnes (første commit eller store repo-endringer)
+          if ! git rev-parse HEAD^ >/dev/null 2>&1; then
+            echo "backend_changed=true" >> "$GITHUB_OUTPUT"
+            echo "No previous commit → treating backend as changed."
+            exit 0
+          fi
+
+          # Faktisk sjekk etter endringer i backend/
+          if git diff --name-only HEAD^ HEAD | grep "^backend/" >/dev/null 2>&1; then
+            echo "backend_changed=true" >> "$GITHUB_OUTPUT"
+            echo "Backend changed."
           else
-            # First commit ever → treat as changed
-            echo "backend_changed=true" >> $GITHUB_OUTPUT
-            echo "No previous commit, treating backend as changed."
+            echo "backend_changed=false" >> "$GITHUB_OUTPUT"
+            echo "No backend changes."
+          fi
 
   # ---------------------------------------------------------
-  # 2) Bygg frontend og forbered GitHub Pages
+  # 2) Bygg frontend og last opp GitHub Pages artifact
   # ---------------------------------------------------------
   build-frontend:
     name: Build Frontend (GitHub Pages)
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -85,7 +94,7 @@ jobs:
           path: ${{ env.FRONTEND_DIR }}/dist
 
   # ---------------------------------------------------------
-  # 3) Deploy til GitHub Pages
+  # 3) Deploy frontend til GitHub Pages
   # ---------------------------------------------------------
   deploy-frontend:
     name: Deploy to GitHub Pages
@@ -94,19 +103,21 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
 
   # ---------------------------------------------------------
-  # 4) Backend deploy til Render (kun ved backend-endringer)
+  # 4) Deploy backend til Render (kun hvis endret)
   # ---------------------------------------------------------
   deploy-backend:
     name: Deploy Backend to Render
     needs: detect-backend-changes
     runs-on: ubuntu-latest
     if: needs.detect-backend-changes.outputs.backend_changed == 'true'
+
     steps:
       - name: Trigger deploy on Render
         run: |
@@ -117,4 +128,4 @@ jobs:
             -d '{"clearCache": true}' \
             https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys
 
-          echo "Render deploy triggered."
+          echo "Render deploy triggered successfully."
