@@ -1,68 +1,51 @@
-# ============================================
-# 📦 Restructuring – .gitignore (root)
-# Spring Boot + React + Vite
-# ============================================
-
-############################
-# OS / Editor
-############################
-.DS_Store
-Thumbs.db
-
+### IntelliJ ###
 .idea/
-.vscode/
 *.iml
+out/
+.gradle/
+build/
 
-############################
-# Logs
-############################
-logs/
+### Node / Vite ###
+node_modules/
+dist/
+vite.svg
 *.log
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
 
-############################
-# Node / Frontend
-############################
-restructuring-frontend/node_modules/
-restructuring-frontend/dist/
-restructuring-frontend/.vite/
-restructuring-frontend/coverage/
-restructuring-frontend/.eslintcache
-restructuring-frontend/.parcel-cache/
-restructuring-frontend/.turbo/
+### React (frontend env-files – IGNORE) ###
+restructuring-frontend/.env
+restructuring-frontend/.env.*
+!restructuring-frontend/.env.example
 
-# Hvis du senere får flere frontend-mapper, legg tilsvarende linjer for dem.
+### Spring Boot ###
+target/
+*.jar
+*.war
+*.class
 
-############################
-# Java / Backend (Maven)
-############################
-restructuring-backend/target/
-restructuring-backend/.mvn/wrapper/maven-wrapper.jar
+### Logs ###
+*.log
+logs/
+*.pid
 
-# Hvis du ikke bruker maven-wrapper, kan du også ignorere:
-# restructuring-backend/mvnw
-# restructuring-backend/mvnw.cmd
+### OS ###
+Thumbs.db
+.DS_Store
 
-############################
-# Environment-filer
-############################
-.env
-.env.*
-!.env.example
-!.env.template
+### dotenv (backend + other) ###
+*.local
+*.env
+!example.env
 
-############################
-# Build artefakter / pakker
-############################
-restructuring-dev-*.zip
-*.zip
+### Docker ###
+docker/*.pid
+docker/*.log
+docker/data/
+docker/postgres/
+docker-compose.override.yml
+docker-compose.dev.yml
 
-############################
-# Misc
-############################
-*.swp
-*.swo
+### PowerShell ###
+*.ps1~
+*.ps1.backup
 *.tmp
