@@ -21,7 +21,7 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("Restructuring API")
-                        .description("Backend API for the Restructuring Compound project")
+                        .description("Backend API for the restructuring project")
                         .version(appVersion + " (" + activeProfile + ")"));
     }
 }

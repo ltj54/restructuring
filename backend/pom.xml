@@ -16,7 +16,7 @@
     <artifactId>restructuring-backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>Restructuring Backend</name>
-    <description>Spring Boot backend for Restructuring Compound project</description>
+    <description>Spring Boot backend for restructuring project</description>
     <packaging>jar</packaging>
 
     <properties>

@@ -79,7 +79,7 @@ public class SecurityConfig {
         config.setAllowedOrigins(List.of(
                 "http://localhost:5173",
                 "https://ltj54.github.io",
-                "https://restructuring-compound-ws.onrender.com"
+                "https://restructuring-backend.onrender.com"
         ));
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
