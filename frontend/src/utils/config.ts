@@ -16,7 +16,7 @@ const DEFAULT_LOCAL_API_BASE_URL = 'http://localhost:8080/api';
 /**
  * Standard backend-URL når appen kjører via GitHub Pages / Render / Produksjon
  */
-const DEFAULT_REMOTE_API_BASE_URL = 'https://restructuring-compound-ws.onrender.com/api';
+const DEFAULT_REMOTE_API_BASE_URL = 'https://restructuring-backend.onrender.com/api';
 
 /**
  * Leser en miljøvariabel og returnerer trimmed string eller undefined
