@@ -13,8 +13,8 @@ permissions:
 
 env:
   NODE_VERSION: "22"
-  FRONTEND_DIR: frontend
-  BACKEND_DIR: backend
+  FRONTEND_DIR: restructuring-idea-ce-setup/frontend
+  BACKEND_DIR: restructuring-idea-ce-setup/backend
 
 jobs:
   # ---------------------------------------------------------
