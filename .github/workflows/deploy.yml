@@ -122,10 +122,9 @@ jobs:
       - name: Trigger deploy on Render
         run: |
           echo "Triggering deploy on Render..."
-          curl -X POST \
+          curl -X POST "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys" \
             -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
             -H "Content-Type: application/json" \
-            -d '{"clearCache": true}' \
-            https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys
+            -d '{"clearCache": true}'
 
           echo "Render deploy triggered successfully."
