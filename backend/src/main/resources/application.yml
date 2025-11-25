@@ -6,7 +6,7 @@ spring:
     name: restructuring-backend
 
 server:
-  port: 8080
+  port: ${PORT:8080}
 
 logging:
   level:

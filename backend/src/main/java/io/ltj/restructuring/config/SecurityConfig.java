@@ -42,7 +42,7 @@ public class SecurityConfig {
                                 "/api/hello",
                                 "/api/config",
                                 "/api/dbinfo",
-                                "/api/log",          // 👈 Viktig: må være åpen for post/beacon
+                                "/api/log",
                                 "/actuator/**"
                         ).permitAll()
 
@@ -73,18 +73,15 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // 👇 MÅ være true når frontend bruker credentials / cookies / auth headers
         config.setAllowCredentials(true);
 
         config.setAllowedOrigins(List.of(
                 "http://localhost:5173",
-                "https://ltj54.github.io",
-                "https://restructuring-backend.onrender.com"
+                "https://ltj54.github.io"                 // 👈 GitHub Pages origin
         ));
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 
-        // Viktig for Authorization + custom headers
         config.setAllowedHeaders(List.of(
                 "Content-Type",
                 "Authorization",
@@ -93,13 +90,11 @@ public class SecurityConfig {
                 "*"
         ));
 
-        // Gjør at frontend kan lese Content-Disposition for filnedlasting
         config.setExposedHeaders(List.of(
                 "Content-Disposition",
                 "Authorization"
         ));
 
-        // Cache optional, men trygt i dev
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

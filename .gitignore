@@ -49,3 +49,6 @@ docker-compose.dev.yml
 *.ps1~
 *.ps1.backup
 *.tmp
+
+# Generated directory listings
+tree.txt
