@@ -75,7 +75,7 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
 
             <div className="hidden sm:flex flex-col pl-4 border-l border-slate-200 dark:border-slate-700 ml-2">
               <span className="text-[10px] uppercase tracking-[0.18em] text-brand-dark/80 dark:text-brand-soft/80">
-                (WIP)Restructuring Compound(WIP)
+                Restructuring
               </span>
               <span className="text-sm font-semibold text-slate-900 dark:text-slate-50">
                 Omstillingsveiviser
