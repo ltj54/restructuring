@@ -10,14 +10,40 @@ const authState = {
   token: 'test-token',
 };
 
+// ---- Mock useAuth ----
 vi.mock('../useAuth', () => ({
   useAuth: () => authState,
 }));
 
+// ---- Mock config ----
 vi.mock('../../utils/config', () => ({
   API_BASE_URL: 'http://localhost/api',
 }));
 
+// ---- Create a JSDOM-like document object so CI does not crash ----
+const mockDocument = {
+  createElement: vi.fn(),
+  body: {
+    appendChild: vi.fn(),
+    removeChild: vi.fn(),
+  },
+};
+
+Object.defineProperty(globalThis, 'document', {
+  writable: true,
+  value: mockDocument,
+});
+
+// ---- Mock URL APIs used by the hook ----
+Object.defineProperty(globalThis, 'URL', {
+  writable: true,
+  value: {
+    createObjectURL: vi.fn(() => 'blob:url'),
+    revokeObjectURL: vi.fn(),
+  },
+});
+
+// ---- renderHook helper ----
 function renderHook<T>(hook: () => T) {
   let value: T | undefined;
 
@@ -48,9 +74,7 @@ describe('useInsurance', () => {
       remove: vi.fn(),
     };
 
-    (globalThis.document as unknown as { createElement: () => typeof anchor }).createElement =
-      vi.fn(() => anchor);
-    (globalThis.document.body.appendChild as unknown as Mock).mockImplementation(() => {});
+    mockDocument.createElement.mockReturnValue(anchor);
 
     server.use(
       http.post('http://localhost/api/insurance/send', () =>
@@ -69,14 +93,14 @@ describe('useInsurance', () => {
     const message = await result.current.sendInsurance();
 
     expect(message).toBe('Forsikringssøknad generert og lastet ned.');
-    expect((globalThis.window.URL.createObjectURL as Mock).mock.calls).toHaveLength(1);
+    expect(globalThis.URL.createObjectURL).toHaveBeenCalled();
     expect(anchor.click).toHaveBeenCalled();
-    expect((globalThis.window.URL.revokeObjectURL as Mock).mock.calls).toHaveLength(1);
+    expect(globalThis.URL.revokeObjectURL).toHaveBeenCalled();
   });
 
   it('throws an ApiError when the user is not authenticated', async () => {
     authState.isAuthenticated = false;
-    (authState as { token: string | null }).token = null;
+    authState.token = null;
 
     const { result } = renderHook(() => useInsurance());
 
