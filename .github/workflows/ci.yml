@@ -8,10 +8,14 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # ---------------------------
+      # BACKEND
+      # ---------------------------
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
@@ -20,24 +24,31 @@ jobs:
           cache: maven
 
       - name: Run backend build and tests
-        working-directory: restructuring-backend
+        working-directory: ./backend
         run: ./mvnw -B verify
 
+      # ---------------------------
+      # FRONTEND
+      # ---------------------------
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: npm
-          cache-dependency-path: package-lock.json
+          cache-dependency-path: ./frontend/package-lock.json
 
       - name: Install frontend dependencies
+        working-directory: ./frontend
         run: npm ci
 
       - name: Lint frontend
+        working-directory: ./frontend
         run: npm run lint:ci
 
       - name: Test frontend
+        working-directory: ./frontend
         run: npm run test
 
       - name: Build frontend
+        working-directory: ./frontend
         run: npm run build
