@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration scan="false">
 
-    <!-- 🚀 Render-optimalisert: Kun console logging -->
+    <!-- 🚀 Render-optimalisert logging: kun console -->
+    <!-- Ingen fil-logging, ingen rolling logs, ingen LOG_DIR -->
+    <!-- Gir raskere oppstart og ingen I/O-forsinkelser -->
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
@@ -10,7 +12,7 @@
     </appender>
 
     <root level="INFO">
-        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="CONSOLE" />
     </root>
 
 </configuration>
