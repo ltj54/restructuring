@@ -4,11 +4,16 @@ import { api } from "../api";
 test("api helper bygger riktig request", async () => {
   const mockJson = vi.fn().mockResolvedValue({ ok: true });
 
-  globalThis.fetch = vi.fn().mockResolvedValue({
+  // Typing for mocked fetch response
+  const mockResponse: Response = {
     ok: true,
     json: mockJson,
-    headers: { get: () => 'application/json' },
-  } as any);
+    headers: {
+      get: () => "application/json",
+    },
+  } as unknown as Response;
+
+  globalThis.fetch = vi.fn().mockResolvedValue(mockResponse);
 
   const result = await api("/hello");
 

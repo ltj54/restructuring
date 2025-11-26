@@ -17,7 +17,7 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
   const location = useLocation();
   const { logEvent } = useStructuredLogger('MainLayout');
 
-  const auth = useAuth ? useAuth() : null;
+  const auth = useAuth();
   const user = auth?.user;
   const isAuthenticated = !!user;
 
