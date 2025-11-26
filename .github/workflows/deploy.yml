@@ -84,9 +84,9 @@ jobs:
             npm install
           fi
 
-      - name: Build frontend
+      - name: Build frontend with correct base path
         working-directory: ${{ env.FRONTEND_DIR }}
-        run: npm run build
+        run: npm run build -- --base=/restructuring/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
