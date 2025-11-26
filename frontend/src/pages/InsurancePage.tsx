@@ -6,8 +6,16 @@ import Button from '../components/Button';
 import { useInsurancePage } from '../hooks/useInsurancePage';
 
 export default function InsurancePage(): React.ReactElement {
-  const { form, banner, isLoading, isSaving, isSending, needsInfo, onSaveProfile, onSendInsurance } =
-    useInsurancePage();
+  const {
+    form,
+    banner,
+    isLoading,
+    isSaving,
+    isSending,
+    needsInfo,
+    onSaveProfile,
+    onSendInsurance,
+  } = useInsurancePage();
 
   const {
     register,
@@ -25,7 +33,9 @@ export default function InsurancePage(): React.ReactElement {
   return (
     <div className="w-full max-w-4xl mx-auto px-4 py-10 space-y-6">
       {/* SYSTEM-BANNER */}
-      {banner && <FormAlert variant={banner.variant} message={banner.message} action={banner.action} />}
+      {banner && (
+        <FormAlert variant={banner.variant} message={banner.message} action={banner.action} />
+      )}
 
       {/* PROFILINFO SOM MÅ FYLLES UT */}
       {needsInfo && (
@@ -71,8 +81,8 @@ export default function InsurancePage(): React.ReactElement {
       {!needsInfo && (
         <Card title="Forsikring">
           <p className="text-slate-700 mb-6 text-sm md:text-base">
-            Her kan du sende inn din forsikringssøknad. Når du klikker på knappen under, genereres en
-            XML-fil som sendes til forsikringsselskapet.
+            Her kan du sende inn din forsikringssøknad. Når du klikker på knappen under, genereres
+            en XML-fil som sendes til forsikringsselskapet.
           </p>
 
           <Button onClick={onSendInsurance} disabled={isSending}>
@@ -84,11 +94,13 @@ export default function InsurancePage(): React.ReactElement {
       {/* INFOSEKSJON */}
       <Card title="Forsikring mot inntektsbortfall">
         <p className="mb-4 text-sm md:text-base text-slate-700">
-          Forsikring mot inntektsbortfall gir økonomisk trygghet hvis du mister inntekten - for eksempel
-          ved sykdom, uførhet, permittering eller arbeidsledighet.
+          Forsikring mot inntektsbortfall gir økonomisk trygghet hvis du mister inntekten - for
+          eksempel ved sykdom, uførhet, permittering eller arbeidsledighet.
         </p>
 
-        <h3 className="text-lg font-semibold mt-6 mb-2 text-brand-dark">Vanlige typer forsikringer</h3>
+        <h3 className="text-lg font-semibold mt-6 mb-2 text-brand-dark">
+          Vanlige typer forsikringer
+        </h3>
 
         <ul className="list-disc list-inside space-y-2 text-sm md:text-base text-slate-700">
           <li>

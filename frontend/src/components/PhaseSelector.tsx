@@ -17,10 +17,7 @@ export default function PhaseSelector({
 }: PhaseSelectorProps) {
   return (
     <div
-      className={[
-        'mt-6 bg-brand-soft/60 border border-brand-soft rounded-xl p-4',
-        className,
-      ]
+      className={['mt-6 bg-brand-soft/60 border border-brand-soft rounded-xl p-4', className]
         .filter(Boolean)
         .join(' ')}
     >
@@ -40,4 +37,3 @@ export default function PhaseSelector({
     </div>
   );
 }
-

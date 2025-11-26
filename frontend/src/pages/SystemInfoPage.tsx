@@ -27,7 +27,7 @@ export default function SystemInfoPage() {
   const [status, setStatus] = useState<Health>('ukjent');
   const [httpCode, setHttpCode] = useState<number | null>(null);
   const [message, setMessage] = useState<string>('');
-  const [checking, setChecking] = useState<boolean>(false);
+  const [, setChecking] = useState(false);
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
 
   const [dbStatus, setDbStatus] = useState<Health>('ukjent');
@@ -164,17 +164,14 @@ export default function SystemInfoPage() {
     status === 'ok'
       ? 'bg-green-100 text-green-800 border-green-300'
       : status === 'feil'
-      ? 'bg-red-100 text-red-800 border-red-300'
-      : 'bg-slate-100 text-slate-700 border-slate-300';
+        ? 'bg-red-100 text-red-800 border-red-300'
+        : 'bg-slate-100 text-slate-700 border-slate-300';
 
   const dbStatusClass =
-    dbStatus === 'ok'
-      ? 'text-green-700'
-      : dbStatus === 'feil'
-      ? 'text-red-700'
-      : 'text-slate-700';
+    dbStatus === 'ok' ? 'text-green-700' : dbStatus === 'feil' ? 'text-red-700' : 'text-slate-700';
 
-  const maxDuration = history.length > 0 ? Math.max(...history.map((h) => h.durationMs || 0), 1) : 1;
+  const maxDuration =
+    history.length > 0 ? Math.max(...history.map((h) => h.durationMs || 0), 1) : 1;
 
   return (
     <div className="w-full max-w-5xl mx-auto px-4 py-8">
@@ -187,12 +184,14 @@ export default function SystemInfoPage() {
           >
             <p className="font-semibold text-slate-900">Venter på svar fra tjenesten...</p>
             <p className="mt-2 text-slate-700">
-              Backend kjører på Render (gratisversjon), og kan bruke litt tid på å starte opp når den har
-              vært inaktiv.
+              Backend kjører på Render (gratisversjon), og kan bruke litt tid på å starte opp når
+              den har vært inaktiv.
             </p>
             <p className="mt-3 text-xs text-slate-500">
               Estimert ventetid:{' '}
-              {waitingSecondsLeft !== null ? `${waitingSecondsLeft} sekunder` : `${WAIT_ESTIMATE_SECONDS} sekunder`}
+              {waitingSecondsLeft !== null
+                ? `${waitingSecondsLeft} sekunder`
+                : `${WAIT_ESTIMATE_SECONDS} sekunder`}
             </p>
             <p className="mt-1 text-xs text-slate-500">
               Popupen forsvinner automatisk så snart vi får svar fra tjenesten.
@@ -202,12 +201,18 @@ export default function SystemInfoPage() {
       )}
       <div className="mb-6">
         <h1 className="text-2xl md:text-3xl font-semibold text-slate-900">Systemstatus</h1>
-        <p className="mt-1 text-sm text-slate-600">Oversikt over backend og database for omstillingsverktøyet.</p>
+        <p className="mt-1 text-sm text-slate-600">
+          Oversikt over backend og database for omstillingsverktøyet.
+        </p>
       </div>
 
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Backend-status */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="md:col-span-2">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="md:col-span-2"
+        >
           <Card title="Backend-status">
             <p className="text-sm text-slate-700">
               <span className="font-semibold">Hello-endepunkt:</span>
@@ -262,28 +267,35 @@ export default function SystemInfoPage() {
               <p className="text-sm text-slate-700">HTTP-kode (dbinfo): {dbHttpCode ?? '-'}</p>
 
               <div className="mt-3 rounded-lg bg-slate-100 p-3 text-xs text-slate-700">
-                <span className="font-semibold">DB-melding:</span> {dbMessage || 'Ingen sjekk ennå.'}
+                <span className="font-semibold">DB-melding:</span>{' '}
+                {dbMessage || 'Ingen sjekk ennå.'}
               </div>
             </div>
           </Card>
         </motion.div>
 
         {/* Responstid / logg */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="md:col-span-3">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="md:col-span-3"
+        >
           <Card title="Responstid & logg">
             {history.length === 0 ? (
               <p className="text-sm text-slate-700">Ingen historikk ennå.</p>
             ) : (
               <div className="space-y-2 text-xs text-slate-700">
                 {history.map((entry, i) => {
-                  const ratio = entry.durationMs ? Math.min(100, (entry.durationMs / maxDuration) * 100) : 5;
+                  const ratio = entry.durationMs
+                    ? Math.min(100, (entry.durationMs / maxDuration) * 100)
+                    : 5;
 
                   const barColor =
                     entry.status === 'ok'
                       ? 'bg-green-500'
                       : entry.status === 'feil'
-                      ? 'bg-red-500'
-                      : 'bg-slate-400';
+                        ? 'bg-red-500'
+                        : 'bg-slate-400';
 
                   return (
                     <div key={i} className="flex items-center gap-2">

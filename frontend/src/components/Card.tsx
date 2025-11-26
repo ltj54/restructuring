@@ -7,12 +7,7 @@ type CardProps = {
   children: React.ReactNode;
 };
 
-export default function Card({
-  title,
-  actions,
-  className = '',
-  children,
-}: CardProps) {
+export default function Card({ title, actions, className = '', children }: CardProps) {
   return (
     <section
       className={[
@@ -38,4 +33,3 @@ export default function Card({
     </section>
   );
 }
-

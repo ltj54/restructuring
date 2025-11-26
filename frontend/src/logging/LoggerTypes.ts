@@ -1,6 +1,6 @@
 // src/logging/LoggerTypes.ts
 
-export type StructuredLogLevel = "INFO" | "WARN" | "ERROR";
+export type StructuredLogLevel = 'INFO' | 'WARN' | 'ERROR';
 
 export interface StructuredLogError {
   message?: string;

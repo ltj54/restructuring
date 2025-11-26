@@ -1,20 +1,28 @@
 import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 import { server } from './server';
 
+// ---------------------------
+// Start MSW Server
+// ---------------------------
 beforeAll(() => {
   server.listen({ onUnhandledRequest: 'error' });
 
-  Object.defineProperty(globalThis, 'window', {
-    value: {
-      URL: {
-        createObjectURL: vi.fn(() => 'blob:mock'),
-        revokeObjectURL: vi.fn(),
-      },
-    },
+  //
+  // Mock window.URL
+  //
+  Object.defineProperty(globalThis, 'URL', {
     writable: true,
+    value: {
+      createObjectURL: vi.fn(() => 'blob:mock-url'),
+      revokeObjectURL: vi.fn(),
+    },
   });
 
+  //
+  // Mock document
+  //
   Object.defineProperty(globalThis, 'document', {
+    writable: true,
     value: {
       createElement: vi.fn(() => ({
         href: '',
@@ -27,17 +35,19 @@ beforeAll(() => {
         removeChild: vi.fn(),
       },
     },
-    writable: true,
   });
 
+  //
+  // Mock localStorage
+  //
   Object.defineProperty(globalThis, 'localStorage', {
+    writable: true,
     value: {
       getItem: vi.fn(() => null),
       setItem: vi.fn(),
       removeItem: vi.fn(),
       clear: vi.fn(),
     },
-    writable: true,
   });
 });
 

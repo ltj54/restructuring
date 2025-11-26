@@ -75,8 +75,9 @@ export default function WizardPage(): React.ReactElement {
       try {
         const parsed = JSON.parse(stored) as UserPlanResponse;
         if (parsed.persona) {
-          const key = (Object.entries(personaLabels).find(([, label]) => label === parsed.persona) ??
-            [null])[0] as PersonaKey | null;
+          const key = (Object.entries(personaLabels).find(
+            ([, label]) => label === parsed.persona
+          ) ?? [null])[0] as PersonaKey | null;
           setPersona(key);
         }
         if (parsed.phase) setPhase(parsed.phase);
@@ -87,7 +88,10 @@ export default function WizardPage(): React.ReactElement {
     }
   }, []);
 
-  const personaDisplay = useMemo(() => (persona ? personaLabels[persona] : 'Ikke valgt'), [persona]);
+  const personaDisplay = useMemo(
+    () => (persona ? personaLabels[persona] : 'Ikke valgt'),
+    [persona]
+  );
 
   const toggleNeed = (option: string) => {
     setNeeds((current) =>
@@ -175,7 +179,9 @@ export default function WizardPage(): React.ReactElement {
                     type="button"
                     onClick={() => setPhase(option)}
                     className={`px-3 py-2 rounded-full text-xs border ${
-                      active ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700'
+                      active
+                        ? 'bg-slate-900 text-white border-slate-900'
+                        : 'bg-white text-slate-700'
                     }`}
                   >
                     {option}
@@ -194,7 +200,9 @@ export default function WizardPage(): React.ReactElement {
                   <label
                     key={need}
                     className={`cursor-pointer rounded-lg border px-3 py-2 text-sm transition ${
-                      active ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white'
+                      active
+                        ? 'border-slate-900 bg-slate-900 text-white'
+                        : 'border-slate-200 bg-white'
                     }`}
                   >
                     <input

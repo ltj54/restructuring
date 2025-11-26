@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { http, HttpResponse } from 'msw';
-import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { server } from '../../test/server';
 import { ApiError } from '../../utils/api';
 import { useInsurance } from '../useInsurance';
