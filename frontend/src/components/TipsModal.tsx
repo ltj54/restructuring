@@ -51,7 +51,9 @@ export default function TipsModal({ open, onClose }: Props) {
           </div>
           <div>
             <strong>2. Oppdater CV</strong>
-            <p className="text-gray-600">Oppdater nøkkelkompetanse og resultater, og lag en kort pitch.</p>
+            <p className="text-gray-600">
+              Oppdater nøkkelkompetanse og resultater, og lag en kort pitch.
+            </p>
           </div>
           <div>
             <strong>3. Nettverk</strong>

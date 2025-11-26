@@ -103,7 +103,7 @@ logging:
     FRONTEND_LOG: INFO    # Frontend-logg fra dev
 
 # ======================================================================
-# 🚀 PROD-PROFIL (Render Production)
+# 🚀 PROD-PROFIL (Render Production) — OPTIMALISERT
 # ======================================================================
 ---
 spring:
@@ -111,22 +111,50 @@ spring:
     activate:
       on-profile: prod
 
+  main:
+    lazy-initialization: true      # ⚡ raskere oppstart – init ved behov
+    banner-mode: off               # litt raskere og renere startup
+
+  mvc:
+    problemdetails:
+      enabled: false               # sparer scanning/konfig
+
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      initializationFailTimeout: 0 # ⚡ unngår metadata-lås
+      connectionTimeout: 2000      # ⚡ raskere failover på Render
+      maximumPoolSize: 2           # perfekt for Render Free CPU
+      minimumIdle: 1               # holder ressursbruk nede
 
   jpa:
     hibernate:
       ddl-auto: none
     open-in-view: false
+    properties:
+      hibernate:
+        temp:
+          use_jdbc_metadata_defaults: false   # ⚡ sparer ~5–7 sek
 
-  sql:
-    init:
-      mode: never
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConfiguration
+      - org.springframework.boot.autoconfigure.websocket.servlet.WebSocketServletAutoConfiguration
+      - org.springframework.boot.autoconfigure.jms.JmsAutoConfiguration
+      - org.springframework.boot.autoconfigure.batch.BatchAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchDataAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration
+      - org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.cassandra.CassandraDataAutoConfiguration
+      - org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration
 
 logging:
   level:
+    root: INFO
     org.springframework: WARN
     FRONTEND_LOG: WARN    # Frontend-logg fra prod
+  file:
+    enabled: false         # ❗ kritisk – ingen fil-logging på Render

@@ -17,7 +17,6 @@ export default function RegisterPage() {
   return (
     <div className="w-full max-w-md mx-auto px-4 py-10">
       <Card title="Registrer deg">
-
         {/* API health message */}
         {apiMessage && <FormAlert variant="info" message={apiMessage} />}
 
@@ -72,7 +71,6 @@ export default function RegisterPage() {
           </Link>
           .
         </p>
-
       </Card>
     </div>
   );

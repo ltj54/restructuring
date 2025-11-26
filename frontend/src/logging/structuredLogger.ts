@@ -12,7 +12,9 @@ if (DEBUG_LOGGER) {
   console.log('[Logger] LOG_ENDPOINT:', LOG_ENDPOINT);
 }
 
-export function sendStructuredLog(payload: Omit<StructuredLogPayload, 'timestamp' | 'env' | 'app'>) {
+export function sendStructuredLog(
+  payload: Omit<StructuredLogPayload, 'timestamp' | 'env' | 'app'>
+) {
   if (!LOG_ENDPOINT) {
     if (DEBUG_LOGGER) console.warn('[Logger] Ingen LOG_ENDPOINT - hopper over logging.');
     return;
@@ -55,7 +57,13 @@ export function logWarn(context: string, event: string, message: string, meta?: 
   sendStructuredLog({ context, event, message, meta, level: 'WARN' });
 }
 
-export function logError(context: string, event: string, message: string, error?: Error, meta?: object) {
+export function logError(
+  context: string,
+  event: string,
+  message: string,
+  error?: Error,
+  meta?: object
+) {
   const err: StructuredLogError | undefined = error
     ? {
         name: error.name,

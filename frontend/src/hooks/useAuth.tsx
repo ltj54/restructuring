@@ -1,12 +1,5 @@
 // src/hooks/useAuth.tsx
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ApiError, configureApiClient, fetchJson, isApiError } from '../utils/api';
 
@@ -41,7 +34,10 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   isAuthenticating: boolean;
   isLoadingUser: boolean;
-  login: (credentials: LoginCredentials, options?: { redirectTo?: string }) => Promise<LoginResponse>;
+  login: (
+    credentials: LoginCredentials,
+    options?: { redirectTo?: string }
+  ) => Promise<LoginResponse>;
   logout: (options?: { redirectTo?: string }) => void;
   refreshUser: () => Promise<AuthenticatedUser | null>;
 }
@@ -62,7 +58,7 @@ type JwtPayload = {
 
 function decodeBase64Url(input: string): string {
   const normalized = input.replace(/-/g, '+').replace(/_/g, '/');
-  const paddingNeeded = (4 - ((normalized.length % 4) || 4)) % 4;
+  const paddingNeeded = (4 - (normalized.length % 4 || 4)) % 4;
   const padded = normalized + (paddingNeeded ? '='.repeat(paddingNeeded) : '');
 
   if (typeof globalThis.atob === 'function') {
@@ -121,7 +117,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const storedToken = loadStoredToken();
 
   const [token, setToken] = useState<string | null>(storedToken?.token ?? null);
-  const [tokenExpiresAt, setTokenExpiresAt] = useState<number | null>(storedToken?.expiresAt ?? null);
+  const [tokenExpiresAt, setTokenExpiresAt] = useState<number | null>(
+    storedToken?.expiresAt ?? null
+  );
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [isLoadingUser, setIsLoadingUser] = useState(Boolean(storedToken?.token));
@@ -252,7 +250,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [token, loadUser]);
 
   const login = useCallback(
-    async (credentials: LoginCredentials, options?: { redirectTo?: string }): Promise<LoginResponse> => {
+    async (
+      credentials: LoginCredentials,
+      options?: { redirectTo?: string }
+    ): Promise<LoginResponse> => {
       setIsAuthenticating(true);
       try {
         const response = await fetchJson<LoginResponse>('/auth/login', {
@@ -266,7 +267,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         const redirectTarget =
           options?.redirectTo ??
-          (locationState?.from && locationState.from !== '/login' ? locationState.from : undefined) ??
+          (locationState?.from && locationState.from !== '/login'
+            ? locationState.from
+            : undefined) ??
           '/insurance';
 
         navigate(redirectTarget, { replace: true });

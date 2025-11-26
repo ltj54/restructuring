@@ -7,7 +7,10 @@ export default function ResourcesPage() {
   const [buffer, setBuffer] = useState<number>(0);
 
   const overskudd = useMemo(() => inntekt - utgifter, [inntekt, utgifter]);
-  const bufferMnd = useMemo(() => (utgifter > 0 ? (buffer / utgifter).toFixed(1) : '0'), [buffer, utgifter]);
+  const bufferMnd = useMemo(
+    () => (utgifter > 0 ? (buffer / utgifter).toFixed(1) : '0'),
+    [buffer, utgifter]
+  );
 
   return (
     <div className="w-full max-w-3xl mx-auto px-4 py-10 space-y-6">

@@ -238,7 +238,9 @@ export default function PlanPage() {
 
         <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 text-sm">
           <div className="flex items-center justify-between gap-2 mb-2">
-            <h2 className="text-base md:text-lg font-semibold text-slate-900">Dagbok for denne fasen</h2>
+            <h2 className="text-base md:text-lg font-semibold text-slate-900">
+              Dagbok for denne fasen
+            </h2>
             {diaryUpdatedAt && !isSavingDiary && (
               <span className="text-xs text-slate-500">
                 Lagret{' '}

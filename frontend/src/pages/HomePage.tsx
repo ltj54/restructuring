@@ -29,8 +29,9 @@ export default function HomePage(): React.ReactElement {
         <div>
           <h3 className="text-lg font-semibold">Inntektstapsforsikring ved omstilling</h3>
           <p className="text-sm text-gray-500">
-            Hvis inntekten din faller på grunn av omstilling, nedbemanning eller endret stilling, kan
-            inntektstapsforsikring gi deg tid og ro til å finne neste steg - uten økonomisk krasj.
+            Hvis inntekten din faller på grunn av omstilling, nedbemanning eller endret stilling,
+            kan inntektstapsforsikring gi deg tid og ro til å finne neste steg - uten økonomisk
+            krasj.
           </p>
         </div>
         <button
@@ -47,8 +48,8 @@ export default function HomePage(): React.ReactElement {
           <div>
             <h4 className="font-semibold mb-1">Hva er det?</h4>
             <p>
-              En forsikring som gir deg en avtalt månedlig utbetaling når du mister inntekt på grunn av
-              omstilling.
+              En forsikring som gir deg en avtalt månedlig utbetaling når du mister inntekt på grunn
+              av omstilling.
             </p>
           </div>
           <div>
@@ -94,8 +95,8 @@ export default function HomePage(): React.ReactElement {
         >
           <Card title="Omstilling i jobben?">
             <p className="text-sm text-slate-600 mb-3">
-              Få oversikt og økonomisk trygghet. Denne siden gir deg enkel oversikt over hva omstilling
-              betyr for deg - lønn, rettigheter, inntektssikring og neste steg.
+              Få oversikt og økonomisk trygghet. Denne siden gir deg enkel oversikt over hva
+              omstilling betyr for deg - lønn, rettigheter, inntektssikring og neste steg.
             </p>
 
             <ul className="mb-4 text-sm text-slate-700 space-y-1 list-disc list-inside">
