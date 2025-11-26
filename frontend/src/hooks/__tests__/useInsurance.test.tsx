@@ -34,14 +34,9 @@ Object.defineProperty(globalThis, 'document', {
   value: mockDocument,
 });
 
-// ---- Mock URL APIs used by the hook ----
-Object.defineProperty(globalThis, 'URL', {
-  writable: true,
-  value: {
-    createObjectURL: vi.fn(() => 'blob:url'),
-    revokeObjectURL: vi.fn(),
-  },
-});
+// ---- Mock ONLY the URL *methods*, NOT the URL class ----
+globalThis.URL.createObjectURL = vi.fn(() => 'blob:url');
+globalThis.URL.revokeObjectURL = vi.fn();
 
 // ---- renderHook helper ----
 function renderHook<T>(hook: () => T) {
