@@ -1,5 +1,5 @@
 # ======================================================================
-# 🌱 GLOBAL CONFIG (applies to ALL profiles)
+# 🌱 GLOBALl CONFIG (applies to ALL profiles)
 # ======================================================================
 spring:
   application:
