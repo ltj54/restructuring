@@ -29,7 +29,9 @@ management:
 # 🔐 JWT CONFIG
 # ======================================================================
 jwt:
-  secret: ${JWT_SECRET:TXV4dW1Ld1hJbEVtS0dSR2dHQ2V6U2pQT2haVzhyV2tDVm1rY1BTZ0RCWg==}
+  # Ny og sikker fallback-secret.
+  # Render vil OVERRIDE denne via JWT_SECRET.
+  secret: ${JWT_SECRET:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9_Mk48qPsJ4f7s6W2x9JrQ0uYv8rA1qTn5Gc4Lh2Pz9yKf3Vb6Xw0Sd9Lu2Hz4Yp}
   expiration-hours: 24
 
 
@@ -50,12 +52,12 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update          # Hibernate lager/migrerer tabeller
+      ddl-auto: update
     open-in-view: false
 
   sql:
     init:
-      mode: always              # KJØR schema.sql ved oppstart i DEV
+      mode: always
       schema-locations: classpath:schema.sql
 
 logging:
