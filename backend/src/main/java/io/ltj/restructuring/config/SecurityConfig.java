@@ -29,59 +29,95 @@ public class SecurityConfig {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
+    // ============================================================
+    // MAIN SECURITY CONFIG
+    // ============================================================
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
         http
+                // Disable CSRF for APIs
                 .csrf(csrf -> csrf.disable())
+
+                // Enable CORS using our config below
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                // We are stateless (JWT only)
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                // Authorization rules
                 .authorizeHttpRequests(auth -> auth
 
-                        // Public endpoints
+                        // PUBLIC ENDPOINTS  ----------------------
                         .requestMatchers(
                                 "/api/hello",
                                 "/api/config",
                                 "/api/dbinfo",
                                 "/api/log",
+                                "/favicon.ico",
                                 "/actuator/**"
                         ).permitAll()
 
-                        .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/register")
-                        .permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
 
-                        .requestMatchers(HttpMethod.OPTIONS, "/**")
-                        .permitAll()
+                        // OPTIONS must be free for FRONTEND dev
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
+                        // Everything else requires JWT
                         .anyRequest().authenticated()
                 )
+
+                // Add JWT filter
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
+
+    // ============================================================
+    // PASSWORD ENCODER
+    // ============================================================
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    // ============================================================
+    // AUTH MANAGER
+    // ============================================================
+
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration)
+            throws Exception {
         return configuration.getAuthenticationManager();
     }
 
+    // ============================================================
+    // CORS CONFIGURATION
+    // ============================================================
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
+
         CorsConfiguration config = new CorsConfiguration();
 
+        // Important for cookies/JWT headers
         config.setAllowCredentials(true);
 
+        // Allowed origins (ALL that your frontend/backend uses)
         config.setAllowedOrigins(List.of(
-                "http://localhost:5173",
-                "https://ltj54.github.io"                 // 👈 GitHub Pages origin
+                "http://localhost:5173",          // Vite frontend
+                "http://localhost:8080",          // Direct browser calls to backend
+                "https://ltj54.github.io"         // GitHub Pages production
         ));
 
+        // Methods that are allowed
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 
+        // Allowed headers
         config.setAllowedHeaders(List.of(
                 "Content-Type",
                 "Authorization",
@@ -90,15 +126,19 @@ public class SecurityConfig {
                 "*"
         ));
 
+        // Headers exposed back to the browser
         config.setExposedHeaders(List.of(
-                "Content-Disposition",
-                "Authorization"
+                "Authorization",
+                "Content-Disposition"
         ));
 
+        // Cache CORS preflight for 1 hour
         config.setMaxAge(3600L);
 
+        // Apply config to all endpoints
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
+
         return source;
     }
 }
