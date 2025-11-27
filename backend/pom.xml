@@ -63,6 +63,13 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- In-memory test database -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <!-- 🔐 Security -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -111,13 +118,6 @@
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-crypto</artifactId>
-        </dependency>
-
-        <!-- H2 database for test profile -->
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>runtime</scope>
         </dependency>
 
     </dependencies>

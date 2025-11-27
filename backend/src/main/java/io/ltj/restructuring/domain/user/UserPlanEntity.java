@@ -1,6 +1,8 @@
 package io.ltj.restructuring.domain.user;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.Instant;
 
 @Entity
@@ -28,8 +30,8 @@ public class UserPlanEntity {
     @Column(name = "needs")
     private String needs;
 
-    @Lob
-    @Column(name = "diary")
+    @JdbcTypeCode(SqlTypes.LONGVARCHAR) // Force Hibernate to use TEXT instead of OID/LOB
+    @Column(name = "diary", columnDefinition = "TEXT")
     private String diary;
 
     @Column(name = "created_at", nullable = false, updatable = false)

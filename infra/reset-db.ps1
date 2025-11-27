@@ -13,7 +13,9 @@ Write-Host ""
 
 $scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $composeFile = Join-Path $scriptRoot "docker-compose.dev.yml"
-$volumeName = "restructuring_db_data"
+
+# ⚠ Dette MÅ matche compose-filens volumnavn
+$volumeName = "restructuring_dev_pgdata"
 
 if (-Not (Test-Path $composeFile)) {
     Write-Host "❌ FEIL: Finner ikke compose-filen: $composeFile" -ForegroundColor Red
@@ -24,11 +26,11 @@ Write-Host "📄 Compose-fil: $composeFile" -ForegroundColor Yellow
 
 Write-Host ""
 Write-Host "⛔ Stopper containere..." -ForegroundColor Yellow
-docker compose -f $composeFile down
+docker compose -f $composeFile down --remove-orphans
 
 Write-Host ""
 Write-Host "🗑 Sletter databasevolum: $volumeName" -ForegroundColor Yellow
-docker volume rm $volumeName -f | Out-Null
+docker volume rm $volumeName -f 2>$null
 
 Write-Host ""
 Write-Host "🚀 Starter Postgres 18 på nytt..." -ForegroundColor Yellow
