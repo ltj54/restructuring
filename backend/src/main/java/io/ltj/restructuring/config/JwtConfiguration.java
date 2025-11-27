@@ -24,17 +24,10 @@ public class JwtConfiguration {
             );
         }
 
-        // 💡 JWT secret **må** være Base64 for sikker drift
-        byte[] keyBytes;
-        try {
-            keyBytes = Decoders.BASE64.decode(secret);
-        } catch (IllegalArgumentException ex) {
-            throw new IllegalStateException(
-                    "Invalid JWT secret. It MUST be Base64 encoded. Provided value was not valid Base64."
-            );
-        }
+        // JWT secret must be Base64 (or Base64URL) for safe decoding
+        byte[] keyBytes = decodeSecret(secret);
 
-        // HS256 krever minimum 256-bit nøkkel
+        // HS256 requires minimum 256-bit key
         if (keyBytes.length < 32) {
             throw new IllegalStateException(
                     "JWT secret is too short. Must be at least 256 bits (32 bytes) when Base64-decoded."
@@ -42,5 +35,20 @@ public class JwtConfiguration {
         }
 
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    private byte[] decodeSecret(String secret) {
+        try {
+            return Decoders.BASE64.decode(secret);
+        } catch (IllegalArgumentException base64Ex) {
+            // Accept Base64URL (common in env vars) as a fallback
+            try {
+                return Decoders.BASE64URL.decode(secret);
+            } catch (IllegalArgumentException base64UrlEx) {
+                throw new IllegalStateException(
+                        "Invalid JWT secret. It must be Base64 or Base64URL encoded (no other characters are allowed)."
+                );
+            }
+        }
     }
 }
