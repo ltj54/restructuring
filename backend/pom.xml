@@ -63,7 +63,7 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Test database -->
+        <!-- In-memory test database -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>

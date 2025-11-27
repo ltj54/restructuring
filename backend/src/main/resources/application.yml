@@ -31,7 +31,7 @@ management:
 jwt:
   # Ny og sikker fallback-secret.
   # Render vil OVERRIDE denne via JWT_SECRET.
-  secret: ${JWT_SECRET:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9_Mk48qPsJ4f7s6W2x9JrQ0uYv8rA1qTn5Gc4Lh2Pz9yKf3Vb6Xw0Sd9Lu2Hz4Yp}
+  secret: ${JWT_SECRET:MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=}
   expiration-hours: 24
 
 
