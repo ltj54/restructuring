@@ -1,5 +1,5 @@
 # ======================================================================
-# 🌱 Felles konfigurasjon (gjelder ALLE profiler)
+# 🌱 GLOBAL CONFIG (applies to ALL profiles)
 # ======================================================================
 spring:
   application:
@@ -18,63 +18,23 @@ management:
       base-path: /actuator
       exposure:
         include: health,info,metrics
+
   endpoint:
     health:
       probes:
         enabled: true
 
+
 # ======================================================================
-# 🔐 JWT-konfigurasjon
+# 🔐 JWT CONFIG
 # ======================================================================
 jwt:
   secret: ${JWT_SECRET:TXV4dW1Ld1hJbEVtS0dSR2dHQ2V6U2pQT2haVzhyV2tDVm1rY1BTZ0RCWg==}
   expiration-hours: 24
 
-# ======================================================================
-# 🧪 TEST-PROFIL (H2 – in-memory database)
-# ======================================================================
----
-spring:
-  config:
-    activate:
-      on-profile: test
-
-  devtools:
-    restart:
-      enabled: false
-
-  datasource:
-    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE;
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
-
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
-    show-sql: true
-
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-
-  sql:
-    init:
-      mode: always
-      data-locations: classpath:data-test.sql
-
-logging:
-  level:
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-    FRONTEND_LOG: INFO   # Frontend-logg fra testmiljø
 
 # ======================================================================
-# 👨‍💻 DEV-PROFIL (lokal utvikling / Render DEV)
+# 👨‍💻 DEV PROFILE (LOCAL DEVELOPMENT – PostgreSQL only)
 # ======================================================================
 ---
 spring:
@@ -90,20 +50,22 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: update          # Hibernate lager/migrerer tabeller
     open-in-view: false
 
   sql:
     init:
-      mode: never
+      mode: always              # KJØR schema.sql ved oppstart i DEV
+      schema-locations: classpath:schema.sql
 
 logging:
   level:
     org.springframework: INFO
-    FRONTEND_LOG: INFO    # Frontend-logg fra dev
+    FRONTEND_LOG: INFO
+
 
 # ======================================================================
-# 🚀 PROD-PROFIL (Render Production) — OPTIMALISERT
+# 🚀 PROD PROFILE (RENDER PRODUCTION – PostgreSQL only)
 # ======================================================================
 ---
 spring:
@@ -112,12 +74,12 @@ spring:
       on-profile: prod
 
   main:
-    lazy-initialization: true      # ⚡ raskere oppstart – init ved behov
-    banner-mode: off               # litt raskere og renere startup
+    lazy-initialization: true
+    banner-mode: off
 
   mvc:
     problemdetails:
-      enabled: false               # sparer scanning/konfig
+      enabled: false
 
   datasource:
     url: ${SPRING_DATASOURCE_URL}
@@ -125,10 +87,10 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
-      initializationFailTimeout: 0 # ⚡ unngår metadata-lås
-      connectionTimeout: 2000      # ⚡ raskere failover på Render
-      maximumPoolSize: 2           # perfekt for Render Free CPU
-      minimumIdle: 1               # holder ressursbruk nede
+      initializationFailTimeout: 0
+      connectionTimeout: 2000
+      maximumPoolSize: 2
+      minimumIdle: 1
 
   jpa:
     hibernate:
@@ -137,7 +99,7 @@ spring:
     properties:
       hibernate:
         temp:
-          use_jdbc_metadata_defaults: false   # ⚡ sparer ~5–7 sek
+          use_jdbc_metadata_defaults: false
 
   autoconfigure:
     exclude:
@@ -155,6 +117,7 @@ logging:
   level:
     root: INFO
     org.springframework: WARN
-    FRONTEND_LOG: WARN    # Frontend-logg fra prod
+    FRONTEND_LOG: WARN
+
   file:
-    enabled: false         # ❗ kritisk – ingen fil-logging på Render
+    enabled: false

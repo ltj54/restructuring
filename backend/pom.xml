@@ -113,13 +113,6 @@
             <artifactId>spring-security-crypto</artifactId>
         </dependency>
 
-        <!-- H2 database for test profile -->
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-
     </dependencies>
 
     <build>
