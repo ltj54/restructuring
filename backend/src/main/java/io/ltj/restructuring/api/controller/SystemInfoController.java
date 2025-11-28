@@ -1,4 +1,4 @@
-package io.ltj.restructuring.api;
+package io.ltj.restructuring.api.controller;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
