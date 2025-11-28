@@ -1,54 +1,105 @@
-### IntelliJ ###
+###############################################
+# 🧠 IntelliJ IDEA
+###############################################
 .idea/
 *.iml
 out/
+
+###############################################
+# ⚙️ Gradle / Java / Spring Boot
+###############################################
 .gradle/
 build/
+target/
+*.class
+*.jar
+*.war
+*.hprof
+*.pid
+*.orig
 
-### Node / Vite ###
+###############################################
+# 🟦 Node / React / Vite
+###############################################
 node_modules/
 dist/
-vite.svg
 *.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+vite.svg
 
-### React (frontend env-files – IGNORE) ###
+# Build artifacts for GitHub Pages
+docs/
+gh-pages/
+public/.vite/
+
+###############################################
+# 🌍 Frontend env-files (IGNORED)
+###############################################
 restructuring-frontend/.env
 restructuring-frontend/.env.*
 !restructuring-frontend/.env.example
 
-### Spring Boot ###
-target/
-*.jar
-*.war
-*.class
-
-### Logs ###
-*.log
-logs/
-*.pid
-
-### OS ###
-Thumbs.db
-.DS_Store
-
-### dotenv (backend + other) ###
+###############################################
+# 🔐 Backend / Global env-files
+###############################################
+.env
+.env.*
 *.local
-*.env
+*.env.local
 !example.env
 
-### Docker ###
+###############################################
+# 📦 Logs (backend & frontend)
+###############################################
+logs/
+**/logs/
+*.log
+*.pid
+
+###############################################
+# 🐳 Docker
+###############################################
 docker/*.pid
 docker/*.log
 docker/data/
 docker/postgres/
 docker-compose.override.yml
 docker-compose.dev.yml
+infra/*.log
+infra/*.pid
 
-### PowerShell ###
+###############################################
+# 🧪 Test output
+###############################################
+coverage/
+test-results/
+reports/
+*.coverage
+
+###############################################
+# 💻 OS Files
+###############################################
+.DS_Store
+Thumbs.db
+
+###############################################
+# 🪟 PowerShell temporary files
+###############################################
 *.ps1~
 *.ps1.backup
 *.tmp
+*.bak
 
-# Generated directory listings
+###############################################
+# 📁 Generated directory listings
+###############################################
 tree.txt
+
+###############################################
+# 🛠 Misc
+###############################################
+*.swp
+*.swo
