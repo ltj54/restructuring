@@ -1,27 +1,29 @@
-------------------------------------------------------------
--- USERS
-------------------------------------------------------------
-INSERT INTO users (id, email, password, first_name, last_name, ssn, created_at, updated_at)
-VALUES
-  (1, 'test@example.com', '$2a$10$abcdefghijklmnopqrstuv', 'Testbruker', 'Testesen', '12345678901', NOW(), NOW());
+WITH upsert_user AS (
+  INSERT INTO users (email, password, first_name, last_name, ssn)
+  VALUES (
+    'test@example.com',
+    '$2a$10$abcdefghijklmnopqrstuv',
+    'Testbruker',
+    'Testesen',
+    '12345678901'
+  )
+  ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email
+  RETURNING id
+), resolved_user AS (
+  SELECT id FROM upsert_user
+  UNION ALL
+  SELECT id FROM users WHERE email = 'test@example.com'
+)
+INSERT INTO user_plans (user_id, phase, persona, needs, diary)
+SELECT id, 'INTRO', 'Testpersona', 'need1,need2', 'Standard testplan diary'
+FROM resolved_user ru
+WHERE NOT EXISTS (
+  SELECT 1 FROM user_plans WHERE user_id = ru.id
+);
 
--- Align identity with inserted seed to avoid PK clashes in tests
-ALTER TABLE users ALTER COLUMN id RESTART WITH 2;
-
-------------------------------------------------------------
--- USER PLANS
-------------------------------------------------------------
-INSERT INTO user_plans (id, user_id, phase, persona, needs, diary, created_at, updated_at)
-VALUES
-  (1, 1, 'INTRO', 'Testpersona', 'need1,need2', 'Standard testplan diary', NOW(), NOW());
-
-ALTER TABLE user_plans ALTER COLUMN id RESTART WITH 2;
-
-------------------------------------------------------------
--- INSURANCE REQUEST
-------------------------------------------------------------
-INSERT INTO insurance_request (id, user_id, xml_content, status, created_at)
-VALUES
-  (1, 1, '<InsuranceRequest><UserId>1</UserId><Test>OK</Test></InsuranceRequest>', 'SENT', NOW());
-
-ALTER TABLE insurance_request ALTER COLUMN id RESTART WITH 2;
+INSERT INTO insurance_request (user_id, xml_content, status)
+SELECT id, '<InsuranceRequest><UserId>1</UserId><Test>OK</Test></InsuranceRequest>', 'SENT'
+FROM resolved_user ru
+WHERE NOT EXISTS (
+  SELECT 1 FROM insurance_request WHERE user_id = ru.id
+);
