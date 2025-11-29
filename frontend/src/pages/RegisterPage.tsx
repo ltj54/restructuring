@@ -5,6 +5,7 @@ import TextField from '../components/form/TextField';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import { useRegisterForm } from '../hooks/useRegisterForm';
+import PageLayout from '../components/PageLayout';
 
 export default function RegisterPage() {
   const { form, feedback, apiMessage, isSubmitting, onSubmit } = useRegisterForm();
@@ -15,8 +16,12 @@ export default function RegisterPage() {
   } = form;
 
   return (
-    <div className="w-full max-w-md mx-auto px-4 py-10">
-      <Card title="Registrer deg">
+    <PageLayout
+      title="Registrer deg"
+      subtitle="Lagre plan, dagbok og beregninger på din bruker."
+      maxWidthClassName="max-w-xl"
+    >
+      <Card>
         {/* API health message */}
         {apiMessage && <FormAlert variant="info" message={apiMessage} />}
 
@@ -72,6 +77,6 @@ export default function RegisterPage() {
           .
         </p>
       </Card>
-    </div>
+    </PageLayout>
   );
 }

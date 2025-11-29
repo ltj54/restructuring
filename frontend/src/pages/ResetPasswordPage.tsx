@@ -5,6 +5,7 @@ import TextField from '../components/form/TextField';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import { useResetPasswordForm } from '../hooks/useResetPasswordForm';
+import PageLayout from '../components/PageLayout';
 
 export default function ResetPasswordPage() {
   const [params] = useSearchParams();
@@ -16,8 +17,12 @@ export default function ResetPasswordPage() {
   } = form;
 
   return (
-    <div className="w-full max-w-md mx-auto px-4 py-10">
-      <Card title="Tilbakestill passord">
+    <PageLayout
+      title="Tilbakestill passord"
+      subtitle="Sett et nytt passord for å komme videre."
+      maxWidthClassName="max-w-xl"
+    >
+      <Card>
         {feedback && (
           <FormAlert
             variant={feedback.variant}
@@ -58,6 +63,6 @@ export default function ResetPasswordPage() {
           </Link>
         </p>
       </Card>
-    </div>
+    </PageLayout>
   );
 }

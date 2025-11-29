@@ -5,6 +5,7 @@ import TextField from '../components/form/TextField';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import { useLoginForm } from '../hooks/useLoginForm';
+import PageLayout from '../components/PageLayout';
 
 export default function LoginPage() {
   const { form, feedback, isSubmitting, onSubmit } = useLoginForm();
@@ -14,8 +15,12 @@ export default function LoginPage() {
   } = form;
 
   return (
-    <div className="w-full max-w-md mx-auto px-4 py-10">
-      <Card title="Logg inn">
+    <PageLayout
+      title="Logg inn"
+      subtitle="Gå videre til plan, veiviser og dekninger."
+      maxWidthClassName="max-w-xl"
+    >
+      <Card>
         {feedback && (
           <FormAlert
             variant={feedback.variant}
@@ -64,6 +69,6 @@ export default function LoginPage() {
           .
         </p>
       </Card>
-    </div>
+    </PageLayout>
   );
 }

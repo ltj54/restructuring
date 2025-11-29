@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import Card from '../components/Card';
+import Button from '../components/Button';
+import PageLayout from '../components/PageLayout';
 import { useAuth } from '../hooks/useAuth';
 import { fetchJson } from '../utils/api';
 
@@ -15,7 +17,7 @@ const phaseSections: Record<
   'Før omstilling': {
     title: 'Før omstilling - bygg trygghet tidlig',
     description:
-      'Du er i en tidlig fase. Hovedmålet nå er å skaffe oversikt og forberede deg uten å skape unødig stress.',
+      'Du er i en tidlig fase. Målet nå er å skaffe oversikt og forberede deg uten å skape unødig stress.',
     bullets: [
       'Skriv ned hva som bekymrer deg konkret - ikke bare «omstilling generelt».',
       'Finn ut hvem som faktisk vet hva (leder, HR, tillitsvalgt).',
@@ -61,7 +63,7 @@ type UserPlanResponse = {
   updatedAt: string | null;
 };
 
-export default function PlanPage() {
+export default function PlanPage(): React.ReactElement {
   const location = useLocation();
   const { isAuthenticated } = useAuth();
 
@@ -172,16 +174,32 @@ export default function PlanPage() {
     })();
   };
 
+  const planActions = (
+    <>
+      <Button to="/wizard" className="bg-gradient-to-r from-emerald-400 to-teal-500 text-slate-900 border-transparent font-semibold">
+        Start veiviseren
+      </Button>
+      <Button to="/resources" className="bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50 font-semibold">
+        Se ressurser
+      </Button>
+    </>
+  );
+
   return (
-    <div className="w-full max-w-3xl mx-auto px-4 py-10">
-      <Card title="Min plan">
+    <PageLayout
+      title="Min plan"
+      subtitle="Fire steg som gir deg oversikt: fase, økonomi, kompetanse og konkrete handlinger. Alt lagres på brukeren din."
+      actions={planActions}
+      maxWidthClassName="max-w-5xl"
+    >
+      <Card>
         {isLoadingRemotePlan && <p className="mb-3 text-xs text-slate-500">Laster plan ...</p>}
 
         {!plan ? (
           <>
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm">
               Ingen plan funnet.{' '}
-              <Link to="/wizard" className="text-brand-dark font-medium underline">
+              <Link to="/wizard" className="text-emerald-700 font-medium underline">
                 Start veiviser
               </Link>
               .
@@ -252,8 +270,7 @@ export default function PlanPage() {
             )}
           </div>
           <p className="text-xs text-slate-600 mb-3">
-            Skriv korte notater om møter, avtaler, avtaler du har gjort med deg selv og ting du vil
-            følge opp. Notatene lagres på denne brukeren.
+            Skriv korte notater om møter, avtaler og ting du vil følge opp. Notatene lagres på denne brukeren.
           </p>
           <div className="mb-3 flex flex-wrap gap-2">
             {Object.keys(phaseSections).map((phaseKey) => {
@@ -290,14 +307,14 @@ export default function PlanPage() {
             value={(activeDiaryPhase && diariesByPhase[activeDiaryPhase]) || ''}
             onChange={handleDiaryChange}
             rows={8}
-            className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-brand resize-y"
+            className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 resize-y"
             placeholder="F.eks. hva ble sagt på siste møte, hva du vil spørre om neste gang, eller hvordan situasjonen påvirker deg nå."
           />
           {isSavingDiary && <p className="mt-1 text-xs text-slate-500">Lagrer ...</p>}
           {diarySaveError && <p className="mt-1 text-xs text-red-500">{diarySaveError}</p>}
         </section>
 
-        <h2 className="mt-6 text-lg font-semibold">Handlinger (14 dager)</h2>
+        <h2 className="mt-6 text-lg font-semibold text-slate-900">Handlinger (14 dager)</h2>
         <ul className="mt-3 space-y-2">
           {[
             'Skaff formell oversikt (datoer, møter, referat).',
@@ -320,6 +337,6 @@ export default function PlanPage() {
           </Link>
         </div>
       </Card>
-    </div>
+    </PageLayout>
   );
 }

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import Card from '../components/Card';
+import PageLayout from '../components/PageLayout';
 import { API_BASE_URL } from '../utils/config';
 
 type Health = 'ukjent' | 'ok' | 'feil';
@@ -23,7 +24,7 @@ const pulseAnimation = {
   },
 };
 
-export default function SystemInfoPage() {
+export default function SystemInfoPage(): React.ReactElement {
   const [status, setStatus] = useState<Health>('ukjent');
   const [httpCode, setHttpCode] = useState<number | null>(null);
   const [message, setMessage] = useState<string>('');
@@ -76,14 +77,12 @@ export default function SystemInfoPage() {
         setMessage('Backend svarte, men med feil.');
       }
 
-      // Vi har fått et HTTP-svar (uansett kode) - skjul popupen.
       stopWaitingForResponse();
     } catch {
       newStatus = 'feil';
       setStatus('feil');
       setMessage('Ingen respons fra backend.');
       setHttpCode(null);
-      // Ved nettverksfeil lar vi popupen stå til nedtellingen er ferdig.
     } finally {
       const end = performance.now();
       const durationMs = end - start;
@@ -140,13 +139,11 @@ export default function SystemInfoPage() {
         setDbMessage('DB-endepunkt svarte, men med feil.');
       }
 
-      // HTTP-svar - skjul popupen.
       stopWaitingForResponse();
     } catch {
       setDbStatus('feil');
       setDbHttpCode(null);
       setDbMessage('Ingen respons fra DB-endepunkt.');
-      // Ved nettverksfeil lar vi popupen stå til nedtellingen er ferdig.
     }
   }, [dbInfoUrl, startWaitingForResponse, stopWaitingForResponse]);
 
@@ -174,7 +171,11 @@ export default function SystemInfoPage() {
     history.length > 0 ? Math.max(...history.map((h) => h.durationMs || 0), 1) : 1;
 
   return (
-    <div className="w-full max-w-5xl mx-auto px-4 py-8">
+    <PageLayout
+      title="Systemstatus"
+      subtitle="Health-check og responstider for backend."
+      maxWidthClassName="max-w-6xl"
+    >
       {waitingForResponse && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
           <motion.div
@@ -184,8 +185,7 @@ export default function SystemInfoPage() {
           >
             <p className="font-semibold text-slate-900">Venter på svar fra tjenesten...</p>
             <p className="mt-2 text-slate-700">
-              Backend kjører på Render (gratisversjon), og kan bruke litt tid på å starte opp når
-              den har vært inaktiv.
+              Backend kjører på Render (gratisversjon), og kan bruke litt tid på å starte opp når den har vært inaktiv.
             </p>
             <p className="mt-3 text-xs text-slate-500">
               Estimert ventetid:{' '}
@@ -199,15 +199,8 @@ export default function SystemInfoPage() {
           </motion.div>
         </div>
       )}
-      <div className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-semibold text-slate-900">Systemstatus</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Oversikt over backend og database for omstillingsverktøyet.
-        </p>
-      </div>
 
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Backend-status */}
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -225,8 +218,12 @@ export default function SystemInfoPage() {
               initial="initial"
               animate="animate"
               className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm mt-4 ${statusClass}`}
+              aria-live="polite"
             >
-              {status === 'ok' ? '✔️ Online' : status === 'feil' ? '⛔ Offline' : '⌛ Ukjent'}
+              <span aria-hidden="true" className={`h-2.5 w-2.5 rounded-full ${status === 'ok' ? 'bg-green-500' : status === 'feil' ? 'bg-red-500' : 'bg-slate-500'}`} />
+              <span className="font-semibold">
+                {status === 'ok' ? 'Online' : status === 'feil' ? 'Offline' : 'Ukjent'}
+              </span>
             </motion.div>
 
             <div className="flex flex-wrap items-center gap-3 mt-4">
@@ -250,7 +247,6 @@ export default function SystemInfoPage() {
           </Card>
         </motion.div>
 
-        {/* DB-sjekk */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           <Card title="Detaljert helsesjekk">
             <div className="text-sm">
@@ -267,14 +263,12 @@ export default function SystemInfoPage() {
               <p className="text-sm text-slate-700">HTTP-kode (dbinfo): {dbHttpCode ?? '-'}</p>
 
               <div className="mt-3 rounded-lg bg-slate-100 p-3 text-xs text-slate-700">
-                <span className="font-semibold">DB-melding:</span>{' '}
-                {dbMessage || 'Ingen sjekk ennå.'}
+                <span className="font-semibold">DB-melding:</span> {dbMessage || 'Ingen sjekk ennå.'}
               </div>
             </div>
           </Card>
         </motion.div>
 
-        {/* Responstid / logg */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -314,6 +308,6 @@ export default function SystemInfoPage() {
           </Card>
         </motion.div>
       </section>
-    </div>
+    </PageLayout>
   );
 }
