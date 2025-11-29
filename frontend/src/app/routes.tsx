@@ -14,17 +14,19 @@ const RegisterPage = lazy(() => import('../pages/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('../pages/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('../pages/ResetPasswordPage'));
 const SystemInfoPage = lazy(() => import('../pages/SystemInfoPage'));
+const DownloadAppPage = lazy(() => import('../pages/DownloadAppPage'));
 
 const mainNavLinks: MainNavLink[] = [
-  { path: '/home', icon: '🏠', label: 'Hjem' },
-  { path: '/insurance', icon: '🛡️', label: 'Forsikring' },
-  { path: '/wizard', icon: '🧭', label: 'Veiviser' },
-  { path: '/plan', icon: '📝', label: 'Plan' },
-  { path: '/resources', icon: '📚', label: 'Ressurser' },
-  { path: '/purchase', icon: '💳', label: 'Kjøp' },
-  { path: '/systeminfo', icon: '💻', label: 'Systeminfo' },
-  { path: '/login', icon: '🔑', label: 'Logg inn' },
-  { path: '/register', icon: '➕', label: 'Registrer' },
+  { path: '/home', icon: '??', label: 'Hjem' },
+  { path: '/insurance', icon: '???', label: 'Forsikring' },
+  { path: '/wizard', icon: '??', label: 'Veiviser' },
+  { path: '/plan', icon: '??', label: 'Plan' },
+  { path: '/resources', icon: '??', label: 'Ressurser' },
+  { path: '/purchase', icon: '??', label: 'Kjøp' },
+  { path: '/systeminfo', icon: '??', label: 'Systeminfo' },
+  { path: '/last-ned', icon: '⬇️', label: 'Last ned app' },
+  { path: '/login', icon: '??', label: 'Logg inn' },
+  { path: '/register', icon: '?', label: 'Registrer' },
 ];
 
 export const appRoutes: RouteObject[] = [
@@ -51,6 +53,7 @@ export const appRoutes: RouteObject[] = [
       { path: 'forgot-password', element: <ForgotPasswordPage /> },
       { path: 'reset-password', element: <ResetPasswordPage /> },
       { path: 'systeminfo', element: <SystemInfoPage /> },
+      { path: 'last-ned', element: <DownloadAppPage /> },
     ],
   },
   { path: '*', element: <Navigate to="/home" replace /> },
