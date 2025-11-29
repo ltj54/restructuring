@@ -3,12 +3,21 @@ spring:
     activate:
       on-profile: prod
 
+  main:
+    lazy-initialization: true
+    banner-mode: off
+
+  mvc:
+    problemdetails:
+      enabled: false
+
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
+      initializationFailTimeout: 0
       connectionTimeout: 2000
       maximumPoolSize: 2
       minimumIdle: 1
@@ -16,7 +25,13 @@ spring:
   jpa:
     hibernate:
       ddl-auto: none
-      open-in-view: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+
+  flyway:
+    enabled: true
+
+jwt:
+  secret: ${JWT_SECRET}

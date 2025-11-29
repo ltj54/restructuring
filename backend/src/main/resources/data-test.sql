@@ -21,6 +21,9 @@ WHERE NOT EXISTS (
   SELECT 1 FROM user_plans WHERE user_id = ru.id
 );
 
+WITH resolved_user AS (
+  SELECT id FROM users WHERE email = 'test@example.com'
+)
 INSERT INTO insurance_request (user_id, xml_content, status)
 SELECT id, '<InsuranceRequest><UserId>1</UserId><Test>OK</Test></InsuranceRequest>', 'SENT'
 FROM resolved_user ru
