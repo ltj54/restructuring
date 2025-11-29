@@ -1,5 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
 import InsurancePage from '../InsurancePage';
 
 const mockRegister = vi.fn(() => ({
@@ -45,11 +46,18 @@ describe('InsurancePage', () => {
     });
   });
 
-  it('shows the insurance call-to-action when profile is complete', () => {
-    const html = renderToStaticMarkup(<InsurancePage />);
+  const renderPage = () =>
+    renderToStaticMarkup(
+      <MemoryRouter>
+        <InsurancePage />
+      </MemoryRouter>
+    );
 
-    expect(html).toContain('Forsikring');
-    expect(html).toContain('Send søknad om forsikring');
+  it('shows the insurance call-to-action when profile is complete', () => {
+    const html = renderPage();
+
+    expect(html).toContain('Inntektstapsforsikring');
+    expect(html).toContain('Send inn søknad');
   });
 
   it('renders the profile form when additional information is required', () => {
@@ -68,7 +76,7 @@ describe('InsurancePage', () => {
       onSendInsurance: mockSendInsurance,
     });
 
-    const html = renderToStaticMarkup(<InsurancePage />);
+    const html = renderPage();
 
     expect(html).toContain('Fyll ut manglende opplysninger');
     expect(html).toContain('Fornavn');
