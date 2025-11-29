@@ -1,9 +1,8 @@
-# ======================================================================
-# 🌱 GLOBALl CONFIG (applies to ALL profiles)
-# ======================================================================
 spring:
   application:
     name: restructuring-backend
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
 
 server:
   port: ${PORT:8080}
@@ -18,108 +17,11 @@ management:
       base-path: /actuator
       exposure:
         include: health,info,metrics
-
   endpoint:
     health:
       probes:
         enabled: true
 
-
-# ======================================================================
-# 🔐 JWT CONFIG
-# ======================================================================
 jwt:
-  # Ny og sikker fallback-secret.
-  # Render vil OVERRIDE denne via JWT_SECRET.
   secret: ${JWT_SECRET:MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=}
   expiration-hours: 24
-
-
-# ======================================================================
-# 👨‍💻 DEV PROFILE (LOCAL DEVELOPMENT – PostgreSQL only)
-# ======================================================================
----
-spring:
-  config:
-    activate:
-      on-profile: dev
-
-  datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:restructuring_dev}
-    username: ${DB_USER:restructuring}
-    password: ${DB_PASSWORD:restructuring}
-    driver-class-name: org.postgresql.Driver
-
-  jpa:
-    hibernate:
-      ddl-auto: update
-    open-in-view: false
-
-  sql:
-    init:
-      mode: always
-      schema-locations: classpath:schema.sql
-
-logging:
-  level:
-    org.springframework: INFO
-    FRONTEND_LOG: INFO
-
-
-# ======================================================================
-# 🚀 PROD PROFILE (RENDER PRODUCTION – PostgreSQL only)
-# ======================================================================
----
-spring:
-  config:
-    activate:
-      on-profile: prod
-
-  main:
-    lazy-initialization: true
-    banner-mode: off
-
-  mvc:
-    problemdetails:
-      enabled: false
-
-  datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      initializationFailTimeout: 0
-      connectionTimeout: 2000
-      maximumPoolSize: 2
-      minimumIdle: 1
-
-  jpa:
-    hibernate:
-      ddl-auto: update
-    open-in-view: false
-    properties:
-      hibernate:
-        temp:
-          use_jdbc_metadata_defaults: false
-
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConfiguration
-      - org.springframework.boot.autoconfigure.websocket.servlet.WebSocketServletAutoConfiguration
-      - org.springframework.boot.autoconfigure.jms.JmsAutoConfiguration
-      - org.springframework.boot.autoconfigure.batch.BatchAutoConfiguration
-      - org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchDataAutoConfiguration
-      - org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration
-      - org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration
-      - org.springframework.boot.autoconfigure.data.cassandra.CassandraDataAutoConfiguration
-      - org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration
-
-logging:
-  level:
-    root: INFO
-    org.springframework: WARN
-    FRONTEND_LOG: WARN
-
-  file:
-    enabled: false
