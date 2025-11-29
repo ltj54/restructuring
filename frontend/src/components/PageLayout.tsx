@@ -32,7 +32,9 @@ export default function PageLayout({
         {(title || subtitle || actions) && (
           <header className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="space-y-2">
-              {title && <h1 className="text-3xl md:text-4xl font-semibold text-slate-900">{title}</h1>}
+              {title && (
+                <h1 className="text-3xl md:text-4xl font-semibold text-slate-900">{title}</h1>
+              )}
               {subtitle && <p className="text-lg text-slate-700">{subtitle}</p>}
             </div>
             {actions && <div className="flex flex-wrap gap-2">{actions}</div>}

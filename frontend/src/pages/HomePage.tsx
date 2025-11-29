@@ -235,7 +235,10 @@ export default function HomePage(): React.ReactElement {
               </div>
 
               <div className="mt-4 flex flex-wrap gap-2">
-                <Button to="/plan" className="bg-emerald-500 text-slate-900 border-transparent font-semibold">
+                <Button
+                  to="/plan"
+                  className="bg-emerald-500 text-slate-900 border-transparent font-semibold"
+                >
                   Åpne planen
                 </Button>
                 <Button to="/wizard" className="border-slate-200 text-slate-700 hover:bg-slate-50">
@@ -275,7 +278,9 @@ export default function HomePage(): React.ReactElement {
                 <div className="h-2.5 w-2.5 rounded-full bg-amber-500 mt-1" />
                 <div>
                   <p className="font-semibold text-slate-900">Planlegg de neste 14 dagene</p>
-                  <p>Små, realistiske handlinger med milepæler som gir deg kontroll og fremdrift.</p>
+                  <p>
+                    Små, realistiske handlinger med milepæler som gir deg kontroll og fremdrift.
+                  </p>
                 </div>
               </div>
             </div>
@@ -300,18 +305,25 @@ export default function HomePage(): React.ReactElement {
             </p>
             <div className="mt-4 grid grid-cols-2 gap-3 text-sm text-slate-700">
               <div className="rounded-2xl border border-slate-100 bg-white p-3 shadow-sm">
-                <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">Hva vi beregner</p>
+                <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
+                  Hva vi beregner
+                </p>
                 <p className="mt-1 font-semibold text-slate-900">Dekning per måned</p>
                 <p>Tilpasset lønn, sluttpakke og dagpenger.</p>
               </div>
               <div className="rounded-2xl border border-slate-100 bg-white p-3 shadow-sm">
-                <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">Når den slår inn</p>
+                <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
+                  Når den slår inn
+                </p>
                 <p className="mt-1 font-semibold text-slate-900">Ved omstilling og nedbemanning</p>
                 <p>Gir ro mens du finner neste steg.</p>
               </div>
             </div>
             <div className="mt-4">
-              <Button to="/plan" className="bg-white text-emerald-700 border-emerald-200 font-semibold">
+              <Button
+                to="/plan"
+                className="bg-white text-emerald-700 border-emerald-200 font-semibold"
+              >
                 Regn på min dekning
               </Button>
             </div>
@@ -324,12 +336,18 @@ export default function HomePage(): React.ReactElement {
               <p className="text-sm text-emerald-600 font-semibold uppercase tracking-[0.15em]">
                 Naviger etter behov
               </p>
-              <h3 className="text-2xl font-semibold text-slate-900">Finn raskt frem til det du trenger</h3>
+              <h3 className="text-2xl font-semibold text-slate-900">
+                Finn raskt frem til det du trenger
+              </h3>
               <p className="text-slate-700">
-                Hopper du inn for å sjekke én ting? Velg snarveien som passer situasjonen akkurat nå.
+                Hopper du inn for å sjekke én ting? Velg snarveien som passer situasjonen akkurat
+                nå.
               </p>
             </div>
-            <Button to="/wizard" className="bg-white text-slate-900 border-transparent font-semibold">
+            <Button
+              to="/wizard"
+              className="bg-white text-slate-900 border-transparent font-semibold"
+            >
               Start guiding
             </Button>
           </div>
@@ -354,7 +372,10 @@ export default function HomePage(): React.ReactElement {
 
       {showInsuranceModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={closeInsuranceModal} />
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={closeInsuranceModal}
+          />
           <div className="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl p-6 mx-4">
             {renderInsuranceModalContent()}
             <footer className="mt-6 flex justify-end">

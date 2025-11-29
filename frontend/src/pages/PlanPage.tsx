@@ -176,10 +176,16 @@ export default function PlanPage(): React.ReactElement {
 
   const planActions = (
     <>
-      <Button to="/wizard" className="bg-gradient-to-r from-emerald-400 to-teal-500 text-slate-900 border-transparent font-semibold">
+      <Button
+        to="/wizard"
+        className="bg-gradient-to-r from-emerald-400 to-teal-500 text-slate-900 border-transparent font-semibold"
+      >
         Start veiviseren
       </Button>
-      <Button to="/resources" className="bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50 font-semibold">
+      <Button
+        to="/resources"
+        className="bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50 font-semibold"
+      >
         Se ressurser
       </Button>
     </>
@@ -270,7 +276,8 @@ export default function PlanPage(): React.ReactElement {
             )}
           </div>
           <p className="text-xs text-slate-600 mb-3">
-            Skriv korte notater om møter, avtaler og ting du vil følge opp. Notatene lagres på denne brukeren.
+            Skriv korte notater om møter, avtaler og ting du vil følge opp. Notatene lagres på denne
+            brukeren.
           </p>
           <div className="mb-3 flex flex-wrap gap-2">
             {Object.keys(phaseSections).map((phaseKey) => {

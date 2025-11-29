@@ -41,13 +41,18 @@ export default function InsurancePage(): React.ReactElement {
       subtitle="Send inn opplysningene dine og få beregnet dekningen som passer planen din."
       maxWidthClassName="max-w-4xl"
       actions={
-        <Button to="/plan" className="bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50 font-semibold">
+        <Button
+          to="/plan"
+          className="bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50 font-semibold"
+        >
           Tilbake til plan
         </Button>
       }
     >
       <div className="space-y-6">
-        {banner && <FormAlert variant={banner.variant} message={banner.message} action={banner.action} />}
+        {banner && (
+          <FormAlert variant={banner.variant} message={banner.message} action={banner.action} />
+        )}
 
         {needsInfo && (
           <Card title="Fyll ut manglende opplysninger">
@@ -90,7 +95,8 @@ export default function InsurancePage(): React.ReactElement {
 
         <Card title="Send inn søknad">
           <p className="text-sm text-slate-700 mb-4">
-            Vi bruker planen din og opplysningene over til å beregne dekning. Når du sender inn, får du bekreftelse på e-post.
+            Vi bruker planen din og opplysningene over til å beregne dekning. Når du sender inn, får
+            du bekreftelse på e-post.
           </p>
           <Button type="button" onClick={onSendInsurance} disabled={isSending}>
             {isSending ? 'Sender...' : 'Send søknad'}

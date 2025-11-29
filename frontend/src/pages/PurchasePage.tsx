@@ -58,7 +58,10 @@ export default function PurchasePage(): React.ReactElement {
       subtitle="Se pris og dekning basert på planen din."
       maxWidthClassName="max-w-3xl"
       actions={
-        <Button to="/plan" className="bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50 font-semibold">
+        <Button
+          to="/plan"
+          className="bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50 font-semibold"
+        >
           Tilbake til plan
         </Button>
       }
@@ -74,7 +77,10 @@ export default function PurchasePage(): React.ReactElement {
             <p>
               <strong>Dekning:</strong> {offer.coverage}
             </p>
-            <Link to="/insurance" className="text-sm text-emerald-700 font-semibold hover:underline">
+            <Link
+              to="/insurance"
+              className="text-sm text-emerald-700 font-semibold hover:underline"
+            >
               Se detaljer om dekning
             </Link>
           </div>

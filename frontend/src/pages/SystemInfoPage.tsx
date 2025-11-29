@@ -185,7 +185,8 @@ export default function SystemInfoPage(): React.ReactElement {
           >
             <p className="font-semibold text-slate-900">Venter på svar fra tjenesten...</p>
             <p className="mt-2 text-slate-700">
-              Backend kjører på Render (gratisversjon), og kan bruke litt tid på å starte opp når den har vært inaktiv.
+              Backend kjører på Render (gratisversjon), og kan bruke litt tid på å starte opp når
+              den har vært inaktiv.
             </p>
             <p className="mt-3 text-xs text-slate-500">
               Estimert ventetid:{' '}
@@ -220,7 +221,10 @@ export default function SystemInfoPage(): React.ReactElement {
               className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm mt-4 ${statusClass}`}
               aria-live="polite"
             >
-              <span aria-hidden="true" className={`h-2.5 w-2.5 rounded-full ${status === 'ok' ? 'bg-green-500' : status === 'feil' ? 'bg-red-500' : 'bg-slate-500'}`} />
+              <span
+                aria-hidden="true"
+                className={`h-2.5 w-2.5 rounded-full ${status === 'ok' ? 'bg-green-500' : status === 'feil' ? 'bg-red-500' : 'bg-slate-500'}`}
+              />
               <span className="font-semibold">
                 {status === 'ok' ? 'Online' : status === 'feil' ? 'Offline' : 'Ukjent'}
               </span>
@@ -263,7 +267,8 @@ export default function SystemInfoPage(): React.ReactElement {
               <p className="text-sm text-slate-700">HTTP-kode (dbinfo): {dbHttpCode ?? '-'}</p>
 
               <div className="mt-3 rounded-lg bg-slate-100 p-3 text-xs text-slate-700">
-                <span className="font-semibold">DB-melding:</span> {dbMessage || 'Ingen sjekk ennå.'}
+                <span className="font-semibold">DB-melding:</span>{' '}
+                {dbMessage || 'Ingen sjekk ennå.'}
               </div>
             </div>
           </Card>

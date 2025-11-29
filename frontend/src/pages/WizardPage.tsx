@@ -142,7 +142,14 @@ export default function WizardPage(): React.ReactElement {
       title="Veiviser"
       subtitle="Velg rolle, fase og behov – så bygger vi planen din."
       maxWidthClassName="max-w-5xl"
-      actions={<Button to="/plan" className="bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50 font-semibold">Gå til plan</Button>}
+      actions={
+        <Button
+          to="/plan"
+          className="bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50 font-semibold"
+        >
+          Gå til plan
+        </Button>
+      }
     >
       <div className="space-y-6">
         <Card title="Velg situasjonen din">
