@@ -38,12 +38,8 @@ export function useInsurance() {
   const { isAuthenticated, token } = useAuth();
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const sendInsurance = useCallback(async () => {
-    if (!isAuthenticated || !token) {
-      throw new ApiError('Du må være innlogget for å sende søknaden.', 401);
-    }
-
+    ensureAuthenticated(isAuthenticated, token);
     setIsSending(true);
     setError(null);
 
@@ -56,27 +52,7 @@ export function useInsurance() {
       });
 
       if (!response.ok) {
-        let message = `Request failed with status ${response.status}`;
-
-        try {
-          const data = await response.json();
-          if (
-            data &&
-            typeof data === 'object' &&
-            'message' in data &&
-            typeof (data as Record<string, unknown>).message === 'string'
-          ) {
-            message = (data as Record<string, string>).message;
-          }
-        } catch {
-          try {
-            const text = await response.text();
-            if (text) message = text;
-          } catch {
-            // ignored
-          }
-        }
-
+        const message = await extractErrorMessage(response);
         throw new ApiError(message, response.status);
       }
 
@@ -101,4 +77,35 @@ export function useInsurance() {
     error,
     sendInsurance,
   };
+}
+
+function ensureAuthenticated(isAuthenticated: boolean, token: string | null) {
+  if (!isAuthenticated || !token) {
+    throw new ApiError('Du må være innlogget for å sende søknaden.', 401);
+  }
+}
+
+async function extractErrorMessage(response: Response): Promise<string> {
+  try {
+    const data = await response.json();
+    if (
+      data &&
+      typeof data === 'object' &&
+      'message' in data &&
+      typeof (data as Record<string, unknown>).message === 'string'
+    ) {
+      return (data as Record<string, string>).message;
+    }
+  } catch {
+    // ignored
+  }
+
+  try {
+    const text = await response.text();
+    if (text) return text;
+  } catch {
+    // ignored
+  }
+
+  return `Request failed with status ${response.status}`;
 }
