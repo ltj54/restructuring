@@ -1,11 +1,13 @@
 package io.ltj.restructuring.application.exception;
 
+import java.io.Serializable;
+
 public class ResourceNotFoundException extends RuntimeException {
 
     private final String resourceName;
-    private final Object identifier;
+    private final Serializable identifier;
 
-    public ResourceNotFoundException(String resourceName, Object identifier) {
+    public ResourceNotFoundException(String resourceName, Serializable identifier) {
         super(resourceName + " not found: " + identifier);
         this.resourceName = resourceName;
         this.identifier = identifier;
@@ -15,7 +17,7 @@ public class ResourceNotFoundException extends RuntimeException {
         return resourceName;
     }
 
-    public Object getIdentifier() {
+    public Serializable getIdentifier() {
         return identifier;
     }
 }

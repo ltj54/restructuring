@@ -24,6 +24,106 @@ const pulseAnimation = {
   },
 };
 
+function WaitingOverlay({
+  waitingForResponse,
+  waitingSecondsLeft,
+}: {
+  waitingForResponse: boolean;
+  waitingSecondsLeft: number | null;
+}): React.ReactElement | null {
+  if (!waitingForResponse) {
+    return null;
+  }
+
+  return (
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-white rounded-2xl shadow-xl max-w-sm w-full px-6 py-5 text-sm text-slate-800"
+      >
+        <p className="font-semibold text-slate-900">Venter p† svar fra tjenesten...</p>
+        <p className="mt-2 text-slate-700">
+          Backend kj›rer p† Render (gratisversjon), og kan bruke litt tid p† † starte opp n†r den
+          har v‘rt inaktiv.
+        </p>
+        <p className="mt-3 text-xs text-slate-500">
+          Estimert ventetid:{' '}
+          {waitingSecondsLeft !== null
+            ? `${waitingSecondsLeft} sekunder`
+            : `${WAIT_ESTIMATE_SECONDS} sekunder`}
+        </p>
+        <p className="mt-1 text-xs text-slate-500">
+          Popupen forsvinner automatisk s† snart vi f†r svar fra tjenesten.
+        </p>
+      </motion.div>
+    </div>
+  );
+}
+
+function StatusBadge({ status }: { status: Health }) {
+  const statusClass =
+    status === 'ok'
+      ? 'bg-green-100 text-green-800 border-green-300'
+      : status === 'feil'
+        ? 'bg-red-100 text-red-800 border-red-300'
+        : 'bg-slate-100 text-slate-700 border-slate-300';
+
+  return (
+    <motion.div
+      variants={pulseAnimation}
+      initial="initial"
+      animate="animate"
+      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm mt-4 ${statusClass}`}
+      aria-live="polite"
+    >
+      <span
+        aria-hidden="true"
+        className={`h-2.5 w-2.5 rounded-full ${status === 'ok' ? 'bg-green-500' : status === 'feil' ? 'bg-red-500' : 'bg-slate-500'}`}
+      />
+      <span className="font-semibold">
+        {status === 'ok' ? 'Online' : status === 'feil' ? 'Offline' : 'Ukjent'}
+      </span>
+    </motion.div>
+  );
+}
+
+function HistoryList({ history }: { history: HistoryEntry[] }) {
+  if (history.length === 0) {
+    return <p className="text-sm text-slate-700">Ingen historikk enn†.</p>;
+  }
+
+  const maxDuration =
+    history.length > 0 ? Math.max(...history.map((h) => h.durationMs || 0), 1) : 1;
+
+  return (
+    <div className="space-y-2 text-xs text-slate-700">
+      {history.map((entry, i) => {
+        const ratio = entry.durationMs ? Math.min(100, (entry.durationMs / maxDuration) * 100) : 5;
+
+        const barColor =
+          entry.status === 'ok'
+            ? 'bg-green-500'
+            : entry.status === 'feil'
+              ? 'bg-red-500'
+              : 'bg-slate-400';
+
+        return (
+          <div key={i} className="flex items-center gap-2">
+            <div className="w-20">{entry.time.toLocaleTimeString()}</div>
+            <div className="flex-1 h-2 bg-slate-200 rounded overflow-hidden">
+              <div className={`h-full ${barColor}`} style={{ width: `${ratio}%` }} />
+            </div>
+            <div className="w-16 text-right">
+              {entry.durationMs ? `${Math.round(entry.durationMs)} ms` : '-'}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function SystemInfoPage(): React.ReactElement {
   const [status, setStatus] = useState<Health>('ukjent');
   const [httpCode, setHttpCode] = useState<number | null>(null);
@@ -157,18 +257,8 @@ export default function SystemInfoPage(): React.ReactElement {
     }
   };
 
-  const statusClass =
-    status === 'ok'
-      ? 'bg-green-100 text-green-800 border-green-300'
-      : status === 'feil'
-        ? 'bg-red-100 text-red-800 border-red-300'
-        : 'bg-slate-100 text-slate-700 border-slate-300';
-
   const dbStatusClass =
     dbStatus === 'ok' ? 'text-green-700' : dbStatus === 'feil' ? 'text-red-700' : 'text-slate-700';
-
-  const maxDuration =
-    history.length > 0 ? Math.max(...history.map((h) => h.durationMs || 0), 1) : 1;
 
   return (
     <PageLayout
@@ -176,30 +266,7 @@ export default function SystemInfoPage(): React.ReactElement {
       subtitle="Health-check og responstider for backend."
       maxWidthClassName="max-w-6xl"
     >
-      {waitingForResponse && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl shadow-xl max-w-sm w-full px-6 py-5 text-sm text-slate-800"
-          >
-            <p className="font-semibold text-slate-900">Venter på svar fra tjenesten...</p>
-            <p className="mt-2 text-slate-700">
-              Backend kjører på Render (gratisversjon), og kan bruke litt tid på å starte opp når
-              den har vært inaktiv.
-            </p>
-            <p className="mt-3 text-xs text-slate-500">
-              Estimert ventetid:{' '}
-              {waitingSecondsLeft !== null
-                ? `${waitingSecondsLeft} sekunder`
-                : `${WAIT_ESTIMATE_SECONDS} sekunder`}
-            </p>
-            <p className="mt-1 text-xs text-slate-500">
-              Popupen forsvinner automatisk så snart vi får svar fra tjenesten.
-            </p>
-          </motion.div>
-        </div>
-      )}
+      <WaitingOverlay waitingForResponse={waitingForResponse} waitingSecondsLeft={waitingSecondsLeft} />
 
       <section className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
         <motion.div
@@ -214,22 +281,7 @@ export default function SystemInfoPage(): React.ReactElement {
               <span className="text-xs break-all text-slate-500">{helloUrl}</span>
             </p>
 
-            <motion.div
-              variants={pulseAnimation}
-              initial="initial"
-              animate="animate"
-              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm mt-4 ${statusClass}`}
-              aria-live="polite"
-            >
-              <span
-                aria-hidden="true"
-                className={`h-2.5 w-2.5 rounded-full ${status === 'ok' ? 'bg-green-500' : status === 'feil' ? 'bg-red-500' : 'bg-slate-500'}`}
-              />
-              <span className="font-semibold">
-                {status === 'ok' ? 'Online' : status === 'feil' ? 'Offline' : 'Ukjent'}
-              </span>
-            </motion.div>
-
+            <StatusBadge status={status} />
             <div className="flex flex-wrap items-center gap-3 mt-4">
               <button
                 onClick={runFullHealthCheck}
@@ -280,39 +332,12 @@ export default function SystemInfoPage(): React.ReactElement {
           className="md:col-span-3"
         >
           <Card title="Responstid & logg">
-            {history.length === 0 ? (
-              <p className="text-sm text-slate-700">Ingen historikk ennå.</p>
-            ) : (
-              <div className="space-y-2 text-xs text-slate-700">
-                {history.map((entry, i) => {
-                  const ratio = entry.durationMs
-                    ? Math.min(100, (entry.durationMs / maxDuration) * 100)
-                    : 5;
-
-                  const barColor =
-                    entry.status === 'ok'
-                      ? 'bg-green-500'
-                      : entry.status === 'feil'
-                        ? 'bg-red-500'
-                        : 'bg-slate-400';
-
-                  return (
-                    <div key={i} className="flex items-center gap-2">
-                      <div className="w-20">{entry.time.toLocaleTimeString()}</div>
-                      <div className="flex-1 h-2 bg-slate-200 rounded overflow-hidden">
-                        <div className={`h-full ${barColor}`} style={{ width: `${ratio}%` }} />
-                      </div>
-                      <div className="w-16 text-right">
-                        {entry.durationMs ? `${Math.round(entry.durationMs)} ms` : '-'}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            <HistoryList history={history} />
           </Card>
         </motion.div>
       </section>
     </PageLayout>
   );
 }
+
+

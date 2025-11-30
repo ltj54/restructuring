@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthServiceImpl implements AuthService {
 
     private static final Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
+    private static final String EMAIL_KEY = "email";
 
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
@@ -53,12 +54,12 @@ public class AuthServiceImpl implements AuthService {
             );
 
             log.atDebug()
-                    .addKeyValue("email", email)
+                    .addKeyValue(EMAIL_KEY, email)
                     .log("User authenticated successfully");
 
         } catch (BadCredentialsException ex) {
             log.atWarn()
-                    .addKeyValue("email", email)
+                    .addKeyValue(EMAIL_KEY, email)
                     .log("Invalid credentials");
             throw ex;
         }
@@ -91,7 +92,7 @@ public class AuthServiceImpl implements AuthService {
 
         if (userRepository.existsByEmail(email)) {
             log.atWarn()
-                    .addKeyValue("email", email)
+                    .addKeyValue(EMAIL_KEY, email)
                     .log("Attempt to register existing email");
 
             throw new UserAlreadyExistsException(email);
@@ -109,7 +110,7 @@ public class AuthServiceImpl implements AuthService {
 
         log.atInfo()
                 .addKeyValue("userId", saved.getId())
-                .addKeyValue("email", saved.getEmail())
+                .addKeyValue(EMAIL_KEY, saved.getEmail())
                 .log("User registered successfully");
 
         return new RegisterResponseDto(

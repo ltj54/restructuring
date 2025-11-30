@@ -1,7 +1,6 @@
 package io.ltj.restructuring.security;
 
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -23,7 +22,7 @@ public class JwtUtil {
                 .subject(username)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expirationMs))
-                .signWith(secretKey, SignatureAlgorithm.HS256)
+                .signWith(secretKey, Jwts.SIG.HS256)
                 .compact();
     }
 

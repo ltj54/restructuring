@@ -23,32 +23,29 @@ public class FrontendLogController {
         };
 
         builder.addKeyValue("source", "frontend");
-
-        if (payload.context() != null && !payload.context().isBlank()) {
-            builder.addKeyValue("context", payload.context());
-        }
-        if (payload.event() != null && !payload.event().isBlank()) {
-            builder.addKeyValue("event", payload.event());
-        }
-        if (payload.timestamp() != null && !payload.timestamp().isBlank()) {
-            builder.addKeyValue("timestamp", payload.timestamp());
-        }
+        addIfPresent(builder, "context", payload.context());
+        addIfPresent(builder, "event", payload.event());
+        addIfPresent(builder, "timestamp", payload.timestamp());
         if (!payload.meta().isEmpty()) {
             builder.addKeyValue("meta", payload.meta());
         }
-        if (payload.error() != null) {
-            FrontendLogError error = payload.error();
-            if (error.message() != null && !error.message().isBlank()) {
-                builder.addKeyValue("errorMessage", error.message());
-            }
-            if (error.name() != null && !error.name().isBlank()) {
-                builder.addKeyValue("errorName", error.name());
-            }
-            if (error.stack() != null && !error.stack().isBlank()) {
-                builder.addKeyValue("errorStack", error.stack());
-            }
-        }
+        addErrorDetails(payload.error(), builder);
 
         builder.log(payload.message());
+    }
+
+    private void addIfPresent(LoggingEventBuilder builder, String key, String value) {
+        if (value != null && !value.isBlank()) {
+            builder.addKeyValue(key, value);
+        }
+    }
+
+    private void addErrorDetails(FrontendLogError error, LoggingEventBuilder builder) {
+        if (error == null) {
+            return;
+        }
+        addIfPresent(builder, "errorMessage", error.message());
+        addIfPresent(builder, "errorName", error.name());
+        addIfPresent(builder, "errorStack", error.stack());
     }
 }
