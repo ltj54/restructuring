@@ -60,7 +60,7 @@ export function useInsurance() {
       const filename = extractFilename(response);
       downloadBlob(blob, filename);
 
-      return 'Forsikringssoknad generert og lastet ned.';
+      return 'Forsikringssøknad generert og lastet ned.';
     } catch (err) {
       const message = getErrorMessage(err);
       setError(message);
@@ -109,6 +109,4 @@ async function extractErrorMessage(response: Response): Promise<string> {
 
   return `Request failed with status ${response.status}`;
 }
-
-
 

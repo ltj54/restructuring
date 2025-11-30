@@ -109,7 +109,7 @@ async function executeRequest(
   url: string,
   headers: HeadersInit,
   body: BodyInit | null | undefined,
-  rest: RequestInit,
+  rest: RequestInit
 ): Promise<Response> {
   try {
     return await fetch(url, {

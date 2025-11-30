@@ -266,7 +266,10 @@ export default function SystemInfoPage(): React.ReactElement {
       subtitle="Health-check og responstider for backend."
       maxWidthClassName="max-w-6xl"
     >
-      <WaitingOverlay waitingForResponse={waitingForResponse} waitingSecondsLeft={waitingSecondsLeft} />
+      <WaitingOverlay
+        waitingForResponse={waitingForResponse}
+        waitingSecondsLeft={waitingSecondsLeft}
+      />
 
       <section className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
         <motion.div
