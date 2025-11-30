@@ -109,4 +109,3 @@ async function extractErrorMessage(response: Response): Promise<string> {
 
   return `Request failed with status ${response.status}`;
 }
-

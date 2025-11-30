@@ -174,4 +174,3 @@ function extractErrorMessage(data: unknown, status: number): string {
 
   return `Request failed with status ${status}`;
 }
-
