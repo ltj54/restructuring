@@ -5,8 +5,13 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
 
+  const isDev = mode === 'development';
+  const base =
+    env.VITE_PUBLIC_BASE ||
+    (isDev ? '/' : '/restructuring/'); // default correct base for GitHub Pages
+
   return {
-    base: env.VITE_PUBLIC_BASE || '/',
+    base,
     plugins: [react()],
     resolve: {
       alias: {
