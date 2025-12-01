@@ -3,10 +3,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useLocation } from 'react-router-dom';
 
-import { LoginFormValues, loginSchema } from '../utils/validation/authSchemas';
+import { LoginFormValues, loginSchema } from '@/utils/validation/authSchemas';
 import { useAuth } from './useAuth';
-import { FormFeedback } from '../components/form/types';
-import { getErrorMessage, isApiError } from '../utils/api';
+import { FormFeedback } from '@/components/form/types';
+import { getErrorMessage, isApiError } from '@/utils/api';
 
 export function useLoginForm() {
   const location = useLocation() as { state?: { from?: string } };

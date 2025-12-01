@@ -1,11 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FormAlert } from '../components/form/FormAlert';
-import TextField from '../components/form/TextField';
-import Card from '../components/Card';
-import Button from '../components/Button';
-import { useLoginForm } from '../hooks/useLoginForm';
-import PageLayout from '../components/PageLayout';
+import { FormAlert } from '@/components/form/FormAlert';
+import TextField from '@/components/form/TextField';
+import Card from '@/components/Card';
+import Button from '@/components/Button';
+import { useLoginForm } from '@/hooks/useLoginForm';
+import PageLayout from '@/components/PageLayout';
 
 export default function LoginPage() {
   const { form, feedback, isSubmitting, onSubmit } = useLoginForm();

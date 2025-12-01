@@ -1,20 +1,20 @@
 import React, { lazy } from 'react';
 import { Navigate, RouteObject, useRoutes } from 'react-router-dom';
-import MainLayout, { MainNavLink } from '../layouts/MainLayout';
-import ProtectedRoute from '../components/ProtectedRoute';
+import MainLayout, { MainNavLink } from '@/layouts/MainLayout';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
-const HomePage = lazy(() => import('../pages/HomePage'));
-const InsurancePage = lazy(() => import('../pages/InsurancePage'));
-const PlanPage = lazy(() => import('../pages/PlanPage'));
-const PurchasePage = lazy(() => import('../pages/PurchasePage'));
-const ResourcesPage = lazy(() => import('../pages/ResourcesPage'));
-const WizardPage = lazy(() => import('../pages/WizardPage'));
-const LoginPage = lazy(() => import('../pages/LoginPage'));
-const RegisterPage = lazy(() => import('../pages/RegisterPage'));
-const ForgotPasswordPage = lazy(() => import('../pages/ForgotPasswordPage'));
-const ResetPasswordPage = lazy(() => import('../pages/ResetPasswordPage'));
-const SystemInfoPage = lazy(() => import('../pages/SystemInfoPage'));
-const DownloadAppPage = lazy(() => import('../pages/DownloadAppPage'));
+const HomePage = lazy(() => import('@/pages/HomePage'));
+const InsurancePage = lazy(() => import('@/pages/InsurancePage'));
+const PlanPage = lazy(() => import('@/pages/PlanPage'));
+const PurchasePage = lazy(() => import('@/pages/PurchasePage'));
+const ResourcesPage = lazy(() => import('@/pages/ResourcesPage'));
+const WizardPage = lazy(() => import('@/pages/WizardPage'));
+const LoginPage = lazy(() => import('@/pages/LoginPage'));
+const RegisterPage = lazy(() => import('@/pages/RegisterPage'));
+const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('@/pages/ResetPasswordPage'));
+const SystemInfoPage = lazy(() => import('@/pages/SystemInfoPage'));
+const DownloadAppPage = lazy(() => import('@/pages/DownloadAppPage'));
 
 const mainNavLinks: MainNavLink[] = [
   { path: '/home', icon: '??', label: 'Hjem' },

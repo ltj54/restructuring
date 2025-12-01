@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import Card from '../components/Card';
-import Button from '../components/Button';
-import PageLayout from '../components/PageLayout';
-import { useAuth } from '../hooks/useAuth';
-import { fetchJson } from '../utils/api';
+import Card from '@/components/Card';
+import Button from '@/components/Button';
+import PageLayout from '@/components/PageLayout';
+import { useAuth } from '@/hooks/useAuth';
+import { fetchJson } from '@/utils/api';
 
 const phaseSections: Record<
   string,

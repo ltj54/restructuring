@@ -1,9 +1,9 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { http, HttpResponse } from 'msw';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { server } from '../../test/server';
-import { ApiError } from '../../utils/api';
-import { useInsurance } from '../useInsurance';
+import { describe, expect, it, vi, beforeEach, beforeAll, afterAll, afterEach } from 'vitest';
+import { server } from '@/test/server';
+import { ApiError } from '@/utils/api';
+import { useInsurance } from '@/hooks/useInsurance';
 
 const authState = {
   isAuthenticated: true,
@@ -11,12 +11,12 @@ const authState = {
 };
 
 // ---- Mock useAuth ----
-vi.mock('../useAuth', () => ({
+vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => authState,
 }));
 
 // ---- Mock config ----
-vi.mock('../../utils/config', () => ({
+vi.mock('@/utils/config', () => ({
   API_BASE_URL: 'http://localhost/api',
 }));
 
@@ -33,6 +33,10 @@ Object.defineProperty(globalThis, 'document', {
   writable: true,
   value: mockDocument,
 });
+
+beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
 
 // ---- Mock ONLY the URL *methods*, NOT the URL class ----
 globalThis.URL.createObjectURL = vi.fn(() => 'blob:url');

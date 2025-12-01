@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ApiError, fetchJson, getErrorMessage } from '../utils/api';
+import { ApiError, fetchJson, getErrorMessage } from '@/utils/api';
 import { useAuth } from './useAuth';
 
 export interface UserProfileForm {

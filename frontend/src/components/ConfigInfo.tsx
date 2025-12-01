@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useStructuredLogger } from '../logging/useStructuredLogger';
-import { API_BASE_URL } from '../utils/config';
+import { useStructuredLogger } from '@/logging/useStructuredLogger';
+import { API_BASE_URL } from '@/utils/config';
 
 interface ConfigData {
   activeProfiles?: string[];

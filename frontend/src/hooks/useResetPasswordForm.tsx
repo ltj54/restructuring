@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { API_BASE_URL } from '../utils/config';
-import { FormFeedback } from '../components/form/types';
-import { ResetPasswordFormValues, resetPasswordSchema } from '../utils/validation/authSchemas';
-import { getErrorMessage } from '../utils/api';
+import { API_BASE_URL } from '@/utils/config';
+import { FormFeedback } from '@/components/form/types';
+import { ResetPasswordFormValues, resetPasswordSchema } from '@/utils/validation/authSchemas';
+import { getErrorMessage } from '@/utils/api';
 
 export function useResetPasswordForm(token: string) {
   const [feedback, setFeedback] = useState<FormFeedback | null>(() =>

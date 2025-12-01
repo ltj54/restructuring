@@ -1,5 +1,5 @@
 import { expect, test, vi } from 'vitest';
-import { api } from '../api';
+import { api } from '@/utils/api';
 
 test('api helper bygger riktig request', async () => {
   const mockJson = vi.fn().mockResolvedValue({ ok: true });

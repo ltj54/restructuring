@@ -1,6 +1,6 @@
 import React from 'react';
-import PageLayout from '../components/PageLayout';
-import Card from '../components/Card';
+import PageLayout from '@/components/PageLayout';
+import Card from '@/components/Card';
 
 const downloadUrl = import.meta.env.VITE_APP_DOWNLOAD_URL || 'https://example.com/last-ned';
 const iosUrl = import.meta.env.VITE_APP_IOS_URL || downloadUrl;

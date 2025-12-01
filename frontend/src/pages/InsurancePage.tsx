@@ -1,10 +1,10 @@
 import React from 'react';
-import { FormAlert } from '../components/form/FormAlert';
-import TextField from '../components/form/TextField';
-import Card from '../components/Card';
-import Button from '../components/Button';
-import PageLayout from '../components/PageLayout';
-import { useInsurancePage } from '../hooks/useInsurancePage';
+import { FormAlert } from '@/components/form/FormAlert';
+import TextField from '@/components/form/TextField';
+import Card from '@/components/Card';
+import Button from '@/components/Button';
+import PageLayout from '@/components/PageLayout';
+import { useInsurancePage } from '@/hooks/useInsurancePage';
 
 export default function InsurancePage(): React.ReactElement {
   const {

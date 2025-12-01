@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import Card from '../components/Card';
-import Button from '../components/Button';
-import PageLayout from '../components/PageLayout';
-import { API_BASE_URL } from '../utils/config';
-import { getErrorMessage } from '../utils/api';
+import Card from '@/components/Card';
+import Button from '@/components/Button';
+import PageLayout from '@/components/PageLayout';
+import { API_BASE_URL } from '@/utils/config';
+import { getErrorMessage } from '@/utils/api';
 
 type InsuranceOffer = {
   price: number;

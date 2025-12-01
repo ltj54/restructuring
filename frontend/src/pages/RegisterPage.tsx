@@ -1,11 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FormAlert } from '../components/form/FormAlert';
-import TextField from '../components/form/TextField';
-import Card from '../components/Card';
-import Button from '../components/Button';
-import { useRegisterForm } from '../hooks/useRegisterForm';
-import PageLayout from '../components/PageLayout';
+import { FormAlert } from '@/components/form/FormAlert';
+import TextField from '@/components/form/TextField';
+import Card from '@/components/Card';
+import Button from '@/components/Button';
+import { useRegisterForm } from '@/hooks/useRegisterForm';
+import PageLayout from '@/components/PageLayout';
 
 export default function RegisterPage() {
   const { form, feedback, apiMessage, isSubmitting, onSubmit } = useRegisterForm();

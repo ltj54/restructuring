@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
-import InsurancePage from '../InsurancePage';
+import InsurancePage from '@/pages/InsurancePage';
 
 const mockRegister = vi.fn(() => ({
   name: 'field',
@@ -15,15 +15,15 @@ const mockSendInsurance = vi.fn();
 
 const mockUseInsurancePage = vi.fn();
 
-vi.mock('../../hooks/useInsurancePage', () => ({
+vi.mock('@/hooks/useInsurancePage', () => ({
   useInsurancePage: () => mockUseInsurancePage(),
 }));
 
-vi.mock('../../components/form/FormAlert', () => ({
+vi.mock('@/components/form/FormAlert', () => ({
   FormAlert: ({ message }: { message: string }) => <div role="alert">{message}</div>,
 }));
 
-vi.mock('../../components/form/TextField', () => ({
+vi.mock('@/components/form/TextField', () => ({
   __esModule: true,
   default: ({ label }: { label: string }) => <input aria-label={label} />,
 }));

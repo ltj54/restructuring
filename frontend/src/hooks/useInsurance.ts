@@ -1,7 +1,7 @@
 // src/hooks/useInsurance.ts
 import { useCallback, useState } from 'react';
-import { API_BASE_URL } from '../utils/config';
-import { ApiError, getErrorMessage } from '../utils/api';
+import { API_BASE_URL } from '@/utils/config';
+import { ApiError, getErrorMessage } from '@/utils/api';
 import { useAuth } from './useAuth';
 
 function extractFilename(response: Response): string {

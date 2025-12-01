@@ -2,16 +2,16 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { FormFeedback } from '../components/form/types';
+import { FormFeedback } from '@/components/form/types';
 import { useUserProfile } from './useUserProfile';
 import { useInsurance } from './useInsurance';
 
 import {
   InsuranceProfileFormValues,
   insuranceProfileSchema,
-} from '../utils/validation/insuranceSchemas';
+} from '@/utils/validation/insuranceSchemas';
 
-import { getErrorMessage } from '../utils/api';
+import { getErrorMessage } from '@/utils/api';
 
 export function useInsurancePage() {
   const {

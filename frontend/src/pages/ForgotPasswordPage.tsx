@@ -1,11 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FormAlert } from '../components/form/FormAlert';
-import TextField from '../components/form/TextField';
-import Card from '../components/Card';
-import Button from '../components/Button';
-import { useForgotPasswordForm } from '../hooks/useForgotPasswordForm';
-import PageLayout from '../components/PageLayout';
+import { FormAlert } from '@/components/form/FormAlert';
+import TextField from '@/components/form/TextField';
+import Card from '@/components/Card';
+import Button from '@/components/Button';
+import { useForgotPasswordForm } from '@/hooks/useForgotPasswordForm';
+import PageLayout from '@/components/PageLayout';
 
 export default function ForgotPasswordPage() {
   const { form, feedback, isSubmitting, onSubmit } = useForgotPasswordForm();

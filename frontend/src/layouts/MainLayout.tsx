@@ -1,7 +1,7 @@
 import React, { Suspense, useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { useStructuredLogger } from '../logging/useStructuredLogger';
-import { useAuth } from '../hooks/useAuth';
+import { useStructuredLogger } from '@/logging/useStructuredLogger';
+import { useAuth } from '@/hooks/useAuth';
 
 export interface MainNavLink {
   path: string;

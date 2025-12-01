@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import Card from '../components/Card';
-import PageLayout from '../components/PageLayout';
+import Card from '@/components/Card';
+import PageLayout from '@/components/PageLayout';
 
 export default function ResourcesPage(): React.ReactElement {
   const [inntekt, setInntekt] = useState<number>(0);

@@ -1,7 +1,7 @@
 // src/hooks/useAuth.tsx
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ApiError, configureApiClient, fetchJson, isApiError } from '../utils/api';
+import { ApiError, configureApiClient, fetchJson, isApiError } from '@/utils/api';
 
 interface LoginCredentials {
   email: string;

@@ -2,12 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { API_BASE_URL } from '../utils/config';
-import { FormFeedback } from '../components/form/types';
+import { API_BASE_URL } from '@/utils/config';
+import { FormFeedback } from '@/components/form/types';
 
-import { RegisterFormValues, registerSchema } from '../utils/validation/authSchemas';
+import { RegisterFormValues, registerSchema } from '@/utils/validation/authSchemas';
 
-import { getErrorMessage } from '../utils/api';
+import { getErrorMessage } from '@/utils/api';
 
 export function useRegisterForm() {
   const [feedback, setFeedback] = useState<FormFeedback | null>(null);

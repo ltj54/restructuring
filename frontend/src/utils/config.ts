@@ -17,8 +17,8 @@ const DEFAULT_LOCAL_API_BASE_URL = 'http://localhost:8080/api';
  */
 const DEFAULT_REMOTE_API_BASE_URL = 'https://restructuring-backend.onrender.com/api';
 
-// Vite sitt miljø-objekt – vi caster til any for fleksibel oppslag
-const env = import.meta.env as any;
+// Vite sitt miljø-objekt - vi typetilpasser for fleksibelt oppslag
+const env = import.meta.env as Record<string, string | undefined>;
 
 /**
  * Leser en miljøvariabel og returnerer trimmed string eller undefined.
@@ -103,7 +103,6 @@ export const DEBUG_LOGGER: boolean = readBoolEnv(
  */
 export function debugLog(...args: unknown[]): void {
   if (!DEBUG_LOGGER || typeof console === 'undefined') return;
-  // eslint-disable-next-line no-console
   console.log('[config]', ...args);
 }
 

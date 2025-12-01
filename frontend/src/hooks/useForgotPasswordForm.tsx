@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { API_BASE_URL } from '../utils/config';
-import { FormFeedback } from '../components/form/types';
-import { ForgotPasswordFormValues, forgotPasswordSchema } from '../utils/validation/authSchemas';
-import { getErrorMessage } from '../utils/api';
+import { API_BASE_URL } from '@/utils/config';
+import { FormFeedback } from '@/components/form/types';
+import { ForgotPasswordFormValues, forgotPasswordSchema } from '@/utils/validation/authSchemas';
+import { getErrorMessage } from '@/utils/api';
 
 export function useForgotPasswordForm() {
   const [feedback, setFeedback] = useState<FormFeedback | null>(null);

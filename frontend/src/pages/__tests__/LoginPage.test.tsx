@@ -2,7 +2,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import type { ReactNode } from 'react';
-import LoginPage from '../LoginPage';
+import LoginPage from '@/pages/LoginPage';
 
 const mockRegister = vi.fn(() => ({
   name: 'field',
@@ -13,7 +13,7 @@ const mockRegister = vi.fn(() => ({
 
 const mockSubmit = vi.fn();
 
-vi.mock('../../hooks/useLoginForm', () => ({
+vi.mock('@/hooks/useLoginForm', () => ({
   useLoginForm: () => ({
     form: {
       register: mockRegister,
@@ -26,7 +26,7 @@ vi.mock('../../hooks/useLoginForm', () => ({
   }),
 }));
 
-vi.mock('../../layouts/AuthLayout', () => ({
+vi.mock('@/layouts/AuthLayout', () => ({
   __esModule: true,
   default: ({ title, children }: { title: string; children: ReactNode }) => (
     <div data-testid="auth-layout">

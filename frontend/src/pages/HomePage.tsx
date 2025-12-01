@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { fetchJson } from '../utils/api';
-import Card from '../components/Card';
-import Button from '../components/Button';
+import { fetchJson } from '@/utils/api';
+import Card from '@/components/Card';
+import Button from '@/components/Button';
 
 export default function HomePage(): React.ReactElement {
   const [offer, setOffer] = useState<{ offer: string } | null>(null);

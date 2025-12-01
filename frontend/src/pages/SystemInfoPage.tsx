@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import Card from '../components/Card';
-import PageLayout from '../components/PageLayout';
-import { API_BASE_URL } from '../utils/config';
+import Card from '@/components/Card';
+import PageLayout from '@/components/PageLayout';
+import { API_BASE_URL } from '@/utils/config';
 
 type Health = 'ukjent' | 'ok' | 'feil';
 

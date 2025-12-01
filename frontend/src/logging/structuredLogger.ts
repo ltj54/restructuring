@@ -1,5 +1,5 @@
 // src/logging/structuredLogger.ts
-import { API_BASE_URL, APP_ENV, APP_NAME, DEBUG_LOGGER } from '../utils/config';
+import { API_BASE_URL, APP_ENV, APP_NAME, DEBUG_LOGGER } from '@/utils/config';
 import type { StructuredLogPayload, StructuredLogError } from './LoggerTypes';
 
 const cleanedApi = API_BASE_URL ? API_BASE_URL.replace(/\/+$/, '') : '';
