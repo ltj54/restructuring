@@ -42,10 +42,10 @@ function WaitingOverlay({
         animate={{ opacity: 1, scale: 1 }}
         className="bg-white rounded-2xl shadow-xl max-w-sm w-full px-6 py-5 text-sm text-slate-800"
       >
-        <p className="font-semibold text-slate-900">Venter p† svar fra tjenesten...</p>
+        <p className="font-semibold text-slate-900">Venter på svar fra tjenesten...</p>
         <p className="mt-2 text-slate-700">
-          Backend kj›rer p† Render (gratisversjon), og kan bruke litt tid p† † starte opp n†r den
-          har v‘rt inaktiv.
+          Backend kjører på Render (gratisversjon), og kan bruke litt tid på å starte opp når den
+          har vært inaktiv.
         </p>
         <p className="mt-3 text-xs text-slate-500">
           Estimert ventetid:{' '}
@@ -54,7 +54,7 @@ function WaitingOverlay({
             : `${WAIT_ESTIMATE_SECONDS} sekunder`}
         </p>
         <p className="mt-1 text-xs text-slate-500">
-          Popupen forsvinner automatisk s† snart vi f†r svar fra tjenesten.
+          Popupen forsvinner automatisk så snart vi får svar fra tjenesten.
         </p>
       </motion.div>
     </div>
@@ -90,7 +90,7 @@ function StatusBadge({ status }: { status: Health }) {
 
 function HistoryList({ history }: { history: HistoryEntry[] }) {
   if (history.length === 0) {
-    return <p className="text-sm text-slate-700">Ingen historikk enn†.</p>;
+    return <p className="text-sm text-slate-700">Ingen historikk ennå.</p>;
   }
 
   const maxDuration =

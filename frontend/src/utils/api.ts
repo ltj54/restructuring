@@ -118,7 +118,7 @@ async function executeRequest(
       body,
     });
   } catch (networkError) {
-    throw new ApiError('Klarte ikke † kontakte serveren', 0, networkError);
+    throw new ApiError('Klarte ikke å kontakte serveren', 0, networkError);
   }
 }
 
