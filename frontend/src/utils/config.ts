@@ -1,10 +1,9 @@
 // ------------------------------------------------------------
-// config.ts - miljøkonfigurasjon for frontend
+// config.ts - miljøkonfigurasjon for frontend (Vite)
 // ------------------------------------------------------------
-// Sammenslått og ryddet:
-//   - Lokal utvikling (http://localhost:8080/api)
-//   - Render backend i produksjon
-//   - Vite miljøvariabler (VITE_*)
+// Håndterer:
+//   - VITE_* miljøvariabler
+//   - Default-URLer for lokal / prod
 //   - Debug-flagg for logging
 // ------------------------------------------------------------
 
@@ -18,83 +17,98 @@ const DEFAULT_LOCAL_API_BASE_URL = 'http://localhost:8080/api';
  */
 const DEFAULT_REMOTE_API_BASE_URL = 'https://restructuring-backend.onrender.com/api';
 
-/**
- * Leser en miljøvariabel og returnerer trimmed string eller undefined
- */
-const readEnv = (key: keyof ImportMetaEnv): string | undefined => {
-  const value = import.meta.env[key];
-  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined;
-};
+// Vite sitt miljø-objekt – vi caster til any for fleksibel oppslag
+const env = import.meta.env as any;
 
 /**
- * Trygg boolean-parsing av miljøvariabler
+ * Leser en miljøvariabel og returnerer trimmed string eller undefined.
  */
-const parseBoolean = (value: string | undefined): boolean | undefined => {
-  if (!value) return undefined;
+function readEnv(name: string): string | undefined {
+  const raw = env?.[name];
 
-  const normalized = value.trim().toLowerCase();
+  if (typeof raw !== 'string') {
+    return undefined;
+  }
+
+  const trimmed = raw.trim();
+  return trimmed === '' ? undefined : trimmed;
+}
+
+/**
+ * Leser en boolean-miljøvariabel.
+ * Godtar: 1/true/yes/on og 0/false/no/off (case-insensitive).
+ */
+function readBoolEnv(name: string, fallback: boolean): boolean {
+  const raw = readEnv(name);
+  if (!raw) return fallback;
+
+  const normalized = raw.toLowerCase();
   if (['1', 'true', 'yes', 'on'].includes(normalized)) return true;
   if (['0', 'false', 'no', 'off'].includes(normalized)) return false;
 
-  return undefined;
-};
+  return fallback;
+}
+
+// ------------------------------------------------------------
+// 🎯 Eksponerte konfig-verdier
+// ------------------------------------------------------------
 
 /**
- * Velger riktig API_BASE_URL:
- *  1) Hvis VITE_API_BASE_URL er satt – bruk den
- *  2) Hvis DEV – bruk lokal backend
- *  3) Ellers – bruk Render backend
+ * Hvilket miljø appen tror den kjører i (development / test / production)
  */
-const getApiBaseUrl = (): string => {
-  const fromEnv = readEnv('VITE_API_BASE_URL');
-  if (fromEnv) return fromEnv;
-
-  if (import.meta.env.DEV) return DEFAULT_LOCAL_API_BASE_URL;
-
-  return DEFAULT_REMOTE_API_BASE_URL;
-};
-
-export const API_BASE_URL = getApiBaseUrl();
+export const APP_ENV: string = readEnv('VITE_APP_ENV') ?? 'development';
 
 /**
- * Miljønavn og appnavn
+ * Navn på applikasjonen (brukes i logger / UI)
  */
-export const APP_ENV = readEnv('VITE_APP_ENV') ?? import.meta.env.MODE ?? 'development';
-
-export const APP_NAME = readEnv('VITE_APP_NAME') ?? 'Restructuring Frontend';
+export const APP_NAME: string = readEnv('VITE_APP_NAME') ?? 'Restructuring Frontend';
 
 /**
- * Debug flagg for logging-systemet.
+ * Bestemmer hvilken backend-URL som skal brukes.
  *
  * Prioritet:
- *   1) VITE_DEBUG_CONFIG_LOGGER (true/false)
- *   2) Hvis ingen flagg: DEV = true, PROD = false
+ *   1) VITE_API_BASE_URL hvis satt
+ *   2) Lokal URL i dev/test
+ *   3) Remote URL i prod
  */
-const isDebugLoggingEnabled = (() => {
-  const explicit = parseBoolean(readEnv('VITE_DEBUG_CONFIG_LOGGER'));
-  if (typeof explicit !== 'undefined') return explicit;
+function resolveApiBaseUrl(): string {
+  const explicit = readEnv('VITE_API_BASE_URL');
+  if (explicit) {
+    return explicit;
+  }
 
-  return import.meta.env.DEV;
-})();
+  if (APP_ENV === 'development' || APP_ENV === 'test') {
+    return DEFAULT_LOCAL_API_BASE_URL;
+  }
+
+  return DEFAULT_REMOTE_API_BASE_URL;
+}
+
+export const API_BASE_URL: string = resolveApiBaseUrl();
 
 /**
- * Eksporter debug-flagget slik structuredLogger trenger
+ * Debug-flagg for logging (brukes av structuredLogger.ts m.m.)
+ *
+ * Default:
+ *   - true i development
+ *   - false i production
  */
-export const DEBUG_LOGGER = isDebugLoggingEnabled;
+export const DEBUG_LOGGER: boolean = readBoolEnv(
+  'VITE_DEBUG_CONFIG_LOGGER',
+  APP_ENV !== 'production'
+);
 
 /**
- * Intern debug-print
+ * Enkel hjelpe-funksjon for debug-logging knyttet til config.
  */
-const debugLog = (...args: unknown[]) => {
-  if (!DEBUG_LOGGER) return;
-  console.debug('[Config]', ...args);
-};
+export function debugLog(...args: unknown[]): void {
+  if (!DEBUG_LOGGER || typeof console === 'undefined') return;
+  // eslint-disable-next-line no-console
+  console.log('[config]', ...args);
+}
 
-// ------------------------------------------------------------
-// Debug utskrifter ved oppstart (valgfritt)
-// ------------------------------------------------------------
-
-debugLog('API_BASE_URL =', API_BASE_URL);
-debugLog('APP_ENV =', APP_ENV);
-debugLog('APP_NAME =', APP_NAME);
-debugLog('DEBUG_LOGGER =', DEBUG_LOGGER);
+// For å kunne se konfigen i dev, kan du eventuelt logge her:
+// debugLog('APP_ENV =', APP_ENV);
+// debugLog('APP_NAME =', APP_NAME);
+// debugLog('API_BASE_URL =', API_BASE_URL);
+// debugLog('DEBUG_LOGGER =', DEBUG_LOGGER);

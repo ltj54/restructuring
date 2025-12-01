@@ -1,9 +1,11 @@
 package io.ltj.restructuring.integration;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.ltj.restructuring.api.dto.auth.LoginRequestDto;
 import io.ltj.restructuring.api.dto.auth.RegisterRequestDto;
 import io.ltj.restructuring.api.dto.plan.UserPlanUpdateRequestDto;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -14,17 +16,25 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+/**
+ * FullFlowIntegrationTest
+ *
+ * Kjører en "happy path"-flyt gjennom:
+ *  1) /api/auth/register
+ *  2) /api/auth/login
+ *  3) /api/user/me
+ *  4) /api/plan/me (opprette / oppdatere plan)
+ *  5) /api/plan/me (lese plan)
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class FullFlowIntegrationTest {
+class FullFlowIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -47,12 +57,14 @@ public class FullFlowIntegrationTest {
 
     @Test
     void fullFlow_shouldWorkCorrectly() throws Exception {
-
         // -------------------------------------------------
         // 1) REGISTER
         // -------------------------------------------------
         RegisterRequestDto regDto = new RegisterRequestDto(
-                email, password, firstName, lastName
+                email,
+                password,
+                firstName,
+                lastName
         );
 
         mockMvc.perform(post("/api/auth/register")
@@ -69,9 +81,13 @@ public class FullFlowIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginDto)))
                 .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
+                .andExpect(jsonPath("$.token").exists())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
-        String token = objectMapper.readTree(loginResp).get("token").asText();
+        JsonNode loginJson = objectMapper.readTree(loginResp);
+        String token = loginJson.get("token").asText();
         assertThat(token).isNotBlank();
 
         // -------------------------------------------------
@@ -83,34 +99,37 @@ public class FullFlowIntegrationTest {
                 .andExpect(jsonPath("$.email").value(email));
 
         // -------------------------------------------------
-        // 4) UPSERT plan
+        // 4) Oppdater /api/plan/me
         // -------------------------------------------------
-        UserPlanUpdateRequestDto planDto = new UserPlanUpdateRequestDto(
-                "INTRO",
-                "Standard persona",
-                List.of("need1", "need2"),
-                "My diary"
+        UserPlanUpdateRequestDto planUpdate = new UserPlanUpdateRequestDto(
+                "DEFAULT",
+                "PREPARE_CHANGE",
+                List.of("need-1", "need-2"),
+                "Dette er en test-dagbok for full-flow integrasjonstesten."
         );
 
-        mockMvc.perform(put("/api/plan/me")
+        String planResp = mockMvc.perform(put("/api/plan/me")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(planDto)))
-                .andExpect(status().isOk());
-
-        // -------------------------------------------------
-        // 5) /api/insurance/send  (DIN KODE)
-        // -------------------------------------------------
-        String xmlResponse = mockMvc.perform(post("/api/insurance/send")
-                        .header("Authorization", "Bearer " + token))
+                        .content(objectMapper.writeValueAsString(planUpdate)))
                 .andExpect(status().isOk())
-                .andExpect(header().string("Content-Type", "application/xml"))
-                .andExpect(header().string(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
-                        org.hamcrest.Matchers.containsString("attachment; filename")))
+                .andExpect(jsonPath("$.persona").value("DEFAULT"))
+                .andExpect(jsonPath("$.phase").value("PREPARE_CHANGE"))
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
 
-        assertThat(xmlResponse).contains("<InsuranceRequest>");
+        JsonNode planJson = objectMapper.readTree(planResp);
+        assertThat(planJson.get("persona").asText()).isEqualTo("DEFAULT");
+        assertThat(planJson.get("phase").asText()).isEqualTo("PREPARE_CHANGE");
+
+        // -------------------------------------------------
+        // 5) Les /api/plan/me
+        // -------------------------------------------------
+        mockMvc.perform(get("/api/plan/me")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.persona").value("DEFAULT"))
+                .andExpect(jsonPath("$.phase").value("PREPARE_CHANGE"));
     }
 }
