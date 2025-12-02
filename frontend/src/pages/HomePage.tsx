@@ -160,11 +160,6 @@ export default function HomePage(): React.ReactElement {
             transition={{ duration: 0.45 }}
             className="md:col-span-3 space-y-6"
           >
-            <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm text-emerald-700 ring-1 ring-emerald-100 shadow">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              Hensikt: Gi deg oversikt, ro og konkrete valg når jobben endrer seg
-            </div>
-
             <div className="space-y-3">
               <h1 className="text-3xl md:text-4xl font-semibold text-slate-900 leading-tight">
                 Stå støtt i omstilling – bygg planen din på noen minutter
@@ -227,9 +222,6 @@ export default function HomePage(): React.ReactElement {
                     En enkel rekkefølge som gir effekt raskt, uten å bruke all tiden din.
                   </p>
                 </div>
-                <span className="rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold px-3 py-1">
-                  Klar til start
-                </span>
               </div>
 
               <div className="mt-5 space-y-3">
@@ -270,11 +262,6 @@ export default function HomePage(): React.ReactElement {
           <Card
             title="Prioriter disse stegene først"
             className="bg-white text-slate-900 shadow-lg border-slate-100"
-            actions={
-              <span className="text-xs font-semibold text-emerald-700 bg-emerald-100 rounded-full px-3 py-1">
-                Mest effekt
-              </span>
-            }
           >
             <div className="space-y-3 text-sm text-slate-700">
               <div className="flex items-start gap-3 rounded-xl border border-slate-100 bg-white p-3 shadow-sm">
