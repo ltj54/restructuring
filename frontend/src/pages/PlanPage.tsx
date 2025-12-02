@@ -127,7 +127,6 @@ export default function PlanPage(): React.ReactElement {
           setActiveDiaryPhase(initialPhase);
         }
       } catch {
-        // Ignorer nettverksfeil - da vises bare det vi evt. har i minnet
       } finally {
         setIsLoadingRemotePlan(false);
       }
@@ -194,7 +193,7 @@ export default function PlanPage(): React.ReactElement {
   return (
     <PageLayout
       title="Min plan"
-      subtitle="Fire steg som gir deg oversikt: fase, økonomi, kompetanse og konkrete handlinger. Alt lagres på brukeren din."
+      subtitle="Fire steg som gir deg oversikt: fase, økonomi, kompetanse og konkrete handlinger."
       actions={planActions}
       maxWidthClassName="max-w-5xl"
     >
@@ -239,9 +238,6 @@ export default function PlanPage(): React.ReactElement {
                   <b>Behov:</b> {plan.behov.join(', ') || '-'}
                 </div>
               </div>
-              <div className="text-slate-500 mt-2 text-xs">
-                Laget: {new Date(plan.createdAt).toLocaleString()}
-              </div>
             </div>
 
             {phaseContent && (
@@ -265,19 +261,9 @@ export default function PlanPage(): React.ReactElement {
             <h2 className="text-base md:text-lg font-semibold text-slate-900">
               Dagbok for denne fasen
             </h2>
-            {diaryUpdatedAt && !isSavingDiary && (
-              <span className="text-xs text-slate-500">
-                Lagret{' '}
-                {new Date(diaryUpdatedAt).toLocaleString(undefined, {
-                  dateStyle: 'short',
-                  timeStyle: 'short',
-                })}
-              </span>
-            )}
           </div>
           <p className="text-xs text-slate-600 mb-3">
-            Skriv korte notater om møter, avtaler og ting du vil følge opp. Notatene lagres på denne
-            brukeren.
+            Skriv korte notater om møter, avtaler og ting du vil følge opp.
           </p>
           <div className="mb-3 flex flex-wrap gap-2">
             {Object.keys(phaseSections).map((phaseKey) => {
@@ -315,7 +301,7 @@ export default function PlanPage(): React.ReactElement {
             onChange={handleDiaryChange}
             rows={8}
             className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 resize-y"
-            placeholder="F.eks. hva ble sagt på siste møte, hva du vil spørre om neste gang, eller hvordan situasjonen påvirker deg nå."
+            placeholder="F.eks. hva ble sagt på siste møte, hva du vil spørre om neste gang."
           />
           {isSavingDiary && <p className="mt-1 text-xs text-slate-500">Lagrer ...</p>}
           {diarySaveError && <p className="mt-1 text-xs text-red-500">{diarySaveError}</p>}
