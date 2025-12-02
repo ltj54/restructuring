@@ -50,6 +50,7 @@ restructuring-frontend/.env.*
 *.local
 *.env.local
 !example.env
+not/
 
 ###############################################
 # 📦 Logs (backend & frontend)
