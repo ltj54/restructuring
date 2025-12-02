@@ -124,7 +124,6 @@ export default function PlanPage(): React.ReactElement {
   const [plan, setPlan] = useState<PlanState | null>(null);
   const [diariesByPhase, setDiariesByPhase] = useState<Record<string, string>>({});
   const [activeDiaryPhase, setActiveDiaryPhase] = useState<string>('');
-  const [diaryUpdatedAt] = useState<string | null>(null);
   const [isLoadingRemotePlan, setIsLoadingRemotePlan] = useState(false);
   const [isSavingDiary, setIsSavingDiary] = useState(false);
   const [diarySaveError, setDiarySaveError] = useState<string | null>(null);
@@ -167,7 +166,7 @@ export default function PlanPage(): React.ReactElement {
         setPlan(normalizedPlan);
 
         const allDiaries: Record<string, string> = {
-          ...(remote.diaries ?? {}),
+          ...remote.diaries,
         };
 
         if (remote.phase && remote.diary && !allDiaries[remote.phase]) {
