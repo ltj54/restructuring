@@ -5,6 +5,11 @@ import { fetchJson } from '@/utils/api';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
 
+// Hent token fra localStorage
+function getToken(): string | null {
+  return localStorage.getItem('token');
+}
+
 export default function HomePage(): React.ReactElement {
   const [offer, setOffer] = useState<{ offer: string } | null>(null);
   const [showInsuranceModal, setShowInsuranceModal] = useState(false);
@@ -12,9 +17,21 @@ export default function HomePage(): React.ReactElement {
   useEffect(() => {
     async function fetchOffer() {
       try {
-        const data = await fetchJson<{ offer: string }>('/offer');
+        const token = getToken();
+        if (!token) {
+          console.warn('Ingen token – hopper over henting av offer');
+          return;
+        }
+
+        const data = await fetchJson<{ offer: string }>('/offer', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
         setOffer(data);
-      } catch {
+      } catch (e) {
+        console.warn('Klarte ikke hente offer:', e);
         // backend svarer ikke - vis bare standardteksten
       }
     }

@@ -4,6 +4,18 @@ import { BrowserRouter, HashRouter } from 'react-router-dom';
 import App from '@/app/App';
 import '@/assets/index.css';
 
+import { configureApiClient } from '@/utils/api';
+
+// 🚀 Sett opp global API-klient — sørger for at Authorization-header ALLTID sendes
+configureApiClient({
+  getToken: () => localStorage.getItem('token'),
+  onUnauthorized: () => {
+    console.warn('User unauthorized – redirecting to login');
+    localStorage.removeItem('token');
+    window.location.href = '/login';
+  },
+});
+
 // GitHub Pages krever HashRouter (ellers 404 ved refresh)
 const isGithubPages = window.location.hostname.includes('github.io');
 const Router = isGithubPages ? HashRouter : BrowserRouter;
