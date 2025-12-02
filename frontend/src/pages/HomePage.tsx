@@ -19,7 +19,7 @@ export default function HomePage(): React.ReactElement {
       try {
         const token = getToken();
         if (!token) {
-          console.warn("Ingen token – hopper over henting av offer");
+          console.warn('Ingen token – hopper over henting av offer');
           return;
         }
 
@@ -30,9 +30,8 @@ export default function HomePage(): React.ReactElement {
         });
 
         setOffer(data);
-
       } catch (e) {
-        console.warn("Klarte ikke hente offer:", e);
+        console.warn('Klarte ikke hente offer:', e);
         // backend svarer ikke - vis bare standardteksten
       }
     }

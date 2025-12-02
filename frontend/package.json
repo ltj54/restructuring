@@ -7,15 +7,21 @@
     "dev": "vite --open=false",
     "build": "vite build",
     "preview": "vite preview --strictPort --port 5173",
+
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "lint:ci": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=10000 || true",
+    "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix",
+
     "type-check": "tsc --noEmit",
     "clean": "rimraf dist node_modules/.cache",
+
     "format": "prettier --write \"{src,public}/**/*.{ts,tsx,js,jsx,css,html,json,md}\"",
     "format:check": "prettier --check \"{src,public}/**/*.{ts,tsx,js,jsx,css,html,json,md}\"",
+
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+
     "deploy": "echo \"GitHub Pages ikke i bruk lenger\""
   },
   "dependencies": {

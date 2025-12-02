@@ -10,7 +10,7 @@ import { configureApiClient } from '@/utils/api';
 configureApiClient({
   getToken: () => localStorage.getItem('token'),
   onUnauthorized: () => {
-    console.warn("User unauthorized – redirecting to login");
+    console.warn('User unauthorized – redirecting to login');
     localStorage.removeItem('token');
     window.location.href = '/login';
   },
