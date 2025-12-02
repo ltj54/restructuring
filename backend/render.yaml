@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: restructuring-backend
+    env: java
+    plan: free
+    region: frankfurt
+
+    buildCommand: mvn -q clean package
+    startCommand: java -jar target/restructuring-backend-0.0.1-SNAPSHOT.jar
+
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+
+      # Sett denne nå, vi kan endre senere
+      - key: JWT_SECRET
+        value: TXV4dW1Ld1hJbEVtS0dSR2dHQ2V6U2pQT2haVzhyV2tDVm1rY1BTZ0RCWg==
+
+      # Render Postgres (valgfritt — hvis du senere legger til database)
+      # - key: DATABASE_URL
+      #   fromDatabase:
+      #     name: restructuring-db
+      #     property: connectionString
