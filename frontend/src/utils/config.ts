@@ -19,6 +19,7 @@ const DEFAULT_REMOTE_API_BASE_URL = 'https://restructuring-backend.onrender.com/
 
 // Vite sitt miljø-objekt - vi typetilpasser for fleksibelt oppslag
 const env = import.meta.env as Record<string, string | undefined>;
+const mode = (env?.MODE as string | undefined) ?? 'development';
 
 /**
  * Leser en miljøvariabel og returnerer trimmed string eller undefined.
@@ -56,7 +57,7 @@ function readBoolEnv(name: string, fallback: boolean): boolean {
 /**
  * Hvilket miljø appen tror den kjører i (development / test / production)
  */
-export const APP_ENV: string = readEnv('VITE_APP_ENV') ?? 'development';
+export const APP_ENV: string = readEnv('VITE_APP_ENV') ?? mode ?? 'development';
 
 /**
  * Navn på applikasjonen (brukes i logger / UI)
@@ -71,6 +72,12 @@ export const APP_NAME: string = readEnv('VITE_APP_NAME') ?? 'Restructuring Front
  *   2) Lokal URL i dev/test
  *   3) Remote URL i prod
  */
+function isLocalHost(): boolean {
+  if (typeof window === 'undefined') return false;
+  const host = window.location?.hostname ?? '';
+  return host === 'localhost' || host === '127.0.0.1' || host === '::1';
+}
+
 function resolveApiBaseUrl(): string {
   const explicit = readEnv('VITE_API_BASE_URL');
   if (explicit) {
@@ -78,7 +85,12 @@ function resolveApiBaseUrl(): string {
   }
 
   if (APP_ENV === 'development' || APP_ENV === 'test') {
+    if (isLocalHost()) return DEFAULT_LOCAL_API_BASE_URL;
     return DEFAULT_LOCAL_API_BASE_URL;
+  }
+
+  if (!isLocalHost()) {
+    return DEFAULT_REMOTE_API_BASE_URL;
   }
 
   return DEFAULT_REMOTE_API_BASE_URL;
