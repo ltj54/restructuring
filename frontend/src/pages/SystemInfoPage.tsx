@@ -176,14 +176,13 @@ export default function SystemInfoPage(): React.ReactElement {
         setStatus('feil');
         setMessage('Backend svarte, men med feil.');
       }
-
-      stopWaitingForResponse();
     } catch {
       newStatus = 'feil';
       setStatus('feil');
       setMessage('Ingen respons fra backend.');
       setHttpCode(null);
     } finally {
+      stopWaitingForResponse();
       const end = performance.now();
       const durationMs = end - start;
 
@@ -239,11 +238,12 @@ export default function SystemInfoPage(): React.ReactElement {
         setDbMessage('DB-endepunkt svarte, men med feil.');
       }
 
-      stopWaitingForResponse();
     } catch {
       setDbStatus('feil');
       setDbHttpCode(null);
       setDbMessage('Ingen respons fra DB-endepunkt.');
+    } finally {
+      stopWaitingForResponse();
     }
   }, [dbInfoUrl, startWaitingForResponse, stopWaitingForResponse]);
 
@@ -254,8 +254,17 @@ export default function SystemInfoPage(): React.ReactElement {
       await checkDb();
     } finally {
       setFullCheckRunning(false);
+      // Skjul ventemelding når helsesjekk er ferdig og knappen kan trykkes igjen
+      stopWaitingForResponse();
     }
   };
+
+  useEffect(() => {
+    // Sørg for at ventemeldingen forsvinner når vi faktisk har fått svar (ok).
+    if (status === 'ok' || dbStatus === 'ok') {
+      stopWaitingForResponse();
+    }
+  }, [status, dbStatus, stopWaitingForResponse]);
 
   const dbStatusClass =
     dbStatus === 'ok' ? 'text-green-700' : dbStatus === 'feil' ? 'text-red-700' : 'text-slate-700';
