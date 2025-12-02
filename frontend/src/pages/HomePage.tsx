@@ -45,8 +45,8 @@ export default function HomePage(): React.ReactElement {
               Én kort veiviser som forteller deg hva du skal gjøre nå
             </h1>
             <p className="text-lg text-slate-700">
-              Vi kutter alt støyet. Start veiviseren, svar kort, og få en plan som viser hva du
-              bør gjøre denne uken – og hvordan du sikrer pengene dine.
+              Vi kutter alt støyet. Start veiviseren, svar kort, og få en plan som viser hva du bør
+              gjøre denne uken – og hvordan du sikrer pengene dine.
             </p>
 
             <div className="flex flex-wrap gap-3">
@@ -73,7 +73,9 @@ export default function HomePage(): React.ReactElement {
               <p className="text-xs uppercase tracking-[0.2em] text-emerald-600 font-semibold">
                 Slik fungerer det
               </p>
-              <h2 className="text-2xl font-semibold text-slate-900 mt-2">På plass på under 5 min</h2>
+              <h2 className="text-2xl font-semibold text-slate-900 mt-2">
+                På plass på under 5 min
+              </h2>
               <div className="mt-5 space-y-3">
                 {steps.map((step, index) => (
                   <div
@@ -93,7 +95,6 @@ export default function HomePage(): React.ReactElement {
             </Card>
           </motion.div>
         </section>
-
       </div>
     </main>
   );

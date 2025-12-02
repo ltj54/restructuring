@@ -164,7 +164,6 @@ export default function WizardPage(): React.ReactElement {
       }
     >
       <div className="space-y-6">
-
         {/* ------------------------------------------------------------
             PERSONA
         ------------------------------------------------------------ */}
@@ -184,9 +183,7 @@ export default function WizardPage(): React.ReactElement {
                   }`}
                 >
                   <div className="font-semibold text-sm">{personaLabels[key]}</div>
-                  <div className="mt-2 text-xs text-slate-600 opacity-90">
-                    {personaShort[key]}
-                  </div>
+                  <div className="mt-2 text-xs text-slate-600 opacity-90">{personaShort[key]}</div>
                 </button>
               );
             })}

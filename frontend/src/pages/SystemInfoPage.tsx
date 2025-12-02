@@ -237,7 +237,6 @@ export default function SystemInfoPage(): React.ReactElement {
         setDbStatus('feil');
         setDbMessage('DB-endepunkt svarte, men med feil.');
       }
-
     } catch {
       setDbStatus('feil');
       setDbHttpCode(null);

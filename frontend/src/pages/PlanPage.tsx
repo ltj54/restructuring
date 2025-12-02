@@ -32,10 +32,8 @@ const phaseSections: Record<
       'Sjekk hvilke forsikringer og ordninger du allerede har.',
     ],
     diaryTitle: 'Dagbok – før omstilling',
-    diaryDescription:
-      'Skriv ned bekymringer, spørsmål og hva du bør sjekke tidlig.',
-    diaryPlaceholder:
-      'Hva lurer du på nå? Hva trenger du svar på? Hva bekymrer deg?',
+    diaryDescription: 'Skriv ned bekymringer, spørsmål og hva du bør sjekke tidlig.',
+    diaryPlaceholder: 'Hva lurer du på nå? Hva trenger du svar på? Hva bekymrer deg?',
     actions: [
       'Lag liste over hva du vet – og hva du ikke vet.',
       'Ta kontakt med leder eller HR for avklaringer.',
@@ -54,10 +52,8 @@ const phaseSections: Record<
       'Lag et regneark med «nå» og «etter omstilling» for lønn og arbeidstid.',
     ],
     diaryTitle: 'Dagbok – under omstilling',
-    diaryDescription:
-      'Skriv ned punkter fra møter, frister og ting du må følge opp.',
-    diaryPlaceholder:
-      'Hva ble sagt i møtet? Hva må du følge opp? Hvilke frister kom opp?',
+    diaryDescription: 'Skriv ned punkter fra møter, frister og ting du må følge opp.',
+    diaryPlaceholder: 'Hva ble sagt i møtet? Hva må du følge opp? Hvilke frister kom opp?',
     actions: [
       'Be om alt skriftlig.',
       'Lag oversikt over konsekvenser (lønn, arbeidstid, arbeidsoppgaver).',
@@ -68,18 +64,15 @@ const phaseSections: Record<
 
   'Etter omstilling': {
     title: 'Etter omstilling – juster økonomi og kurs',
-    description:
-      'Omstillingen er gjennomført. Nå handler det om økonomi, karriere og neste steg.',
+    description: 'Omstillingen er gjennomført. Nå handler det om økonomi, karriere og neste steg.',
     bullets: [
       'Oppdater budsjett basert på ny inntekt og arbeidstid.',
       'Lag en 3-måneders plan for kompetanse, CV og søknader.',
       'Vurder behov for ekstra inntektssikring.',
     ],
     diaryTitle: 'Dagbok – etter omstilling',
-    diaryDescription:
-      'Bruk notater til å planlegge neste steg: karriere, økonomi og mål.',
-    diaryPlaceholder:
-      'Hva er neste steg? Hvilke jobber vurderer du? Hva er målene dine?',
+    diaryDescription: 'Bruk notater til å planlegge neste steg: karriere, økonomi og mål.',
+    diaryPlaceholder: 'Hva er neste steg? Hvilke jobber vurderer du? Hva er målene dine?',
     actions: [
       'Oppdater budsjett.',
       'Planlegg kurs eller kompetanseheving.',
@@ -129,11 +122,7 @@ export default function PlanPage(): React.ReactElement {
   const [diarySaveError, setDiarySaveError] = useState<string | null>(null);
 
   // Den aktive fasen som styrer HELE UI-et
-  const displayedPhase =
-    activeDiaryPhase ||
-    plan?.fase ||
-    phaseFromQuery ||
-    'Før omstilling';
+  const displayedPhase = activeDiaryPhase || plan?.fase || phaseFromQuery || 'Før omstilling';
 
   const phaseContent = phaseSections[displayedPhase];
 
@@ -145,6 +134,7 @@ export default function PlanPage(): React.ReactElement {
     if (!isAuthenticated) return;
 
     setIsLoadingRemotePlan(true);
+
     (async () => {
       try {
         const remote = await fetchJson<UserPlanResponse | undefined>('/plan/me');
@@ -176,16 +166,16 @@ export default function PlanPage(): React.ReactElement {
         setDiariesByPhase(allDiaries);
 
         if (!activeDiaryPhase) {
-          const initialPhase =
-            phaseFromQuery || remote.phase || 'Før omstilling';
+          const initialPhase = phaseFromQuery || remote.phase || 'Før omstilling';
           setActiveDiaryPhase(initialPhase);
         }
       } catch {
+        // intentionally left comment so eslint doesn't treat this as empty block
       } finally {
         setIsLoadingRemotePlan(false);
       }
     })();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, activeDiaryPhase, phaseFromQuery]);
 
   // -----------------------------------------------------------
   // LAGRING AV DAGBOK
@@ -205,6 +195,7 @@ export default function PlanPage(): React.ReactElement {
     if (!isAuthenticated) return;
 
     setIsSavingDiary(true);
+
     (async () => {
       try {
         await fetchJson('/plan/me', {
@@ -328,16 +319,11 @@ export default function PlanPage(): React.ReactElement {
         {/* -----------------------------------------------------------
            HANDLINGER
         ----------------------------------------------------------- */}
-        <h2 className="mt-6 text-lg font-semibold text-slate-900">
-          Handlinger (14 dager)
-        </h2>
+        <h2 className="mt-6 text-lg font-semibold text-slate-900">Handlinger (14 dager)</h2>
 
         <ul className="mt-3 space-y-2">
           {phaseContent.actions.map((t) => (
-            <li
-              key={t}
-              className="rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm"
-            >
+            <li key={t} className="rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm">
               {t}
             </li>
           ))}
