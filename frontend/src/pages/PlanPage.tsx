@@ -6,45 +6,92 @@ import PageLayout from '@/components/PageLayout';
 import { useAuth } from '@/hooks/useAuth';
 import { fetchJson } from '@/utils/api';
 
+// -----------------------------------------------------------
+// FASETEKSTER – dynamisk innhold
+// -----------------------------------------------------------
+
 const phaseSections: Record<
   string,
   {
     title: string;
     description: string;
     bullets: string[];
+    diaryTitle: string;
+    diaryDescription: string;
+    diaryPlaceholder: string;
+    actions: string[];
   }
 > = {
   'Før omstilling': {
-    title: 'Før omstilling - bygg trygghet tidlig',
+    title: 'Før omstilling – bygg trygghet tidlig',
     description:
-      'Du er i en tidlig fase. Målet nå er å skaffe oversikt og forberede deg uten å skape unødig stress.',
+      'Du er i en tidlig fase. Målet nå er å skaffe oversikt og forberede deg uten unødig stress.',
     bullets: [
-      'Skriv ned hva som bekymrer deg konkret - ikke bare «omstilling generelt».',
+      'Skriv ned hva som bekymrer deg konkret – ikke bare «omstilling generelt».',
       'Finn ut hvem som faktisk vet hva (leder, HR, tillitsvalgt).',
-      'Sjekk hvilke forsikringer og ordninger du allerede har via jobb eller fagforening.',
+      'Sjekk hvilke forsikringer og ordninger du allerede har.',
+    ],
+    diaryTitle: 'Dagbok – før omstilling',
+    diaryDescription:
+      'Skriv ned bekymringer, spørsmål og hva du bør sjekke tidlig.',
+    diaryPlaceholder:
+      'Hva lurer du på nå? Hva trenger du svar på? Hva bekymrer deg?',
+    actions: [
+      'Lag liste over hva du vet – og hva du ikke vet.',
+      'Ta kontakt med leder eller HR for avklaringer.',
+      'Kartlegg dine forsikringer og økonomi.',
+      'Begynn stille med oppdatering av CV.',
     ],
   },
+
   'Under omstilling': {
-    title: 'Under omstilling - ta kontroll på endringene',
+    title: 'Under omstilling – ta kontroll på endringene',
     description:
       'Endringene er i gang. Her handler planen om å beholde oversikt og bruke rettighetene dine aktivt.',
     bullets: [
       'Sørg for skriftlig informasjon om forslagene som gjelder deg.',
       'Be om et konkret møte om din rolle og dine alternativer.',
-      'Lag et enkelt regneark med «nå» og «etter omstilling» for lønn og arbeidstid.',
+      'Lag et regneark med «nå» og «etter omstilling» for lønn og arbeidstid.',
+    ],
+    diaryTitle: 'Dagbok – under omstilling',
+    diaryDescription:
+      'Skriv ned punkter fra møter, frister og ting du må følge opp.',
+    diaryPlaceholder:
+      'Hva ble sagt i møtet? Hva må du følge opp? Hvilke frister kom opp?',
+    actions: [
+      'Be om alt skriftlig.',
+      'Lag oversikt over konsekvenser (lønn, arbeidstid, arbeidsoppgaver).',
+      'Book rådgiving (tillitsvalgt/HR).',
+      'Loggfør alle møter i dagboken.',
     ],
   },
+
   'Etter omstilling': {
-    title: 'Etter omstilling - juster økonomi og kurs',
+    title: 'Etter omstilling – juster økonomi og kurs',
     description:
-      'Omstillingen er gjennomført. Planen flyttes nå over på økonomi, videre karriere og hva som skal være neste steg for deg.',
+      'Omstillingen er gjennomført. Nå handler det om økonomi, karriere og neste steg.',
     bullets: [
-      'Oppdater budsjett med reell inntekt og kostnader etter omstilling.',
-      'Lag en konkret 3-måneders plan for kompetanse, CV og søknader.',
-      'Vurder behov for ekstra inntektssikring hvis inntekten er mer usikker enn før.',
+      'Oppdater budsjett basert på ny inntekt og arbeidstid.',
+      'Lag en 3-måneders plan for kompetanse, CV og søknader.',
+      'Vurder behov for ekstra inntektssikring.',
+    ],
+    diaryTitle: 'Dagbok – etter omstilling',
+    diaryDescription:
+      'Bruk notater til å planlegge neste steg: karriere, økonomi og mål.',
+    diaryPlaceholder:
+      'Hva er neste steg? Hvilke jobber vurderer du? Hva er målene dine?',
+    actions: [
+      'Oppdater budsjett.',
+      'Planlegg kurs eller kompetanseheving.',
+      'Søk på jobber eller interne muligheter.',
+      'Lag en 3-måneders utviklingsplan.',
     ],
   },
 };
+
+// -----------------------------------------------------------
+// TYPER
+// -----------------------------------------------------------
 
 type PlanState = {
   persona: string;
@@ -63,6 +110,10 @@ type UserPlanResponse = {
   updatedAt: string | null;
 };
 
+// -----------------------------------------------------------
+// KOMPONENT
+// -----------------------------------------------------------
+
 export default function PlanPage(): React.ReactElement {
   const location = useLocation();
   const { isAuthenticated } = useAuth();
@@ -73,19 +124,26 @@ export default function PlanPage(): React.ReactElement {
   const [plan, setPlan] = useState<PlanState | null>(null);
   const [diariesByPhase, setDiariesByPhase] = useState<Record<string, string>>({});
   const [activeDiaryPhase, setActiveDiaryPhase] = useState<string>('');
-  const [diaryUpdatedAt, setDiaryUpdatedAt] = useState<string | null>(null);
+  const [diaryUpdatedAt] = useState<string | null>(null);
   const [isLoadingRemotePlan, setIsLoadingRemotePlan] = useState(false);
   const [isSavingDiary, setIsSavingDiary] = useState(false);
   const [diarySaveError, setDiarySaveError] = useState<string | null>(null);
 
-  const effectivePhase = phaseFromQuery || plan?.fase || '';
-  const phaseContent = effectivePhase ? phaseSections[effectivePhase] : undefined;
-  const displayedPhase = activeDiaryPhase || effectivePhase;
+  // Den aktive fasen som styrer HELE UI-et
+  const displayedPhase =
+    activeDiaryPhase ||
+    plan?.fase ||
+    phaseFromQuery ||
+    'Før omstilling';
+
+  const phaseContent = phaseSections[displayedPhase];
+
+  // -----------------------------------------------------------
+  // LASTER PLAN FRA SERVER
+  // -----------------------------------------------------------
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      return;
-    }
+    if (!isAuthenticated) return;
 
     setIsLoadingRemotePlan(true);
     (async () => {
@@ -118,12 +176,9 @@ export default function PlanPage(): React.ReactElement {
 
         setDiariesByPhase(allDiaries);
 
-        if (remote.diary) {
-          setDiaryUpdatedAt(remote.updatedAt ?? remote.createdAt ?? null);
-        }
-
         if (!activeDiaryPhase) {
-          const initialPhase = effectivePhase || remote.phase || 'Før omstilling';
+          const initialPhase =
+            phaseFromQuery || remote.phase || 'Før omstilling';
           setActiveDiaryPhase(initialPhase);
         }
       } catch {
@@ -131,40 +186,37 @@ export default function PlanPage(): React.ReactElement {
         setIsLoadingRemotePlan(false);
       }
     })();
-  }, [isAuthenticated, activeDiaryPhase, effectivePhase]);
+  }, [isAuthenticated]);
+
+  // -----------------------------------------------------------
+  // LAGRING AV DAGBOK
+  // -----------------------------------------------------------
 
   const handleDiaryChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     const next = event.target.value;
     setDiarySaveError(null);
 
-    if (!activeDiaryPhase) {
-      return;
-    }
+    if (!activeDiaryPhase) return;
 
     setDiariesByPhase((current) => ({
       ...current,
       [activeDiaryPhase]: next,
     }));
 
-    if (!isAuthenticated) {
-      return;
-    }
+    if (!isAuthenticated) return;
 
     setIsSavingDiary(true);
-
     (async () => {
       try {
-        const now = new Date().toISOString();
         await fetchJson('/plan/me', {
           method: 'PUT',
           body: {
             persona: plan?.persona ?? 'Annet',
-            phase: activeDiaryPhase || plan?.fase || effectivePhase,
+            phase: activeDiaryPhase,
             needs: plan?.behov ?? [],
             diary: next,
           },
         });
-        setDiaryUpdatedAt(now);
       } catch {
         setDiarySaveError('Kunne ikke lagre endringen nå.');
       } finally {
@@ -172,6 +224,10 @@ export default function PlanPage(): React.ReactElement {
       }
     })();
   };
+
+  // -----------------------------------------------------------
+  // HANDLINGER I TOPPEN
+  // -----------------------------------------------------------
 
   const planActions = (
     <>
@@ -190,6 +246,10 @@ export default function PlanPage(): React.ReactElement {
     </>
   );
 
+  // -----------------------------------------------------------
+  // RENDER
+  // -----------------------------------------------------------
+
   return (
     <PageLayout
       title="Min plan"
@@ -200,75 +260,34 @@ export default function PlanPage(): React.ReactElement {
       <Card>
         {isLoadingRemotePlan && <p className="mb-3 text-xs text-slate-500">Laster plan ...</p>}
 
-        {!plan ? (
-          <>
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm">
-              Ingen plan funnet.{' '}
-              <Link to="/wizard" className="text-emerald-700 font-medium underline">
-                Start veiviser
-              </Link>
-              .
-            </div>
+        {/* -----------------------------------------------------------
+           FASEINNHOLD
+        ----------------------------------------------------------- */}
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 text-sm">
+          <h2 className="text-base md:text-lg font-semibold text-slate-900 mb-1">
+            {phaseContent.title}
+          </h2>
+          <p className="text-sm text-slate-700 mb-3">{phaseContent.description}</p>
+          <ul className="list-disc list-inside space-y-1 text-sm text-slate-700">
+            {phaseContent.bullets.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </section>
 
-            {phaseContent && (
-              <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 text-sm">
-                <h2 className="text-base md:text-lg font-semibold text-slate-900 mb-1">
-                  {phaseContent.title}
-                </h2>
-                <p className="text-sm text-slate-700 mb-3">{phaseContent.description}</p>
-                <ul className="list-disc list-inside space-y-1 text-sm text-slate-700">
-                  {phaseContent.bullets.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </section>
-            )}
-          </>
-        ) : (
-          <>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                <div>
-                  <b>Rolle:</b> {plan.persona}
-                </div>
-                <div>
-                  <b>Fase:</b> {displayedPhase || plan.fase}
-                </div>
-                <div className="md:col-span-2">
-                  <b>Behov:</b> {plan.behov.join(', ') || '-'}
-                </div>
-              </div>
-            </div>
-
-            {phaseContent && (
-              <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 text-sm">
-                <h2 className="text-base md:text-lg font-semibold text-slate-900 mb-1">
-                  {phaseContent.title}
-                </h2>
-                <p className="text-sm text-slate-700 mb-3">{phaseContent.description}</p>
-                <ul className="list-disc list-inside space-y-1 text-sm text-slate-700">
-                  {phaseContent.bullets.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </section>
-            )}
-          </>
-        )}
-
+        {/* -----------------------------------------------------------
+           DAGBOK
+        ----------------------------------------------------------- */}
         <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 text-sm">
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <h2 className="text-base md:text-lg font-semibold text-slate-900">
-              Dagbok for denne fasen
-            </h2>
-          </div>
-          <p className="text-xs text-slate-600 mb-3">
-            Skriv korte notater om møter, avtaler og ting du vil følge opp.
-          </p>
+          <h2 className="text-base md:text-lg font-semibold text-slate-900">
+            {phaseContent.diaryTitle}
+          </h2>
+          <p className="text-xs text-slate-600 mb-3">{phaseContent.diaryDescription}</p>
+
           <div className="mb-3 flex flex-wrap gap-2">
             {Object.keys(phaseSections).map((phaseKey) => {
-              const hasDiary = !!diariesByPhase[phaseKey]?.trim();
               const isActive = activeDiaryPhase === phaseKey;
+              const hasDiary = !!diariesByPhase[phaseKey]?.trim();
 
               return (
                 <button
@@ -285,42 +304,49 @@ export default function PlanPage(): React.ReactElement {
                   {hasDiary && (
                     <span
                       aria-hidden="true"
-                      className={
-                        isActive
-                          ? 'inline-block w-1.5 h-1.5 rounded-full bg-white/90'
-                          : 'inline-block w-1.5 h-1.5 rounded-full bg-emerald-500'
-                      }
+                      className={`inline-block w-1.5 h-1.5 rounded-full ${
+                        isActive ? 'bg-white/90' : 'bg-emerald-500'
+                      }`}
                     />
                   )}
                 </button>
               );
             })}
           </div>
+
           <textarea
             value={(activeDiaryPhase && diariesByPhase[activeDiaryPhase]) || ''}
             onChange={handleDiaryChange}
             rows={8}
             className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 resize-y"
-            placeholder="F.eks. hva ble sagt på siste møte, hva du vil spørre om neste gang."
+            placeholder={phaseContent.diaryPlaceholder}
           />
+
           {isSavingDiary && <p className="mt-1 text-xs text-slate-500">Lagrer ...</p>}
           {diarySaveError && <p className="mt-1 text-xs text-red-500">{diarySaveError}</p>}
         </section>
 
-        <h2 className="mt-6 text-lg font-semibold text-slate-900">Handlinger (14 dager)</h2>
+        {/* -----------------------------------------------------------
+           HANDLINGER
+        ----------------------------------------------------------- */}
+        <h2 className="mt-6 text-lg font-semibold text-slate-900">
+          Handlinger (14 dager)
+        </h2>
+
         <ul className="mt-3 space-y-2">
-          {[
-            'Skaff formell oversikt (datoer, møter, referat).',
-            'Lag et enkelt budsjett og identifiser buffer.',
-            'Oppdater CV + 3 jobbsøknader eller interne muligheter.',
-            'Book en samtale med rådgiver/mentor.',
-          ].map((t) => (
-            <li key={t} className="rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm">
+          {phaseContent.actions.map((t) => (
+            <li
+              key={t}
+              className="rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm"
+            >
               {t}
             </li>
           ))}
         </ul>
 
+        {/* -----------------------------------------------------------
+           RESSURSER
+        ----------------------------------------------------------- */}
         <div className="mt-6">
           <Link
             to="/resources"
