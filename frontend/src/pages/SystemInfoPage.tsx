@@ -66,8 +66,8 @@ function StatusBadge({ status }: { status: Health }) {
     status === 'ok'
       ? 'bg-green-100 text-green-800 border-green-300'
       : status === 'feil'
-        ? 'bg-red-100 text-red-800 border-red-300'
-        : 'bg-slate-100 text-slate-700 border-slate-300';
+      ? 'bg-red-100 text-red-800 border-red-300'
+      : 'bg-slate-100 text-slate-700 border-slate-300';
 
   return (
     <motion.div
@@ -79,7 +79,13 @@ function StatusBadge({ status }: { status: Health }) {
     >
       <span
         aria-hidden="true"
-        className={`h-2.5 w-2.5 rounded-full ${status === 'ok' ? 'bg-green-500' : status === 'feil' ? 'bg-red-500' : 'bg-slate-500'}`}
+        className={`h-2.5 w-2.5 rounded-full ${
+          status === 'ok'
+            ? 'bg-green-500'
+            : status === 'feil'
+            ? 'bg-red-500'
+            : 'bg-slate-500'
+        }`}
       />
       <span className="font-semibold">
         {status === 'ok' ? 'Online' : status === 'feil' ? 'Offline' : 'Ukjent'}
@@ -99,14 +105,16 @@ function HistoryList({ history }: { history: HistoryEntry[] }) {
   return (
     <div className="space-y-2 text-xs text-slate-700">
       {history.map((entry, i) => {
-        const ratio = entry.durationMs ? Math.min(100, (entry.durationMs / maxDuration) * 100) : 5;
+        const ratio = entry.durationMs
+          ? Math.min(100, (entry.durationMs / maxDuration) * 100)
+          : 5;
 
         const barColor =
           entry.status === 'ok'
             ? 'bg-green-500'
             : entry.status === 'feil'
-              ? 'bg-red-500'
-              : 'bg-slate-400';
+            ? 'bg-red-500'
+            : 'bg-slate-400';
 
         return (
           <div key={i} className="flex items-center gap-2">
@@ -136,9 +144,11 @@ export default function SystemInfoPage(): React.ReactElement {
   const [dbMessage, setDbMessage] = useState<string>('');
 
   const [history, setHistory] = useState<HistoryEntry[]>([]);
-  const [fullCheckRunning, setFullCheckRunning] = useState<boolean>(false);
   const [waitingForResponse, setWaitingForResponse] = useState<boolean>(false);
   const [waitingSecondsLeft, setWaitingSecondsLeft] = useState<number | null>(null);
+
+  const helloUrl = useMemo(() => `${API_BASE_URL}/hello`, []);
+  const dbInfoUrl = useMemo(() => `${API_BASE_URL}/dbinfo`, []);
 
   const startWaitingForResponse = useCallback(() => {
     setWaitingForResponse(true);
@@ -149,9 +159,6 @@ export default function SystemInfoPage(): React.ReactElement {
     setWaitingForResponse(false);
     setWaitingSecondsLeft(null);
   }, []);
-
-  const helloUrl = useMemo(() => `${API_BASE_URL}/hello`, []);
-  const dbInfoUrl = useMemo(() => `${API_BASE_URL}/dbinfo`, []);
 
   const checkBackend = useCallback(async () => {
     setChecking(true);
@@ -201,30 +208,10 @@ export default function SystemInfoPage(): React.ReactElement {
     }
   }, [helloUrl, startWaitingForResponse, stopWaitingForResponse]);
 
-  useEffect(() => {
-    checkBackend();
-  }, [checkBackend]);
-
-  useEffect(() => {
-    if (!waitingForResponse) {
-      return;
-    }
-
-    if (waitingSecondsLeft === 0) {
-      setWaitingForResponse(false);
-      return;
-    }
-
-    const id = window.setInterval(() => {
-      setWaitingSecondsLeft((prev) => (prev !== null && prev > 0 ? prev - 1 : prev));
-    }, 1000);
-
-    return () => window.clearInterval(id);
-  }, [waitingForResponse, waitingSecondsLeft]);
-
   const checkDb = useCallback(async () => {
-    setDbMessage('');
     startWaitingForResponse();
+    setDbMessage('');
+
     try {
       const res = await fetch(dbInfoUrl);
       setDbHttpCode(res.status);
@@ -246,24 +233,37 @@ export default function SystemInfoPage(): React.ReactElement {
     }
   }, [dbInfoUrl, startWaitingForResponse, stopWaitingForResponse]);
 
-  const runFullHealthCheck = async () => {
-    setFullCheckRunning(true);
-    try {
-      await checkBackend();
-      await checkDb();
-    } finally {
-      setFullCheckRunning(false);
-      // Skjul ventemelding når helsesjekk er ferdig og knappen kan trykkes igjen
-      stopWaitingForResponse();
-    }
-  };
-
+  // 🔁 AUTO-LOOP: Backend → (hvis OK) DB → stopp når begge OK
   useEffect(() => {
-    // Sørg for at ventemeldingen forsvinner når vi faktisk har fått svar (ok).
-    if (status === 'ok' || dbStatus === 'ok') {
-      stopWaitingForResponse();
+    let intervalId: number | null = null;
+
+    async function autoCheck() {
+      await checkBackend();
+
+      if (status === 'ok') {
+        await checkDb();
+      }
+
+      if (status === 'ok' && dbStatus === 'ok') {
+        if (intervalId) {
+          clearInterval(intervalId);
+        }
+        return;
+      }
     }
-  }, [status, dbStatus, stopWaitingForResponse]);
+
+    // Start med en gang
+    autoCheck();
+
+    // Sjekk hvert 3s til OK
+    intervalId = window.setInterval(autoCheck, 3000);
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [status, dbStatus, checkBackend, checkDb]);
 
   const dbStatusClass =
     dbStatus === 'ok' ? 'text-green-700' : dbStatus === 'feil' ? 'text-red-700' : 'text-slate-700';
@@ -279,6 +279,22 @@ export default function SystemInfoPage(): React.ReactElement {
         waitingSecondsLeft={waitingSecondsLeft}
       />
 
+      {/* 🔥 ANIMASJON: Viser kun mens backend starter */}
+      {status !== 'ok' && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="mb-4 p-4 text-sm text-orange-800 bg-orange-100 border border-orange-300 rounded-xl"
+        >
+          <motion.div
+            animate={{ opacity: [0.4, 1, 0.4] }}
+            transition={{ repeat: Infinity, duration: 1.5 }}
+          >
+            Starter backend … (Render kan bruke litt tid)
+          </motion.div>
+        </motion.div>
+      )}
+
       <section className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -293,15 +309,6 @@ export default function SystemInfoPage(): React.ReactElement {
             </p>
 
             <StatusBadge status={status} />
-            <div className="flex flex-wrap items-center gap-3 mt-4">
-              <button
-                onClick={runFullHealthCheck}
-                disabled={fullCheckRunning}
-                className="border border-slate-300 text-slate-800 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-slate-50 transition inline-flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {fullCheckRunning ? 'Kjører full helsesjekk...' : 'Full helsesjekk'}
-              </button>
-            </div>
 
             <p className="mt-3 text-sm text-slate-600">
               Sist sjekket: {lastChecked ? lastChecked.toLocaleTimeString() : 'Aldri'}
