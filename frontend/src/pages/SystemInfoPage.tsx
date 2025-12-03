@@ -13,11 +13,11 @@ type HistoryEntry = {
   durationMs: number | null;
 };
 
-// Simple spinner
+// Simple spinner for the booting banner
 function Spinner() {
   return (
     <motion.div
-      className="inline-block h-4 w-4 border-2 border-yellow-600 border-t-transparent rounded-full mr-2"
+      className="mr-2 inline-block h-4 w-4 rounded-full border-2 border-amber-600 border-t-transparent"
       animate={{ rotate: 360 }}
       transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
     />
@@ -28,7 +28,7 @@ function Spinner() {
 function SkeletonBlock({ width = '100%', height = '1rem' }) {
   return (
     <div
-      className="bg-slate-200 rounded animate-pulse"
+      className="animate-pulse rounded bg-slate-200/80"
       style={{ width, height }}
     />
   );
@@ -36,11 +36,11 @@ function SkeletonBlock({ width = '100%', height = '1rem' }) {
 
 function SkeletonCard() {
   return (
-    <div className="space-y-3">
-      <SkeletonBlock width="60%" />
-      <SkeletonBlock width="40%" />
-      <SkeletonBlock width="80%" height="0.75rem" />
-      <SkeletonBlock width="70%" height="0.75rem" />
+    <div className="space-y-3 rounded-xl bg-slate-50 p-3">
+      <SkeletonBlock width="55%" />
+      <SkeletonBlock width="35%" />
+      <SkeletonBlock width="90%" height="0.75rem" />
+      <SkeletonBlock width="75%" height="0.75rem" />
       <SkeletonBlock width="50%" height="0.75rem" />
     </div>
   );
@@ -49,22 +49,22 @@ function SkeletonCard() {
 function StatusBadge({ status }: { status: Health }) {
   const statusClass =
     status === 'ok'
-      ? 'bg-green-100 text-green-800 border-green-300'
+      ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
       : status === 'feil'
-      ? 'bg-red-100 text-red-800 border-red-300'
+      ? 'bg-rose-100 text-rose-800 border-rose-300'
       : 'bg-slate-100 text-slate-700 border-slate-300';
 
   return (
     <div
-      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm mt-4 ${statusClass}`}
+      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm ${statusClass}`}
     >
       <span
         aria-hidden="true"
         className={`h-2.5 w-2.5 rounded-full ${
           status === 'ok'
-            ? 'bg-green-500'
+            ? 'bg-emerald-500'
             : status === 'feil'
-            ? 'bg-red-500'
+            ? 'bg-rose-500'
             : 'bg-slate-500'
         }`}
       />
@@ -91,7 +91,7 @@ function HistoryList({ history }: { history: HistoryEntry[] }) {
     history.length > 0 ? Math.max(...history.map((h) => h.durationMs || 0), 1) : 1;
 
   return (
-    <div className="space-y-2 text-xs text-slate-700">
+    <div className="space-y-3 text-sm text-slate-700">
       {history.map((entry, i) => {
         const ratio = entry.durationMs
           ? Math.min(100, (entry.durationMs / maxDuration) * 100)
@@ -99,19 +99,40 @@ function HistoryList({ history }: { history: HistoryEntry[] }) {
 
         const barColor =
           entry.status === 'ok'
-            ? 'bg-green-500'
+            ? 'bg-emerald-500'
             : entry.status === 'feil'
-            ? 'bg-red-500'
+            ? 'bg-rose-500'
             : 'bg-slate-400';
 
         return (
-          <div key={i} className="flex items-center gap-2">
-            <div className="w-20">{entry.time.toLocaleTimeString()}</div>
-            <div className="flex-1 h-2 bg-slate-200 rounded overflow-hidden">
-              <div className={`h-full ${barColor}`} style={{ width: `${ratio}%` }} />
+          <div key={i} className="rounded-xl border border-slate-100 bg-white/80 p-3 shadow-sm shadow-slate-100">
+            <div className="flex items-center justify-between text-xs text-slate-500">
+              <span>{entry.time.toLocaleTimeString()}</span>
+              <span className="font-semibold text-slate-700">
+                {entry.durationMs ? `${Math.round(entry.durationMs)} ms` : 'Ingen måling'}
+              </span>
             </div>
-            <div className="w-16 text-right">
-              {entry.durationMs ? `${Math.round(entry.durationMs)} ms` : '-'}
+            <div className="mt-2 flex items-center gap-3">
+              <div className="flex-1 overflow-hidden rounded-full bg-slate-200">
+                <div className={`h-2 ${barColor}`} style={{ width: `${ratio}%` }} />
+              </div>
+              <div className="flex items-center gap-2 text-xs">
+                <span
+                  className={`h-2.5 w-2.5 rounded-full ${
+                    entry.status === 'ok'
+                      ? 'bg-emerald-500'
+                      : entry.status === 'feil'
+                      ? 'bg-rose-500'
+                      : 'bg-slate-400'
+                  }`}
+                />
+                <span className="uppercase tracking-wide text-slate-600">
+                  {entry.status === 'ok' ? 'OK' : entry.status === 'feil' ? 'FEIL' : 'UKJENT'}
+                </span>
+              </div>
+            </div>
+            <div className="mt-2 text-xs text-slate-500">
+              HTTP: {entry.httpCode ?? '-'}
             </div>
           </div>
         );
@@ -132,6 +153,7 @@ export default function SystemInfoPage(): React.ReactElement {
   const [dbMessage, setDbMessage] = useState<string>('');
 
   const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const latestEntry = history[0];
 
   const healthUrl = useMemo(() => `${API_BASE_URL}/health`, []);
   const dbInfoUrl = useMemo(() => `${API_BASE_URL}/dbinfo`, []);
@@ -282,7 +304,7 @@ export default function SystemInfoPage(): React.ReactElement {
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <Card title="Detaljert helsesjekk">
+          <Card title="Database-status">
             {dbStatus === 'ok' ? (
               <div className="text-sm">
                 <p className="text-slate-700">
@@ -309,7 +331,7 @@ export default function SystemInfoPage(): React.ReactElement {
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="md:col-span-3">
-          <Card title="Responstid & logg">
+          <Card title="Responstid og logg">
             {history.length === 0 ? (
               <div className="space-y-3">
                 <SkeletonBlock width="70%" height="0.75rem" />
