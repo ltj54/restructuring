@@ -79,7 +79,13 @@ function StatusBadge({ status }: { status: Health }) {
     >
       <span
         aria-hidden="true"
-        className={`h-2.5 w-2.5 rounded-full ${status === 'ok' ? 'bg-green-500' : status === 'feil' ? 'bg-red-500' : 'bg-slate-500'}`}
+        className={`h-2.5 w-2.5 rounded-full ${
+          status === 'ok'
+            ? 'bg-green-500'
+            : status === 'feil'
+              ? 'bg-red-500'
+              : 'bg-slate-500'
+        }`}
       />
       <span className="font-semibold">
         {status === 'ok' ? 'Online' : status === 'feil' ? 'Offline' : 'Ukjent'}
@@ -99,7 +105,9 @@ function HistoryList({ history }: { history: HistoryEntry[] }) {
   return (
     <div className="space-y-2 text-xs text-slate-700">
       {history.map((entry, i) => {
-        const ratio = entry.durationMs ? Math.min(100, (entry.durationMs / maxDuration) * 100) : 5;
+        const ratio = entry.durationMs
+          ? Math.min(100, (entry.durationMs / maxDuration) * 100)
+          : 5;
 
         const barColor =
           entry.status === 'ok'
@@ -136,9 +144,11 @@ export default function SystemInfoPage(): React.ReactElement {
   const [dbMessage, setDbMessage] = useState<string>('');
 
   const [history, setHistory] = useState<HistoryEntry[]>([]);
-  const [fullCheckRunning, setFullCheckRunning] = useState<boolean>(false);
   const [waitingForResponse, setWaitingForResponse] = useState<boolean>(false);
   const [waitingSecondsLeft, setWaitingSecondsLeft] = useState<number | null>(null);
+
+  const helloUrl = useMemo(() => `${API_BASE_URL}/hello`, []);
+  const dbInfoUrl = useMemo(() => `${API_BASE_URL}/dbinfo`, []);
 
   const startWaitingForResponse = useCallback(() => {
     setWaitingForResponse(true);
@@ -149,9 +159,6 @@ export default function SystemInfoPage(): React.ReactElement {
     setWaitingForResponse(false);
     setWaitingSecondsLeft(null);
   }, []);
-
-  const helloUrl = useMemo(() => `${API_BASE_URL}/hello`, []);
-  const dbInfoUrl = useMemo(() => `${API_BASE_URL}/dbinfo`, []);
 
   const checkBackend = useCallback(async () => {
     setChecking(true);
@@ -201,27 +208,6 @@ export default function SystemInfoPage(): React.ReactElement {
     }
   }, [helloUrl, startWaitingForResponse, stopWaitingForResponse]);
 
-  useEffect(() => {
-    checkBackend();
-  }, [checkBackend]);
-
-  useEffect(() => {
-    if (!waitingForResponse) {
-      return;
-    }
-
-    if (waitingSecondsLeft === 0) {
-      setWaitingForResponse(false);
-      return;
-    }
-
-    const id = window.setInterval(() => {
-      setWaitingSecondsLeft((prev) => (prev !== null && prev > 0 ? prev - 1 : prev));
-    }, 1000);
-
-    return () => window.clearInterval(id);
-  }, [waitingForResponse, waitingSecondsLeft]);
-
   const checkDb = useCallback(async () => {
     setDbMessage('');
     startWaitingForResponse();
@@ -246,24 +232,33 @@ export default function SystemInfoPage(): React.ReactElement {
     }
   }, [dbInfoUrl, startWaitingForResponse, stopWaitingForResponse]);
 
-  const runFullHealthCheck = async () => {
-    setFullCheckRunning(true);
-    try {
+  // 🟦 ENDRET: FJERNET BUTTON, LAGT TIL AUTO-LOOP
+  //
+  // Denne loopen kjører helsesjekk kontinuerlig
+  // til både backend og DB svarer OK.
+  //
+  useEffect(() => {
+    let intervalId: number | null = null;
+
+    async function runLoop() {
       await checkBackend();
       await checkDb();
-    } finally {
-      setFullCheckRunning(false);
-      // Skjul ventemelding når helsesjekk er ferdig og knappen kan trykkes igjen
-      stopWaitingForResponse();
-    }
-  };
 
-  useEffect(() => {
-    // Sørg for at ventemeldingen forsvinner når vi faktisk har fått svar (ok).
-    if (status === 'ok' || dbStatus === 'ok') {
-      stopWaitingForResponse();
+      // Stopp loop når begge er OK
+      if (status === 'ok' && dbStatus === 'ok') {
+        if (intervalId) clearInterval(intervalId);
+        return;
+      }
     }
-  }, [status, dbStatus, stopWaitingForResponse]);
+
+    // Start loop (f.eks. hvert 3. sekund til alt er oppe)
+    runLoop();
+    intervalId = window.setInterval(runLoop, 3000);
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [status, dbStatus, checkBackend, checkDb]);
 
   const dbStatusClass =
     dbStatus === 'ok' ? 'text-green-700' : dbStatus === 'feil' ? 'text-red-700' : 'text-slate-700';
@@ -293,15 +288,8 @@ export default function SystemInfoPage(): React.ReactElement {
             </p>
 
             <StatusBadge status={status} />
-            <div className="flex flex-wrap items-center gap-3 mt-4">
-              <button
-                onClick={runFullHealthCheck}
-                disabled={fullCheckRunning}
-                className="border border-slate-300 text-slate-800 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-slate-50 transition inline-flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {fullCheckRunning ? 'Kjører full helsesjekk...' : 'Full helsesjekk'}
-              </button>
-            </div>
+
+            {/* 🟦 FJERNET KNAPP HER */}
 
             <p className="mt-3 text-sm text-slate-600">
               Sist sjekket: {lastChecked ? lastChecked.toLocaleTimeString() : 'Aldri'}
