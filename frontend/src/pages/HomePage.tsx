@@ -49,13 +49,25 @@ export default function HomePage(): React.ReactElement {
               gjøre denne uken – og hvordan du sikrer pengene dine.
             </p>
 
+            {/* BUTTONS */}
             <div className="flex flex-wrap gap-3">
+              {/* START / SE PLANEN MIN */}
               <Button
                 to={hasToken ? '/plan' : '/wizard'}
                 className="bg-gradient-to-r from-emerald-400 to-teal-500 text-slate-900 font-semibold border-transparent shadow-lg shadow-emerald-400/30 hover:shadow-emerald-200/50"
               >
                 {hasToken ? 'Se planen min' : 'Start veiviseren'}
               </Button>
+
+              {/* LOGIN BUTTON (ONLY WHEN NOT LOGGED IN) */}
+              {!hasToken && (
+                <Button
+                  to="/login"
+                  className="bg-white text-slate-700 border-slate-300 hover:bg-slate-50 shadow-sm"
+                >
+                  Logg inn
+                </Button>
+              )}
             </div>
 
             <div className="text-sm text-slate-600 space-y-1">
