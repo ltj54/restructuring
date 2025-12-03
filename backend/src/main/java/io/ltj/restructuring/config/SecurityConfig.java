@@ -40,7 +40,7 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                        // PUBLIC ENDPOINTS ----------------------
+                        // PUBLIC ENDPOINTS ---------------------
                         .requestMatchers(
                                 "/api/hello",
                                 "/api/config",
