@@ -13,14 +13,38 @@ type HistoryEntry = {
   durationMs: number | null;
 };
 
-const pulseAnimation = {
-  initial: { scale: 1, opacity: 1 },
-  animate: {
-    scale: [1, 1.12, 1],
-    opacity: [1, 0.7, 1],
-    transition: { duration: 1.6, repeat: Infinity },
-  },
-};
+// Simple spinner
+function Spinner() {
+  return (
+    <motion.div
+      className="inline-block h-4 w-4 border-2 border-yellow-600 border-t-transparent rounded-full mr-2"
+      animate={{ rotate: 360 }}
+      transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
+    />
+  );
+}
+
+// Skeleton block
+function SkeletonBlock({ width = '100%', height = '1rem' }) {
+  return (
+    <div
+      className="bg-slate-200 rounded animate-pulse"
+      style={{ width, height }}
+    />
+  );
+}
+
+function SkeletonCard() {
+  return (
+    <div className="space-y-3">
+      <SkeletonBlock width="60%" />
+      <SkeletonBlock width="40%" />
+      <SkeletonBlock width="80%" height="0.75rem" />
+      <SkeletonBlock width="70%" height="0.75rem" />
+      <SkeletonBlock width="50%" height="0.75rem" />
+    </div>
+  );
+}
 
 function StatusBadge({ status }: { status: Health }) {
   const statusClass =
@@ -31,12 +55,8 @@ function StatusBadge({ status }: { status: Health }) {
       : 'bg-slate-100 text-slate-700 border-slate-300';
 
   return (
-    <motion.div
-      variants={pulseAnimation}
-      initial="initial"
-      animate="animate"
+    <div
       className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm mt-4 ${statusClass}`}
-      aria-live="polite"
     >
       <span
         aria-hidden="true"
@@ -51,13 +71,20 @@ function StatusBadge({ status }: { status: Health }) {
       <span className="font-semibold">
         {status === 'ok' ? 'Online' : status === 'feil' ? 'Offline' : 'Ukjent'}
       </span>
-    </motion.div>
+    </div>
   );
 }
 
 function HistoryList({ history }: { history: HistoryEntry[] }) {
   if (history.length === 0) {
-    return <p className="text-sm text-slate-700">Ingen historikk ennå.</p>;
+    return (
+      <div className="space-y-2">
+        <SkeletonBlock width="30%" />
+        <SkeletonBlock width="90%" height="0.5rem" />
+        <SkeletonBlock width="85%" height="0.5rem" />
+        <SkeletonBlock width="70%" height="0.5rem" />
+      </div>
+    );
   }
 
   const maxDuration =
@@ -115,11 +142,9 @@ export default function SystemInfoPage(): React.ReactElement {
 
     const start = performance.now();
     let newStatus: Health = 'ukjent';
-    let newHttp: number | null = null;
 
     try {
       const res = await fetch(helloUrl);
-      newHttp = res.status;
       setHttpCode(res.status);
 
       if (res.ok) {
@@ -147,13 +172,13 @@ export default function SystemInfoPage(): React.ReactElement {
         const entry: HistoryEntry = {
           time: new Date(),
           status: newStatus,
-          httpCode: newHttp,
+          httpCode,
           durationMs,
         };
         return [entry, ...prev].slice(0, 10);
       });
     }
-  }, [helloUrl]);
+  }, [helloUrl, httpCode]);
 
   const checkDb = useCallback(async () => {
     setDbMessage('');
@@ -177,7 +202,7 @@ export default function SystemInfoPage(): React.ReactElement {
     }
   }, [dbInfoUrl]);
 
-  // 🔁 AUTO-LOOP: Backend → (hvis OK) DB → stopp når begge OK
+  // AUTO HEALTH LOOP
   useEffect(() => {
     let intervalId: number | null = null;
 
@@ -189,9 +214,7 @@ export default function SystemInfoPage(): React.ReactElement {
       }
 
       if (status === 'ok' && dbStatus === 'ok') {
-        if (intervalId) {
-          clearInterval(intervalId);
-        }
+        if (intervalId) clearInterval(intervalId);
         return;
       }
     }
@@ -199,15 +222,16 @@ export default function SystemInfoPage(): React.ReactElement {
     autoCheck();
     intervalId = window.setInterval(autoCheck, 3000);
 
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-    };
+    return () => intervalId && clearInterval(intervalId);
   }, [status, dbStatus, checkBackend, checkDb]);
 
+  const backendLoading = status !== 'ok';
   const dbStatusClass =
-    dbStatus === 'ok' ? 'text-green-700' : dbStatus === 'feil' ? 'text-red-700' : 'text-slate-700';
+    dbStatus === 'ok'
+      ? 'text-green-700'
+      : dbStatus === 'feil'
+      ? 'text-red-700'
+      : 'text-slate-700';
 
   return (
     <PageLayout
@@ -215,28 +239,24 @@ export default function SystemInfoPage(): React.ReactElement {
       subtitle="Health-check og responstider for backend."
       maxWidthClassName="max-w-6xl"
     >
-      {/* 🔥 ANIMASJON: Viser kun mens backend starter */}
-      {status !== 'ok' && (
+
+      {/* 🟡 Liten, underdrevet animasjon + spinner + humor */}
+      {backendLoading && (
         <motion.div
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="mb-4 p-4 text-sm text-orange-800 bg-orange-100 border border-orange-300 rounded-xl"
+          animate={{ opacity: [0.45, 1, 0.45] }}
+          transition={{ duration: 1.8, repeat: Infinity }}
+          className="mb-4 p-3 text-sm text-yellow-900 bg-yellow-100 border border-yellow-300 rounded-xl flex items-center"
         >
-          <motion.div
-            animate={{ opacity: [0.3, 1, 0.3] }}
-            transition={{ repeat: Infinity, duration: 1.4 }}
-          >
-            Starter backend … (Render kan bruke litt tid)
-          </motion.div>
+          <Spinner />
+          Backend vil starte snart (kanskje)…
         </motion.div>
       )}
 
       <section className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="md:col-span-2"
-        >
+
+        {/* BACKEND CARD */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="md:col-span-2">
           <Card title="Backend-status">
             <p className="text-sm text-slate-700">
               <span className="font-semibold">Hello-endepunkt:</span>
@@ -244,51 +264,69 @@ export default function SystemInfoPage(): React.ReactElement {
               <span className="text-xs break-all text-slate-500">{helloUrl}</span>
             </p>
 
-            <StatusBadge status={status} />
-
-            <p className="mt-3 text-sm text-slate-600">
-              Sist sjekket: {lastChecked ? lastChecked.toLocaleTimeString() : 'Aldri'}
-            </p>
-            <p className="text-sm text-slate-600">HTTP-kode (hello): {httpCode ?? '-'}</p>
-
-            <div className="mt-3 rounded-lg bg-slate-100 p-3 text-sm text-slate-700">
-              <span className="font-semibold">Melding:</span> {message}
-            </div>
+            {backendLoading ? (
+              <div className="space-y-4 mt-4">
+                <SkeletonBlock width="30%" height="1.5rem" />
+                <SkeletonCard />
+              </div>
+            ) : (
+              <>
+                <StatusBadge status={status} />
+                <p className="mt-3 text-sm text-slate-600">
+                  Sist sjekket: {lastChecked ? lastChecked.toLocaleTimeString() : 'Aldri'}
+                </p>
+                <p className="text-sm text-slate-600">HTTP-kode (hello): {httpCode ?? '-'}</p>
+                <div className="mt-3 rounded-lg bg-slate-100 p-3 text-sm text-slate-700">
+                  <span className="font-semibold">Melding:</span> {message}
+                </div>
+              </>
+            )}
           </Card>
         </motion.div>
 
+        {/* DB CARD */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           <Card title="Detaljert helsesjekk">
-            <div className="text-sm">
-              <p className="text-slate-700">
-                <span className="font-semibold">DB-endepunkt:</span>
-                <br />
-                <span className="text-xs break-all text-slate-500">{dbInfoUrl}</span>
-              </p>
-
-              <p className={`mt-2 ${dbStatusClass}`}>
-                Status: {dbStatus === 'ok' ? 'OK' : dbStatus === 'feil' ? 'Feil' : 'Ukjent'}
-              </p>
-
-              <p className="text-sm text-slate-700">HTTP-kode (dbinfo): {dbHttpCode ?? '-'}</p>
-
-              <div className="mt-3 rounded-lg bg-slate-100 p-3 text-xs text-slate-700">
-                <span className="font-semibold">DB-melding:</span>{' '}
-                {dbMessage || 'Ingen sjekk ennå.'}
+            {dbStatus === 'ok' ? (
+              <div className="text-sm">
+                <p className="text-slate-700">
+                  <span className="font-semibold">DB-endepunkt:</span>
+                  <br />
+                  <span className="text-xs break-all text-slate-500">{dbInfoUrl}</span>
+                </p>
+                <p className={`mt-2 ${dbStatusClass}`}>
+                  Status: {dbStatus === 'ok' ? 'OK' : dbStatus === 'feil' ? 'Feil' : 'Ukjent'}
+                </p>
+                <p className="text-sm text-slate-700">HTTP-kode (dbinfo): {dbHttpCode ?? '-'}</p>
+                <div className="mt-3 rounded-lg bg-slate-100 p-3 text-xs text-slate-700">
+                  <span className="font-semibold">DB-melding:</span> {dbMessage || 'Ingen sjekk ennå.'}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="space-y-3">
+                <SkeletonBlock width="50%" />
+                <SkeletonBlock width="30%" />
+                <SkeletonCard />
+              </div>
+            )}
           </Card>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="md:col-span-3"
-        >
+        {/* HISTORY CARD */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="md:col-span-3">
           <Card title="Responstid & logg">
-            <HistoryList history={history} />
+            {history.length === 0 ? (
+              <div className="space-y-3">
+                <SkeletonBlock width="70%" height="0.75rem" />
+                <SkeletonBlock width="60%" height="0.75rem" />
+                <SkeletonBlock width="50%" height="0.75rem" />
+              </div>
+            ) : (
+              <HistoryList history={history} />
+            )}
           </Card>
         </motion.div>
+
       </section>
     </PageLayout>
   );
