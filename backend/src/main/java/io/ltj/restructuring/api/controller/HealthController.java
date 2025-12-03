@@ -11,11 +11,17 @@ public class HealthController {
 
     @GetMapping("/hello")
     public ResponseEntity<String> hello() {
-        return ResponseEntity.ok("✅ Backend er oppe og svarer!");
+        return ResponseEntity.ok("Backend er oppe og svarer!");
     }
 
     @GetMapping("/ping")
     public ResponseEntity<String> ping() {
         return ResponseEntity.ok("pong");
+    }
+
+    // 🟢 DENNE MÅ DU LEGGE TIL
+    @GetMapping("/health")
+    public ResponseEntity<String> health() {
+        return ResponseEntity.ok("OK");
     }
 }

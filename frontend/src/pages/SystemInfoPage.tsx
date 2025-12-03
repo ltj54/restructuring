@@ -133,7 +133,7 @@ export default function SystemInfoPage(): React.ReactElement {
 
   const [history, setHistory] = useState<HistoryEntry[]>([]);
 
-  const helloUrl = useMemo(() => `${API_BASE_URL}/hello`, []);
+  const healthUrl = useMemo(() => `${API_BASE_URL}/health`, []);
   const dbInfoUrl = useMemo(() => `${API_BASE_URL}/dbinfo`, []);
 
   const checkBackend = useCallback(async () => {
@@ -144,7 +144,7 @@ export default function SystemInfoPage(): React.ReactElement {
     let newStatus: Health = 'ukjent';
 
     try {
-      const res = await fetch(helloUrl);
+      const res = await fetch(healthUrl);
       setHttpCode(res.status);
 
       if (res.ok) {
@@ -178,7 +178,7 @@ export default function SystemInfoPage(): React.ReactElement {
         return [entry, ...prev].slice(0, 10);
       });
     }
-  }, [helloUrl, httpCode]);
+  }, [healthUrl, httpCode]);
 
   const checkDb = useCallback(async () => {
     setDbMessage('');
@@ -239,8 +239,6 @@ export default function SystemInfoPage(): React.ReactElement {
       subtitle="Health-check og responstider for backend."
       maxWidthClassName="max-w-6xl"
     >
-
-      {/* 🟡 Liten, underdrevet animasjon + spinner + humor */}
       {backendLoading && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -255,13 +253,12 @@ export default function SystemInfoPage(): React.ReactElement {
 
       <section className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
 
-        {/* BACKEND CARD */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="md:col-span-2">
           <Card title="Backend-status">
             <p className="text-sm text-slate-700">
-              <span className="font-semibold">Hello-endepunkt:</span>
+              <span className="font-semibold">Health-endepunkt:</span>
               <br />
-              <span className="text-xs break-all text-slate-500">{helloUrl}</span>
+              <span className="text-xs break-all text-slate-500">{healthUrl}</span>
             </p>
 
             {backendLoading ? (
@@ -275,7 +272,7 @@ export default function SystemInfoPage(): React.ReactElement {
                 <p className="mt-3 text-sm text-slate-600">
                   Sist sjekket: {lastChecked ? lastChecked.toLocaleTimeString() : 'Aldri'}
                 </p>
-                <p className="text-sm text-slate-600">HTTP-kode (hello): {httpCode ?? '-'}</p>
+                <p className="text-sm text-slate-600">HTTP-kode (health): {httpCode ?? '-'}</p>
                 <div className="mt-3 rounded-lg bg-slate-100 p-3 text-sm text-slate-700">
                   <span className="font-semibold">Melding:</span> {message}
                 </div>
@@ -284,7 +281,6 @@ export default function SystemInfoPage(): React.ReactElement {
           </Card>
         </motion.div>
 
-        {/* DB CARD */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           <Card title="Detaljert helsesjekk">
             {dbStatus === 'ok' ? (
@@ -312,7 +308,6 @@ export default function SystemInfoPage(): React.ReactElement {
           </Card>
         </motion.div>
 
-        {/* HISTORY CARD */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="md:col-span-3">
           <Card title="Responstid & logg">
             {history.length === 0 ? (
