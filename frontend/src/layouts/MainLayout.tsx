@@ -22,11 +22,13 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
   const isAuthenticated = !!user;
 
   const displayName: string =
-    (user && (user.fullName || user.name || user.displayName || user.email)) || 'Ikke pålogget';
+    (user && (user.fullName || user.name || user.displayName || user.email)) ||
+    'Ikke pålogget';
 
   const initials = useMemo(() => {
     if (!user) return '--';
-    const source = user.fullName || user.name || user.displayName || user.email || '';
+    const source =
+      user.fullName || user.name || user.displayName || user.email || '';
     const parts = String(source).split('@')[0].split(' ');
     const letters = parts
       .filter((p: string) => p.trim().length > 0)
@@ -58,8 +60,13 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-brand-soft via-white to-slate-50 text-slate-900 flex flex-col dark:from-darkbg dark:via-slate-950 dark:to-darkbg dark:text-gray-100">
+
+      {/* -------------------------------------------------------------------
+         TOP HEADER
+      ------------------------------------------------------------------- */}
       <header className="w-full bg-transparent shadow-none sticky top-0 z-40 backdrop-blur-sm">
         <nav className="relative max-w-5xl mx-auto flex items-center justify-between px-4 py-3">
+
           {/* AVATAR + INFO */}
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-slate-900 text-white flex items-center justify-center rounded-md font-bold dark:bg-slate-700">
@@ -67,7 +74,9 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
             </div>
 
             <div className="flex flex-col">
-              <span className="font-medium truncate max-w-[160px]">{displayName}</span>
+              <span className="font-medium truncate max-w-[160px]">
+                {displayName}
+              </span>
               <span className="text-xs text-gray-500 dark:text-gray-400">
                 {isAuthenticated ? 'Pålogget' : 'Ikke pålogget'}
               </span>
@@ -83,47 +92,49 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
             </div>
           </div>
 
-          {/* HAMBURGER + ANCHOR */}
-          <div className="relative">
+          {/* LOGG UT + HAMBURGER */}
+          <div className="relative flex items-center gap-4">
+
+            {/* 👈🏼 New: Logg ut is now here */}
+            {isAuthenticated && (
+              <button
+                onClick={handleLogout}
+                className="text-sm text-red-600 hover:text-red-800 dark:text-red-300 dark:hover:text-red-400 font-medium"
+              >
+                Logg ut
+              </button>
+            )}
+
+            {/* Hamburger */}
             <button
               onClick={() => setMenuOpen((prev) => !prev)}
               className="flex items-center gap-1 hover:text-brand-dark transition text-slate-900 dark:text-gray-100"
             >
-              <span className="text-lg" aria-hidden>
-                ☰
-              </span>
+              <span className="text-lg">☰</span>
               <span className="text-sm">Meny</span>
             </button>
 
-            {/* DROPDOWN MENU */}
             {menuOpen && (
               <>
-                {/* Bakgrunn for modal */}
                 <div
                   onClick={() => setMenuOpen(false)}
                   className="fixed inset-0 bg-black/10 backdrop-blur-sm z-40"
                 />
-
-                {/* Selve menyboksen - én versjon, responsivt posisjonert */}
                 <div
                   className="
                     absolute z-50 rounded-xl shadow-xl border border-gray-200 dark:border-slate-700
                     bg-white dark:bg-slate-900
                     animate-[fadeInScale_0.18s_ease-out]
-
                     right-3 left-auto top-9 w-[75vw]
-
                     sm:right-0 sm:left-auto sm:top-10 sm:w-64
                   "
                 >
-                  {/* CARET / PIL */}
                   <div
                     className="
                       absolute w-4 h-4 rotate-45 border-l border-t
                       bg-white dark:bg-slate-900
                       border-gray-200 dark:border-slate-700
                       -top-2 right-6
-                      sm:right-6
                     "
                   />
 
@@ -143,22 +154,12 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
                           ].join(' ')
                         }
                       >
-                        <span aria-hidden>{link.icon}</span>
+                        <span>{link.icon}</span>
                         <span>{link.label}</span>
                       </NavLink>
                     ))}
 
-                    {isAuthenticated && (
-                      <>
-                        <div className="mt-2 border-t border-gray-200 dark:border-slate-700 mx-4" />
-                        <button
-                          onClick={handleLogout}
-                          className="mt-2 mx-4 w-[calc(100%-2rem)] flex items-center justify-between gap-2 px-3 py-2 text-sm rounded-lg bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-900/40 dark:text-red-300 dark:hover:bg-red-900/60"
-                        >
-                          <span>⇦ Logg ut</span>
-                        </button>
-                      </>
-                    )}
+                    {/* ❌ Logg ut removed from menu */}
                   </div>
                 </div>
               </>
@@ -167,7 +168,9 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
         </nav>
       </header>
 
-      {/* SIDEINNHOLD */}
+      {/* ❌ SESSION BAR REMOVED */}
+
+      {/* CONTENT */}
       <main className="flex-grow">
         <Suspense
           fallback={
@@ -184,8 +187,6 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
 }
 
 /*
-Legg denne i globals.css hvis den ikke eksisterer:
-
 @keyframes fadeInScale {
   0%   { opacity: 0; transform: scale(0.94); }
   100% { opacity: 1; transform: scale(1); }
