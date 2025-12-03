@@ -136,13 +136,6 @@
                             <version>1.18.32</version>
                         </path>
                     </annotationProcessorPaths>
-                    <testAnnotationProcessorPaths>
-                        <path>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                            <version>1.18.32</version>
-                        </path>
-                    </testAnnotationProcessorPaths>
                 </configuration>
             </plugin>
             <plugin>

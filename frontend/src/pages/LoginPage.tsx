@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FormAlert } from '@/components/form/FormAlert';
 import TextField from '@/components/form/TextField';
 import Card from '@/components/Card';
@@ -13,6 +13,12 @@ export default function LoginPage() {
     register,
     formState: { errors },
   } = form;
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const query = new URLSearchParams(location.search);
+  const redirectTo = query.get('redirect') || '/insurance';
 
   return (
     <PageLayout
@@ -29,7 +35,16 @@ export default function LoginPage() {
           />
         )}
 
-        <form onSubmit={onSubmit} className="flex flex-col gap-5 mt-4">
+        <form
+          onSubmit={form.handleSubmit(async (data) => {
+            const success = await onSubmit(data);
+
+            if (success) {
+              navigate(redirectTo, { replace: true });
+            }
+          })}
+          className="flex flex-col gap-5 mt-4"
+        >
           <TextField
             type="email"
             label="E-post"
@@ -38,6 +53,7 @@ export default function LoginPage() {
             error={errors.email?.message}
             {...register('email')}
           />
+
           <TextField
             type="password"
             label="Passord"
