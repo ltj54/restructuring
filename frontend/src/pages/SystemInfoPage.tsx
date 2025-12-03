@@ -282,7 +282,7 @@ export default function SystemInfoPage(): React.ReactElement {
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <Card title="Detaljert helsesjekk">
+          <Card title="Database-status">
             {dbStatus === 'ok' ? (
               <div className="text-sm">
                 <p className="text-slate-700">
@@ -309,7 +309,7 @@ export default function SystemInfoPage(): React.ReactElement {
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="md:col-span-3">
-          <Card title="Responstid & logg">
+          <Card title="Responstid og logg">
             {history.length === 0 ? (
               <div className="space-y-3">
                 <SkeletonBlock width="70%" height="0.75rem" />
