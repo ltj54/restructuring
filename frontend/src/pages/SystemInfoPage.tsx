@@ -66,8 +66,8 @@ function StatusBadge({ status }: { status: Health }) {
     status === 'ok'
       ? 'bg-green-100 text-green-800 border-green-300'
       : status === 'feil'
-        ? 'bg-red-100 text-red-800 border-red-300'
-        : 'bg-slate-100 text-slate-700 border-slate-300';
+      ? 'bg-red-100 text-red-800 border-red-300'
+      : 'bg-slate-100 text-slate-700 border-slate-300';
 
   return (
     <motion.div
@@ -83,8 +83,8 @@ function StatusBadge({ status }: { status: Health }) {
           status === 'ok'
             ? 'bg-green-500'
             : status === 'feil'
-              ? 'bg-red-500'
-              : 'bg-slate-500'
+            ? 'bg-red-500'
+            : 'bg-slate-500'
         }`}
       />
       <span className="font-semibold">
@@ -113,8 +113,8 @@ function HistoryList({ history }: { history: HistoryEntry[] }) {
           entry.status === 'ok'
             ? 'bg-green-500'
             : entry.status === 'feil'
-              ? 'bg-red-500'
-              : 'bg-slate-400';
+            ? 'bg-red-500'
+            : 'bg-slate-400';
 
         return (
           <div key={i} className="flex items-center gap-2">
@@ -209,8 +209,9 @@ export default function SystemInfoPage(): React.ReactElement {
   }, [helloUrl, startWaitingForResponse, stopWaitingForResponse]);
 
   const checkDb = useCallback(async () => {
-    setDbMessage('');
     startWaitingForResponse();
+    setDbMessage('');
+
     try {
       const res = await fetch(dbInfoUrl);
       setDbHttpCode(res.status);
@@ -232,31 +233,35 @@ export default function SystemInfoPage(): React.ReactElement {
     }
   }, [dbInfoUrl, startWaitingForResponse, stopWaitingForResponse]);
 
-  // 🟦 ENDRET: FJERNET BUTTON, LAGT TIL AUTO-LOOP
-  //
-  // Denne loopen kjører helsesjekk kontinuerlig
-  // til både backend og DB svarer OK.
-  //
+  // 🔁 AUTO-LOOP: Backend → (hvis OK) DB → stopp når begge OK
   useEffect(() => {
     let intervalId: number | null = null;
 
-    async function runLoop() {
+    async function autoCheck() {
       await checkBackend();
-      await checkDb();
 
-      // Stopp loop når begge er OK
+      if (status === 'ok') {
+        await checkDb();
+      }
+
       if (status === 'ok' && dbStatus === 'ok') {
-        if (intervalId) clearInterval(intervalId);
+        if (intervalId) {
+          clearInterval(intervalId);
+        }
         return;
       }
     }
 
-    // Start loop (f.eks. hvert 3. sekund til alt er oppe)
-    runLoop();
-    intervalId = window.setInterval(runLoop, 3000);
+    // Start med en gang
+    autoCheck();
+
+    // Sjekk hvert 3s til OK
+    intervalId = window.setInterval(autoCheck, 3000);
 
     return () => {
-      if (intervalId) clearInterval(intervalId);
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
     };
   }, [status, dbStatus, checkBackend, checkDb]);
 
@@ -274,6 +279,22 @@ export default function SystemInfoPage(): React.ReactElement {
         waitingSecondsLeft={waitingSecondsLeft}
       />
 
+      {/* 🔥 ANIMASJON: Viser kun mens backend starter */}
+      {status !== 'ok' && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="mb-4 p-4 text-sm text-orange-800 bg-orange-100 border border-orange-300 rounded-xl"
+        >
+          <motion.div
+            animate={{ opacity: [0.4, 1, 0.4] }}
+            transition={{ repeat: Infinity, duration: 1.5 }}
+          >
+            Starter backend … (Render kan bruke litt tid)
+          </motion.div>
+        </motion.div>
+      )}
+
       <section className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -288,8 +309,6 @@ export default function SystemInfoPage(): React.ReactElement {
             </p>
 
             <StatusBadge status={status} />
-
-            {/* 🟦 FJERNET KNAPP HER */}
 
             <p className="mt-3 text-sm text-slate-600">
               Sist sjekket: {lastChecked ? lastChecked.toLocaleTimeString() : 'Aldri'}
