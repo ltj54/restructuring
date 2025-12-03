@@ -105,7 +105,10 @@ function HistoryList({ history }: { history: HistoryEntry[] }) {
             : 'bg-slate-400';
 
         return (
-          <div key={i} className="rounded-xl border border-slate-100 bg-white/80 p-3 shadow-sm shadow-slate-100">
+          <div
+            key={i}
+            className="rounded-xl border border-slate-100 bg-white/80 p-3 shadow-sm shadow-slate-100"
+          >
             <div className="flex items-center justify-between text-xs text-slate-500">
               <span>{entry.time.toLocaleTimeString()}</span>
               <span className="font-semibold text-slate-700">
@@ -164,10 +167,12 @@ export default function SystemInfoPage(): React.ReactElement {
 
     const start = performance.now();
     let newStatus: Health = 'ukjent';
+    let statusCode: number | null = null;
 
     try {
       const res = await fetch(healthUrl);
-      setHttpCode(res.status);
+      statusCode = res.status;
+      setHttpCode(statusCode);
 
       if (res.ok) {
         newStatus = 'ok';
@@ -194,13 +199,13 @@ export default function SystemInfoPage(): React.ReactElement {
         const entry: HistoryEntry = {
           time: new Date(),
           status: newStatus,
-          httpCode,
+          httpCode: statusCode,
           durationMs,
         };
         return [entry, ...prev].slice(0, 10);
       });
     }
-  }, [healthUrl, httpCode]);
+  }, [healthUrl]);
 
   const checkDb = useCallback(async () => {
     setDbMessage('');
@@ -258,7 +263,7 @@ export default function SystemInfoPage(): React.ReactElement {
   return (
     <PageLayout
       title="Systemstatus"
-      subtitle="Health-check og responstider for backend."
+      subtitle="Oppdatert oversikt over backend, database og målelogg."
       maxWidthClassName="max-w-6xl"
     >
       {backendLoading && (
@@ -266,71 +271,145 @@ export default function SystemInfoPage(): React.ReactElement {
           initial={{ opacity: 0 }}
           animate={{ opacity: [0.45, 1, 0.45] }}
           transition={{ duration: 1.8, repeat: Infinity }}
-          className="mb-4 p-3 text-sm text-yellow-900 bg-yellow-100 border border-yellow-300 rounded-xl flex items-center"
+          className="mb-4 flex items-center rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900"
         >
           <Spinner />
-          Backend vil starte snart (kanskje)…
+          Backend starter opp, vi oppdaterer statusen fortløpende.
         </motion.div>
       )}
 
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
-
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="md:col-span-2">
-          <Card title="Backend-status">
-            <p className="text-sm text-slate-700">
-              <span className="font-semibold">Health-endepunkt:</span>
-              <br />
-              <span className="text-xs break-all text-slate-500">{healthUrl}</span>
-            </p>
-
-            {backendLoading ? (
-              <div className="space-y-4 mt-4">
-                <SkeletonBlock width="30%" height="1.5rem" />
-                <SkeletonCard />
-              </div>
-            ) : (
-              <>
-                <StatusBadge status={status} />
-                <p className="mt-3 text-sm text-slate-600">
-                  Sist sjekket: {lastChecked ? lastChecked.toLocaleTimeString() : 'Aldri'}
-                </p>
-                <p className="text-sm text-slate-600">HTTP-kode (health): {httpCode ?? '-'}</p>
-                <div className="mt-3 rounded-lg bg-slate-100 p-3 text-sm text-slate-700">
-                  <span className="font-semibold">Melding:</span> {message}
+      <section className="space-y-6">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="grid grid-cols-1 gap-6 xl:grid-cols-12"
+        >
+          <div className="xl:col-span-8">
+            <Card title="Backend-overvåkning">
+              <div className="rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 px-5 py-4 text-white shadow-inner shadow-slate-900/10">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
+                      Backend
+                    </p>
+                    <div className="mt-2 flex flex-wrap items-center gap-3">
+                      <StatusBadge status={status} />
+                      {latestEntry?.durationMs ? (
+                        <div className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs text-white/80">
+                          Siste responstid: {Math.round(latestEntry.durationMs)} ms
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 text-xs sm:text-sm">
+                    <div className="rounded-xl border border-white/10 bg-white/10 px-3 py-2">
+                      <p className="text-slate-300">Sist sjekket</p>
+                      <p className="font-semibold text-white">
+                        {lastChecked ? lastChecked.toLocaleTimeString() : 'Aldri'}
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-white/10 bg-white/10 px-3 py-2">
+                      <p className="text-slate-300">HTTP-kode</p>
+                      <p className="font-semibold text-white">{httpCode ?? '-'}</p>
+                    </div>
+                  </div>
                 </div>
-              </>
-            )}
-          </Card>
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-white/70">
+                    {healthUrl}
+                  </span>
+                  <span className="text-sm text-white/80">{message || 'Avventer første måling.'}</span>
+                </div>
+              </div>
+
+              {backendLoading ? (
+                <div className="mt-5 space-y-4">
+                  <SkeletonBlock width="35%" height="1.4rem" />
+                  <SkeletonCard />
+                </div>
+              ) : (
+                <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                    <p className="text-xs uppercase tracking-wider text-slate-500">
+                      Health-endepunkt
+                    </p>
+                    <p className="mt-2 break-all text-xs text-slate-600">{healthUrl}</p>
+                    <p className="mt-3 text-sm text-slate-700">
+                      HTTP-kode (health): <span className="font-semibold text-slate-900">{httpCode ?? '-'}</span>
+                    </p>
+                    <div className="mt-3 rounded-lg bg-white p-3 text-sm text-slate-700 shadow-sm shadow-slate-100">
+                      <span className="font-semibold">Melding:</span> {message}
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100">
+                    <p className="text-xs uppercase tracking-wider text-slate-500">
+                      Responstid snapshot
+                    </p>
+                    {latestEntry ? (
+                      <div className="mt-3 space-y-2 text-sm text-slate-700">
+                        <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+                          <span>Responstid</span>
+                          <span className="font-semibold text-slate-900">
+                            {Math.round(latestEntry.durationMs ?? 0)} ms
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+                          <span>Status</span>
+                          <StatusBadge status={latestEntry.status} />
+                        </div>
+                        <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+                          <span>HTTP</span>
+                          <span className="font-semibold text-slate-900">
+                            {latestEntry.httpCode ?? '-'}
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <SkeletonBlock width="70%" />
+                        <SkeletonBlock width="40%" />
+                        <SkeletonBlock width="85%" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </Card>
+          </div>
+
+          <div className="xl:col-span-4">
+            <Card title="Database-status">
+              {dbStatus === 'ok' ? (
+                <div className="space-y-4 text-sm">
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                    <p className="text-xs uppercase tracking-wider text-slate-500">
+                      DB-endepunkt
+                    </p>
+                    <p className="mt-2 break-all text-xs text-slate-600">{dbInfoUrl}</p>
+                    <p className={`mt-3 font-semibold ${dbStatusClass}`}>
+                      Status: {dbStatus === 'ok' ? 'OK' : dbStatus === 'feil' ? 'Feil' : 'Ukjent'}
+                    </p>
+                    <p className="text-sm text-slate-700">HTTP-kode (dbinfo): {dbHttpCode ?? '-'}</p>
+                  </div>
+                  <div className="rounded-2xl border border-slate-100 bg-white p-4 text-xs text-slate-700 shadow-sm shadow-slate-100">
+                    <p className="text-xs uppercase tracking-wider text-slate-500">DB-melding</p>
+                    <p className="mt-2 leading-relaxed">
+                      {dbMessage || 'Ingen sjekk ennå.'}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <SkeletonBlock width="45%" />
+                  <SkeletonBlock width="25%" />
+                  <SkeletonCard />
+                </div>
+              )}
+            </Card>
+          </div>
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <Card title="Database-status">
-            {dbStatus === 'ok' ? (
-              <div className="text-sm">
-                <p className="text-slate-700">
-                  <span className="font-semibold">DB-endepunkt:</span>
-                  <br />
-                  <span className="text-xs break-all text-slate-500">{dbInfoUrl}</span>
-                </p>
-                <p className={`mt-2 ${dbStatusClass}`}>
-                  Status: {dbStatus === 'ok' ? 'OK' : dbStatus === 'feil' ? 'Feil' : 'Ukjent'}
-                </p>
-                <p className="text-sm text-slate-700">HTTP-kode (dbinfo): {dbHttpCode ?? '-'}</p>
-                <div className="mt-3 rounded-lg bg-slate-100 p-3 text-xs text-slate-700">
-                  <span className="font-semibold">DB-melding:</span> {dbMessage || 'Ingen sjekk ennå.'}
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <SkeletonBlock width="50%" />
-                <SkeletonBlock width="30%" />
-                <SkeletonCard />
-              </div>
-            )}
-          </Card>
-        </motion.div>
-
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="md:col-span-3">
           <Card title="Responstid og logg">
             {history.length === 0 ? (
               <div className="space-y-3">
@@ -343,7 +422,6 @@ export default function SystemInfoPage(): React.ReactElement {
             )}
           </Card>
         </motion.div>
-
       </section>
     </PageLayout>
   );
