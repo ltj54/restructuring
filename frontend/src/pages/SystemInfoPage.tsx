@@ -13,8 +13,6 @@ type HistoryEntry = {
   durationMs: number | null;
 };
 
-const WAIT_ESTIMATE_SECONDS = 60;
-
 const pulseAnimation = {
   initial: { scale: 1, opacity: 1 },
   animate: {
@@ -23,43 +21,6 @@ const pulseAnimation = {
     transition: { duration: 1.6, repeat: Infinity },
   },
 };
-
-function WaitingOverlay({
-  waitingForResponse,
-  waitingSecondsLeft,
-}: {
-  waitingForResponse: boolean;
-  waitingSecondsLeft: number | null;
-}): React.ReactElement | null {
-  if (!waitingForResponse) {
-    return null;
-  }
-
-  return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-2xl shadow-xl max-w-sm w-full px-6 py-5 text-sm text-slate-800"
-      >
-        <p className="font-semibold text-slate-900">Venter på svar fra tjenesten...</p>
-        <p className="mt-2 text-slate-700">
-          Backend kjører på Render (gratisversjon), og kan bruke litt tid på å starte opp når den
-          har vært inaktiv.
-        </p>
-        <p className="mt-3 text-xs text-slate-500">
-          Estimert ventetid:{' '}
-          {waitingSecondsLeft !== null
-            ? `${waitingSecondsLeft} sekunder`
-            : `${WAIT_ESTIMATE_SECONDS} sekunder`}
-        </p>
-        <p className="mt-1 text-xs text-slate-500">
-          Popupen forsvinner automatisk så snart vi får svar fra tjenesten.
-        </p>
-      </motion.div>
-    </div>
-  );
-}
 
 function StatusBadge({ status }: { status: Health }) {
   const statusClass =
@@ -144,26 +105,13 @@ export default function SystemInfoPage(): React.ReactElement {
   const [dbMessage, setDbMessage] = useState<string>('');
 
   const [history, setHistory] = useState<HistoryEntry[]>([]);
-  const [waitingForResponse, setWaitingForResponse] = useState<boolean>(false);
-  const [waitingSecondsLeft, setWaitingSecondsLeft] = useState<number | null>(null);
 
   const helloUrl = useMemo(() => `${API_BASE_URL}/hello`, []);
   const dbInfoUrl = useMemo(() => `${API_BASE_URL}/dbinfo`, []);
 
-  const startWaitingForResponse = useCallback(() => {
-    setWaitingForResponse(true);
-    setWaitingSecondsLeft(WAIT_ESTIMATE_SECONDS);
-  }, []);
-
-  const stopWaitingForResponse = useCallback(() => {
-    setWaitingForResponse(false);
-    setWaitingSecondsLeft(null);
-  }, []);
-
   const checkBackend = useCallback(async () => {
     setChecking(true);
     setMessage('');
-    startWaitingForResponse();
 
     const start = performance.now();
     let newStatus: Health = 'ukjent';
@@ -189,7 +137,6 @@ export default function SystemInfoPage(): React.ReactElement {
       setMessage('Ingen respons fra backend.');
       setHttpCode(null);
     } finally {
-      stopWaitingForResponse();
       const end = performance.now();
       const durationMs = end - start;
 
@@ -206,10 +153,9 @@ export default function SystemInfoPage(): React.ReactElement {
         return [entry, ...prev].slice(0, 10);
       });
     }
-  }, [helloUrl, startWaitingForResponse, stopWaitingForResponse]);
+  }, [helloUrl]);
 
   const checkDb = useCallback(async () => {
-    startWaitingForResponse();
     setDbMessage('');
 
     try {
@@ -228,10 +174,8 @@ export default function SystemInfoPage(): React.ReactElement {
       setDbStatus('feil');
       setDbHttpCode(null);
       setDbMessage('Ingen respons fra DB-endepunkt.');
-    } finally {
-      stopWaitingForResponse();
     }
-  }, [dbInfoUrl, startWaitingForResponse, stopWaitingForResponse]);
+  }, [dbInfoUrl]);
 
   // 🔁 AUTO-LOOP: Backend → (hvis OK) DB → stopp når begge OK
   useEffect(() => {
@@ -252,10 +196,7 @@ export default function SystemInfoPage(): React.ReactElement {
       }
     }
 
-    // Start med en gang
     autoCheck();
-
-    // Sjekk hvert 3s til OK
     intervalId = window.setInterval(autoCheck, 3000);
 
     return () => {
@@ -274,11 +215,6 @@ export default function SystemInfoPage(): React.ReactElement {
       subtitle="Health-check og responstider for backend."
       maxWidthClassName="max-w-6xl"
     >
-      <WaitingOverlay
-        waitingForResponse={waitingForResponse}
-        waitingSecondsLeft={waitingSecondsLeft}
-      />
-
       {/* 🔥 ANIMASJON: Viser kun mens backend starter */}
       {status !== 'ok' && (
         <motion.div
@@ -287,8 +223,8 @@ export default function SystemInfoPage(): React.ReactElement {
           className="mb-4 p-4 text-sm text-orange-800 bg-orange-100 border border-orange-300 rounded-xl"
         >
           <motion.div
-            animate={{ opacity: [0.4, 1, 0.4] }}
-            transition={{ repeat: Infinity, duration: 1.5 }}
+            animate={{ opacity: [0.3, 1, 0.3] }}
+            transition={{ repeat: Infinity, duration: 1.4 }}
           >
             Starter backend … (Render kan bruke litt tid)
           </motion.div>
