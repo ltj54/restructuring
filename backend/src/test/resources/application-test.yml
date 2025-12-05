@@ -21,3 +21,7 @@ jwt:
 logging:
   level:
     org.springframework: INFO
+
+openai:
+  api:
+    key: dummy-test-key
