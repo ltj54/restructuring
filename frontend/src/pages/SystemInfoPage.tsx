@@ -13,22 +13,24 @@ type HistoryEntry = {
   durationMs: number | null;
 };
 
-// Simple spinner for the booting banner
+// ----------------------------------------------------
+//  Small UI helpers
+// ----------------------------------------------------
+
 function Spinner() {
   return (
     <motion.div
-      className="mr-2 inline-block h-4 w-4 rounded-full border-2 border-amber-600 border-t-transparent"
+      className="mr-2 inline-block h-4 w-4 rounded-full border-2 border-blue-500 border-t-transparent"
       animate={{ rotate: 360 }}
       transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
     />
   );
 }
 
-// Skeleton block
 function SkeletonBlock({ width = '100%', height = '1rem' }) {
   return (
     <div
-      className="animate-pulse rounded bg-slate-200/80"
+      className="animate-pulse rounded bg-slate-200/70"
       style={{ width, height }}
     />
   );
@@ -36,42 +38,37 @@ function SkeletonBlock({ width = '100%', height = '1rem' }) {
 
 function SkeletonCard() {
   return (
-    <div className="space-y-3 rounded-xl bg-slate-50 p-3">
-      <SkeletonBlock width="55%" />
-      <SkeletonBlock width="35%" />
-      <SkeletonBlock width="90%" height="0.75rem" />
-      <SkeletonBlock width="75%" height="0.75rem" />
-      <SkeletonBlock width="50%" height="0.75rem" />
+    <div className="space-y-3 rounded-xl bg-white p-4 shadow-sm border border-slate-100">
+      <SkeletonBlock width="60%" />
+      <SkeletonBlock width="40%" />
+      <SkeletonBlock width="80%" height="0.8rem" />
+      <SkeletonBlock width="70%" height="0.8rem" />
     </div>
   );
 }
 
 function StatusBadge({ status }: { status: Health }) {
-  const statusClass =
+  const color =
     status === 'ok'
-      ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+      ? 'bg-emerald-100 text-emerald-700 border-emerald-300'
       : status === 'feil'
-      ? 'bg-rose-100 text-rose-800 border-rose-300'
+      ? 'bg-rose-100 text-rose-700 border-rose-300'
       : 'bg-slate-100 text-slate-700 border-slate-300';
 
+  const dot =
+    status === 'ok'
+      ? 'bg-emerald-500'
+      : status === 'feil'
+      ? 'bg-rose-500'
+      : 'bg-slate-500';
+
   return (
-    <div
-      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm ${statusClass}`}
+    <span
+      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm ${color}`}
     >
-      <span
-        aria-hidden="true"
-        className={`h-2.5 w-2.5 rounded-full ${
-          status === 'ok'
-            ? 'bg-emerald-500'
-            : status === 'feil'
-            ? 'bg-rose-500'
-            : 'bg-slate-500'
-        }`}
-      />
-      <span className="font-semibold">
-        {status === 'ok' ? 'Online' : status === 'feil' ? 'Offline' : 'Ukjent'}
-      </span>
-    </div>
+      <span className={`h-2.5 w-2.5 rounded-full ${dot}`} />
+      {status === 'ok' ? 'Online' : status === 'feil' ? 'Offline' : 'Ukjent'}
+    </span>
   );
 }
 
@@ -79,25 +76,23 @@ function HistoryList({ history }: { history: HistoryEntry[] }) {
   if (history.length === 0) {
     return (
       <div className="space-y-2">
-        <SkeletonBlock width="30%" />
-        <SkeletonBlock width="90%" height="0.5rem" />
-        <SkeletonBlock width="85%" height="0.5rem" />
-        <SkeletonBlock width="70%" height="0.5rem" />
+        <SkeletonBlock width="40%" />
+        <SkeletonBlock width="80%" height="0.6rem" />
+        <SkeletonBlock width="75%" height="0.6rem" />
       </div>
     );
   }
 
-  const maxDuration =
-    history.length > 0 ? Math.max(...history.map((h) => h.durationMs || 0), 1) : 1;
+  const maxDuration = Math.max(...history.map((h) => h.durationMs || 1));
 
   return (
-    <div className="space-y-3 text-sm text-slate-700">
+    <div className="space-y-3 text-sm">
       {history.map((entry, i) => {
         const ratio = entry.durationMs
           ? Math.min(100, (entry.durationMs / maxDuration) * 100)
           : 5;
 
-        const barColor =
+        const bar =
           entry.status === 'ok'
             ? 'bg-emerald-500'
             : entry.status === 'feil'
@@ -107,42 +102,34 @@ function HistoryList({ history }: { history: HistoryEntry[] }) {
         return (
           <div
             key={i}
-            className="rounded-xl border border-slate-100 bg-white/80 p-3 shadow-sm shadow-slate-100"
+            className="border border-slate-200 rounded-xl bg-white p-3 shadow-sm"
           >
-            <div className="flex items-center justify-between text-xs text-slate-500">
+            <div className="flex justify-between text-xs text-slate-500">
               <span>{entry.time.toLocaleTimeString()}</span>
               <span className="font-semibold text-slate-700">
                 {entry.durationMs ? `${Math.round(entry.durationMs)} ms` : 'Ingen måling'}
               </span>
             </div>
+
             <div className="mt-2 flex items-center gap-3">
               <div className="flex-1 overflow-hidden rounded-full bg-slate-200">
-                <div className={`h-2 ${barColor}`} style={{ width: `${ratio}%` }} />
+                <div className={`h-2 ${bar}`} style={{ width: `${ratio}%` }} />
               </div>
-              <div className="flex items-center gap-2 text-xs">
-                <span
-                  className={`h-2.5 w-2.5 rounded-full ${
-                    entry.status === 'ok'
-                      ? 'bg-emerald-500'
-                      : entry.status === 'feil'
-                      ? 'bg-rose-500'
-                      : 'bg-slate-400'
-                  }`}
-                />
-                <span className="uppercase tracking-wide text-slate-600">
-                  {entry.status === 'ok' ? 'OK' : entry.status === 'feil' ? 'FEIL' : 'UKJENT'}
-                </span>
-              </div>
+
+              <StatusBadge status={entry.status} />
             </div>
-            <div className="mt-2 text-xs text-slate-500">
-              HTTP: {entry.httpCode ?? '-'}
-            </div>
+
+            <div className="mt-2 text-xs text-slate-500">HTTP: {entry.httpCode ?? '-'}</div>
           </div>
         );
       })}
     </div>
   );
 }
+
+// ----------------------------------------------------
+//   MAIN PAGE
+// ----------------------------------------------------
 
 export default function SystemInfoPage(): React.ReactElement {
   const [status, setStatus] = useState<Health>('ukjent');
@@ -161,18 +148,21 @@ export default function SystemInfoPage(): React.ReactElement {
   const healthUrl = useMemo(() => `${API_BASE_URL}/health`, []);
   const dbInfoUrl = useMemo(() => `${API_BASE_URL}/dbinfo`, []);
 
+  // ---------------------------------------
+  // Backend check
+  // ---------------------------------------
   const checkBackend = useCallback(async () => {
     setChecking(true);
     setMessage('');
 
     const start = performance.now();
     let newStatus: Health = 'ukjent';
-    let statusCode: number | null = null;
+    let code: number | null = null;
 
     try {
       const res = await fetch(healthUrl);
-      statusCode = res.status;
-      setHttpCode(statusCode);
+      code = res.status;
+      setHttpCode(code);
 
       if (res.ok) {
         newStatus = 'ok';
@@ -186,11 +176,10 @@ export default function SystemInfoPage(): React.ReactElement {
     } catch {
       newStatus = 'feil';
       setStatus('feil');
-      setMessage('Ingen respons fra backend.');
       setHttpCode(null);
+      setMessage('Ingen respons fra backend.');
     } finally {
-      const end = performance.now();
-      const durationMs = end - start;
+      const durationMs = performance.now() - start;
 
       setLastChecked(new Date());
       setChecking(false);
@@ -199,7 +188,7 @@ export default function SystemInfoPage(): React.ReactElement {
         const entry: HistoryEntry = {
           time: new Date(),
           status: newStatus,
-          httpCode: statusCode,
+          httpCode: code,
           durationMs,
         };
         return [entry, ...prev].slice(0, 10);
@@ -207,6 +196,9 @@ export default function SystemInfoPage(): React.ReactElement {
     }
   }, [healthUrl]);
 
+  // ---------------------------------------
+  // DB check
+  // ---------------------------------------
   const checkDb = useCallback(async () => {
     setDbMessage('');
 
@@ -229,11 +221,13 @@ export default function SystemInfoPage(): React.ReactElement {
     }
   }, [dbInfoUrl]);
 
-  // AUTO HEALTH LOOP
+  // ---------------------------------------
+  // Auto loop
+  // ---------------------------------------
   useEffect(() => {
-    let intervalId: number | null = null;
+    let id: number | null = null;
 
-    async function autoCheck() {
+    async function loop() {
       await checkBackend();
 
       if (status === 'ok') {
@@ -241,188 +235,125 @@ export default function SystemInfoPage(): React.ReactElement {
       }
 
       if (status === 'ok' && dbStatus === 'ok') {
-        if (intervalId) clearInterval(intervalId);
-        return;
+        if (id) clearInterval(id);
       }
     }
 
-    autoCheck();
-    intervalId = window.setInterval(autoCheck, 3000);
+    loop();
+    id = window.setInterval(loop, 3000);
 
-    return () => intervalId && clearInterval(intervalId);
+    return () => id && clearInterval(id);
   }, [status, dbStatus, checkBackend, checkDb]);
 
-  const backendLoading = status !== 'ok';
-  const dbStatusClass =
-    dbStatus === 'ok'
-      ? 'text-green-700'
-      : dbStatus === 'feil'
-      ? 'text-red-700'
-      : 'text-slate-700';
+  const loading = status !== 'ok';
 
   return (
     <PageLayout
       title="Systemstatus"
-      subtitle="Oppdatert oversikt over backend, database og målelogg."
-      maxWidthClassName="max-w-6xl"
+      subtitle="Enkel og ryddig oversikt over backend, database og nylige målinger."
+      maxWidthClassName="max-w-5xl"
     >
-      {backendLoading && (
+      {/* BOOT BANNER */}
+      {loading && (
         <motion.div
           initial={{ opacity: 0 }}
-          animate={{ opacity: [0.45, 1, 0.45] }}
+          animate={{ opacity: [0.4, 1, 0.4] }}
           transition={{ duration: 1.8, repeat: Infinity }}
-          className="mb-4 flex items-center rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900"
+          className="mb-5 flex items-center rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900"
         >
-          <Spinner />
-          Backend starter opp, vi oppdaterer statusen fortløpende.
+          <Spinner /> Backend starter opp – sjekker status ...
         </motion.div>
       )}
 
-      <section className="space-y-6">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="grid grid-cols-1 gap-6 xl:grid-cols-12"
-        >
-          <div className="xl:col-span-8">
-            <Card title="Backend-overvåkning">
-              <div className="rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 px-5 py-4 text-white shadow-inner shadow-slate-900/10">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                      Backend
-                    </p>
-                    <div className="mt-2 flex flex-wrap items-center gap-3">
-                      <StatusBadge status={status} />
-                      {latestEntry?.durationMs ? (
-                        <div className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs text-white/80">
-                          Siste responstid: {Math.round(latestEntry.durationMs)} ms
-                        </div>
-                      ) : null}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3 text-xs sm:text-sm">
-                    <div className="rounded-xl border border-white/10 bg-white/10 px-3 py-2">
-                      <p className="text-slate-300">Sist sjekket</p>
-                      <p className="font-semibold text-white">
-                        {lastChecked ? lastChecked.toLocaleTimeString() : 'Aldri'}
-                      </p>
-                    </div>
-                    <div className="rounded-xl border border-white/10 bg-white/10 px-3 py-2">
-                      <p className="text-slate-300">HTTP-kode</p>
-                      <p className="font-semibold text-white">{httpCode ?? '-'}</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-4 flex flex-wrap items-center gap-3">
-                  <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-white/70">
-                    {healthUrl}
-                  </span>
-                  <span className="text-sm text-white/80">{message || 'Avventer første måling.'}</span>
-                </div>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        {/* --------------------------------------- */}
+        {/* BACKEND CARD */}
+        {/* --------------------------------------- */}
+        <Card title="Backend-status" className="h-full">
+          <div className="space-y-4 text-sm">
+            <div className="flex items-center justify-between">
+              <StatusBadge status={status} />
+
+              <div className="text-right text-xs text-slate-500">
+                <p>Sist sjekket</p>
+                <p className="font-semibold text-slate-700">
+                  {lastChecked ? lastChecked.toLocaleTimeString() : '—'}
+                </p>
               </div>
+            </div>
 
-              {backendLoading ? (
-                <div className="mt-5 space-y-4">
-                  <SkeletonBlock width="35%" height="1.4rem" />
-                  <SkeletonCard />
-                </div>
-              ) : (
-                <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-                    <p className="text-xs uppercase tracking-wider text-slate-500">
-                      Health-endepunkt
-                    </p>
-                    <p className="mt-2 break-all text-xs text-slate-600">{healthUrl}</p>
-                    <p className="mt-3 text-sm text-slate-700">
-                      HTTP-kode (health): <span className="font-semibold text-slate-900">{httpCode ?? '-'}</span>
-                    </p>
-                    <div className="mt-3 rounded-lg bg-white p-3 text-sm text-slate-700 shadow-sm shadow-slate-100">
-                      <span className="font-semibold">Melding:</span> {message}
-                    </div>
-                  </div>
-                  <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm shadow-slate-100">
-                    <p className="text-xs uppercase tracking-wider text-slate-500">
-                      Responstid snapshot
-                    </p>
-                    {latestEntry ? (
-                      <div className="mt-3 space-y-2 text-sm text-slate-700">
-                        <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
-                          <span>Responstid</span>
-                          <span className="font-semibold text-slate-900">
-                            {Math.round(latestEntry.durationMs ?? 0)} ms
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
-                          <span>Status</span>
-                          <StatusBadge status={latestEntry.status} />
-                        </div>
-                        <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
-                          <span>HTTP</span>
-                          <span className="font-semibold text-slate-900">
-                            {latestEntry.httpCode ?? '-'}
-                          </span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        <SkeletonBlock width="70%" />
-                        <SkeletonBlock width="40%" />
-                        <SkeletonBlock width="85%" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </Card>
-          </div>
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs">
+              <p className="font-semibold text-slate-700 mb-1">Health URL</p>
+              <p className="break-all text-slate-600">{healthUrl}</p>
+            </div>
 
-          <div className="xl:col-span-4">
-            <Card title="Database-status">
-              {dbStatus === 'ok' ? (
-                <div className="space-y-4 text-sm">
-                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-                    <p className="text-xs uppercase tracking-wider text-slate-500">
-                      DB-endepunkt
-                    </p>
-                    <p className="mt-2 break-all text-xs text-slate-600">{dbInfoUrl}</p>
-                    <p className={`mt-3 font-semibold ${dbStatusClass}`}>
-                      Status: {dbStatus === 'ok' ? 'OK' : dbStatus === 'feil' ? 'Feil' : 'Ukjent'}
-                    </p>
-                    <p className="text-sm text-slate-700">HTTP-kode (dbinfo): {dbHttpCode ?? '-'}</p>
-                  </div>
-                  <div className="rounded-2xl border border-slate-100 bg-white p-4 text-xs text-slate-700 shadow-sm shadow-slate-100">
-                    <p className="text-xs uppercase tracking-wider text-slate-500">DB-melding</p>
-                    <p className="mt-2 leading-relaxed">
-                      {dbMessage || 'Ingen sjekk ennå.'}
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <SkeletonBlock width="45%" />
-                  <SkeletonBlock width="25%" />
-                  <SkeletonCard />
-                </div>
-              )}
-            </Card>
-          </div>
-        </motion.div>
-
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <Card title="Responstid og logg">
-            {history.length === 0 ? (
-              <div className="space-y-3">
-                <SkeletonBlock width="70%" height="0.75rem" />
-                <SkeletonBlock width="60%" height="0.75rem" />
-                <SkeletonBlock width="50%" height="0.75rem" />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="rounded-lg border border-slate-200 bg-white p-3 text-sm">
+                <p className="text-slate-500 text-xs">HTTP (health)</p>
+                <p className="font-semibold text-slate-800">{httpCode ?? '-'}</p>
               </div>
-            ) : (
-              <HistoryList history={history} />
-            )}
-          </Card>
-        </motion.div>
-      </section>
+              <div className="rounded-lg border border-slate-200 bg-white p-3 text-sm">
+                <p className="text-slate-500 text-xs">Responstid</p>
+                <p className="font-semibold text-slate-800">
+                  {latestEntry ? `${Math.round(latestEntry.durationMs ?? 0)} ms` : '-'}
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-slate-200 bg-white p-3 text-sm">
+              <p className="font-semibold text-slate-700">Melding</p>
+              <p className="text-slate-600 mt-1">{message}</p>
+            </div>
+          </div>
+        </Card>
+
+        {/* --------------------------------------- */}
+        {/* DB CARD */}
+        {/* --------------------------------------- */}
+        <Card title="Database-status" className="h-full">
+          <div className="space-y-4 text-sm">
+            <StatusBadge status={dbStatus} />
+
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs">
+              <p className="font-semibold text-slate-700 mb-1">DB URL</p>
+              <p className="break-all text-slate-600">{dbInfoUrl}</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="rounded-lg border bg-white border-slate-200 p-3 text-sm">
+                <p className="text-xs text-slate-500">HTTP (dbinfo)</p>
+                <p className="font-semibold text-slate-800">{dbHttpCode ?? '-'}</p>
+              </div>
+              <div className="rounded-lg border bg-white border-slate-200 p-3 text-sm">
+                <p className="text-xs text-slate-500">Status</p>
+                <p className="font-semibold text-slate-800">
+                  {dbStatus === 'ok' ? 'OK' : dbStatus === 'feil' ? 'Feil' : 'Ukjent'}
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-slate-200 bg-white p-3 text-sm">
+              <p className="font-semibold text-slate-700">Melding</p>
+              <p className="text-slate-600 mt-1 whitespace-pre-wrap">{dbMessage}</p>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* --------------------------------------- */}
+      {/* HISTORY */}
+      {/* --------------------------------------- */}
+      <Card title="Responshistorikk" className="mt-6">
+        {history.length === 0 ? (
+          <div className="space-y-3">
+            <SkeletonBlock width="60%" />
+            <SkeletonBlock width="50%" />
+            <SkeletonCard />
+          </div>
+        ) : (
+          <HistoryList history={history} />
+        )}
+      </Card>
     </PageLayout>
   );
 }
