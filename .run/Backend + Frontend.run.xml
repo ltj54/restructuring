@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Backend + Frontend" type="CompoundRunConfigurationType">
     <toRun name="Backend" type="Application" />
-    <toRun name="Frontend" type="ShConfigurationType" />
+    <toRun name="Frontend (PowerShell)" type="PowerShellRunType" />
     <method v="2" />
   </configuration>
 </component>

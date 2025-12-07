@@ -1,0 +1,6 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Frontend (PowerShell)" type="PowerShellRunType" factoryName="PowerShell" scriptUrl="C:\Prosjekt\restructuring\scripts\start-frontend.ps1" workingDirectory="C:\Prosjekt\restructuring\scripts" executablePath="$PROJECT_DIR$/../../Program Files/PowerShell/7/pwsh.exe">
+    <envs />
+    <method v="2" />
+  </configuration>
+</component>
