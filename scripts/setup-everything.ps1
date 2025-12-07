@@ -318,7 +318,7 @@ version: "3.8"
 services:
   restructuring-dev-db:
     container_name: restructuring-dev-db
-    image: postgres:17
+    image: postgres:18
     restart: unless-stopped
     ports:
       - "5432:5432"
@@ -445,9 +445,9 @@ Write-Template -Path "$runConfig\RestructuringApplication.run.xml" -Label "Restr
 '@
 
 # Compound
-Write-Template -Path "$runConfig\Restructuring_Compound.run.xml" -Label "Restructuring_Compound.run.xml" -Content @'
+Write-Template -Path "$runConfig\restructuring.run.xml" -Label "restructuring.run.xml" -Content @'
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Restructuring Compound" type="CompoundRunConfigurationType" factoryName="Compound Run Configuration">
+  <configuration default="false" name="restructuring" type="CompoundRunConfigurationType" factoryName="Compound Run Configuration">
     <option name="runConfigurations">
       <list>
         <item itemvalue="PowerShell.StartDocker" />
@@ -481,5 +481,6 @@ Write-Host "===============================================" -ForegroundColor Gr
 Write-Host "== ONE-SHOT SETUP DONE                     =="
 Write-Host "-> Next steps:" -ForegroundColor Green
 Write-Host "   1) Open IntelliJ and load the project" -ForegroundColor Green
-Write-Host "   2) Run 'Restructuring Compound' run config" -ForegroundColor Green
+Write-Host "   2) Run 'restructuring' run config" -ForegroundColor Green
+Write-Host "   3) Rerun setup-everything.ps1 -ResetDb if you need a clean local database" -ForegroundColor Green
 Write-Host "==============================================="
