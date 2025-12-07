@@ -1,4 +1,5 @@
 # ======================================================================
+# Kjør med denne: pwsh ./scripts/setup-everything.ps1 -SkipTemplates -ResetDb -NoBuild
 # ONE-SHOT DEVELOPMENT SETUP SCRIPT
 # Creates everything needed for dev:
 #  - application.yml + dev/prod profiles
@@ -15,7 +16,9 @@
 # ======================================================================
 
 param(
-    [switch]$ResetDb   # Wipe local dev database data directory (will prompt)
+    [switch]$ResetDb,        # Wipe local dev database data directory (will prompt)
+    [switch]$SkipTemplates,  # Skip writing/overwriting template files (no prompts)
+    [switch]$NoBuild         # Do not rebuild docker images (faster if already built)
 )
 
 Write-Host ""
@@ -29,6 +32,11 @@ $scriptDir   = $PSScriptRoot
 $projectRoot = Split-Path $scriptDir -Parent
 
 Write-Host "-> Project root: $projectRoot"
+
+$composeFile  = Join-Path $projectRoot "infra\docker-compose.dev.yml"
+$dbContainer  = "restructuring-dev-db"
+$dbName       = "restructuring_dev"
+$dbUser       = "restructuring"
 
 function Ensure-Dir {
     param([string]$Path)
@@ -96,13 +104,30 @@ function Reset-DevDatabase {
         Write-Host "   Docker not available or error when checking containers. Skipping stop." -ForegroundColor Red
     }
 
-    # Remove data dir
+    # Take down stack and remove volumes (handles Postgres 18 layout)
+    try {
+        docker compose -f $composeFile down --volumes --remove-orphans | Out-Null
+    } catch {
+        Write-Host "   Failed to run docker compose down -v: $($_.Exception.Message)" -ForegroundColor Red
+    }
+
+    # Remove data dir (legacy bind mount)
     if (Test-Path $dataDir) {
         Write-Host "   Removing Postgres data directory: $dataDir" -ForegroundColor Yellow
         try {
             Remove-Item -Recurse -Force $dataDir
         } catch {
             Write-Host ("   Failed to remove {0}: {1}" -f $dataDir, $_) -ForegroundColor Red
+        }
+    }
+
+    # Remove named volumes that may exist from previous runs
+    $volumesToClean = @("infra_db_data", "restructuring_db_data")
+    foreach ($vol in $volumesToClean) {
+        try {
+            docker volume rm $vol 2>$null | Out-Null
+        } catch {
+            # ignore
         }
     }
 
@@ -152,6 +177,44 @@ foreach ($p in $paths) { Ensure-Dir $p }
 $resources = "$projectRoot\backend\src\main\resources"
 $runConfig = "$projectRoot\.idea\runConfigurations"
 
+# Helper: docker compose invoker
+function Invoke-Compose {
+    param(
+        [Parameter(ValueFromRemainingArguments = $true)]
+        [string[]]$Args
+    )
+    docker compose -f $composeFile @Args
+}
+
+function Wait-ForDatabase {
+    param([int]$TimeoutSeconds = 60)
+
+    Write-Host "-> Waiting for database health (container: $dbContainer)..."
+    $sw = [System.Diagnostics.Stopwatch]::StartNew()
+    while ($sw.Elapsed.TotalSeconds -lt $TimeoutSeconds) {
+        $status = docker inspect --format '{{.State.Health.Status}}' $dbContainer 2>$null
+        if ($status -eq "healthy") {
+            Write-Host "[OK] Database is healthy." -ForegroundColor Green
+            return
+        }
+        Start-Sleep 2
+    }
+    Write-Host "Database did not become healthy within $TimeoutSeconds seconds." -ForegroundColor Red
+    exit 1
+}
+
+function Apply-SqlFile {
+    param([string]$Path, [string]$Label)
+    Write-Host "-> Applying $Label..."
+    Get-Content -Raw $Path | docker exec -i $dbContainer psql -v ON_ERROR_STOP=1 -U $dbUser -d $dbName
+}
+
+# ------------------------------------------------------------
+# 1. Templates (skip with -SkipTemplates)
+# ------------------------------------------------------------
+if ($SkipTemplates) {
+    Write-Host "-> Skipping template file writes (-SkipTemplates supplied)" -ForegroundColor Yellow
+} else {
 # ------------------------------------------------------------
 # 1. application.yml (GLOBAL)
 # ------------------------------------------------------------
@@ -327,12 +390,15 @@ services:
       POSTGRES_USER: restructuring
       POSTGRES_PASSWORD: restructuring
     volumes:
-      - ./docker/data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U restructuring"]
       interval: 5s
       timeout: 3s
       retries: 5
+
+volumes:
+  db_data:
 '@
 
 # ------------------------------------------------------------
@@ -460,11 +526,16 @@ Write-Template -Path "$runConfig\restructuring.run.xml" -Label "restructuring.ru
 </component>
 '@
 
+} # end SkipTemplates guard
+
 # ------------------------------------------------------------
 # 9. Reset dev database (optional)
 # ------------------------------------------------------------
 if ($ResetDb) {
     $answer = Read-Host "Confirm wipe of dev database data dir? Type 'yes' to proceed"
+    if ([string]::IsNullOrWhiteSpace($answer)) {
+        $answer = "yes"  # default to yes when non-interactive
+    }
     if ($answer.ToLowerInvariant() -eq "yes") {
         Reset-DevDatabase
         Init-Db-In-Container
@@ -475,6 +546,24 @@ if ($ResetDb) {
     Write-Host ""
     Write-Host "-> Skipping dev DB reset (run with -ResetDb to wipe data dir)" -ForegroundColor Yellow
 }
+
+# ------------------------------------------------------------
+# 10. Start and seed Postgres (Docker) with schema + dummy data
+# ------------------------------------------------------------
+
+Write-Host ""
+Write-Host "-> Starting Postgres (docker-compose.dev.yml)..." -ForegroundColor Cyan
+
+$dbArgs = @("up", "-d", "restructuring-dev-db")
+if (-not $NoBuild) { $dbArgs = @("up", "-d", "--build", "restructuring-dev-db") }
+Invoke-Compose @dbArgs
+
+Wait-ForDatabase
+
+Apply-SqlFile -Path "$resources\schema.sql" -Label "schema.sql"
+Apply-SqlFile -Path "$resources\data-test.sql" -Label "data-test.sql"
+
+Write-Host "[OK] Database is up with seeded test data." -ForegroundColor Green
 
 Write-Host ""
 Write-Host "===============================================" -ForegroundColor Green
