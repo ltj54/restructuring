@@ -1,10 +1,11 @@
--- Align user_plans.diary with application expectation (plain TEXT JSON)
--- Handles existing tables where diary was created as OID/LOB.
+-- Align user_plans.diary with application expectation (TEXT)
+-- Handles cases where diary was created as an OID/LOB.
+
 DO $$
 DECLARE
     diary_type TEXT;
 BEGIN
-    -- Ensure table exists (older setups relied on Hibernate auto DDL)
+    -- Ensure table exists
     IF NOT EXISTS (
         SELECT 1
         FROM information_schema.tables
@@ -26,6 +27,7 @@ BEGIN
         RETURN;
     END IF;
 
+    -- Determine type of diary column
     SELECT data_type
     INTO diary_type
     FROM information_schema.columns
@@ -33,23 +35,43 @@ BEGIN
       AND table_name = 'user_plans'
       AND column_name = 'diary';
 
-    -- Add column if missing
+    -- Add if missing
     IF diary_type IS NULL THEN
         ALTER TABLE user_plans ADD COLUMN diary TEXT;
         RETURN;
     END IF;
 
-    -- Convert OID/other types to TEXT safely
-    IF diary_type <> 'text' THEN
-        ALTER TABLE user_plans
-            ALTER COLUMN diary TYPE TEXT
-            USING (
-                CASE
-                    WHEN diary IS NULL THEN NULL
-                    WHEN EXISTS (SELECT 1 FROM pg_largeobject WHERE loid = diary) THEN
-                        convert_from(lo_get(diary), 'UTF8')
-                    ELSE diary::text
-                END
-            );
+    -- If already TEXT → nothing to do
+    IF diary_type = 'text' THEN
+        RETURN;
     END IF;
+
+    -------------------------------------------------------------------
+    -- SAFEST MIGRATION:
+    -- 1) Add diary_tmp TEXT
+    -- 2) Copy values using UPDATE (allowed to use subqueries here)
+    -- 3) Drop original diary column
+    -- 4) Rename diary_tmp → diary
+    -------------------------------------------------------------------
+
+    ALTER TABLE user_plans ADD COLUMN diary_tmp TEXT;
+
+    -- Copy data
+    UPDATE user_plans
+    SET diary_tmp =
+        CASE
+            WHEN diary IS NULL THEN NULL
+            WHEN EXISTS (
+                SELECT 1
+                FROM pg_largeobject
+                WHERE loid = user_plans.diary
+            )
+                THEN convert_from(lo_get(diary), 'UTF8')
+            ELSE diary::text
+        END;
+
+    ALTER TABLE user_plans DROP COLUMN diary;
+
+    ALTER TABLE user_plans RENAME COLUMN diary_tmp TO diary;
+
 END $$;
