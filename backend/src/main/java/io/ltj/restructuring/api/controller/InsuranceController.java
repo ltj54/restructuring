@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
-import io.ltj.restructuring.security.userdetails.UserPrincipal;
+import io.ltj.restructuring.security.JwtUserDetails;
 
 import java.nio.charset.StandardCharsets;
 
@@ -35,7 +35,7 @@ public class InsuranceController {
 
     @PostMapping("/send")
     public ResponseEntity<ByteArrayResource> sendInsurance(
-            @AuthenticationPrincipal UserPrincipal principal) {
+            @AuthenticationPrincipal JwtUserDetails principal) {
         if (principal == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Ingen bruker funnet for forespørselen.");
         }

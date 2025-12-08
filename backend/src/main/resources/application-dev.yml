@@ -26,6 +26,7 @@ spring:
 
   flyway:
     enabled: true
+    locations: classpath:migration
 
 jwt:
   secret: MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=

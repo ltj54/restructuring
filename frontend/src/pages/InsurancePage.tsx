@@ -95,8 +95,7 @@ export default function InsurancePage(): React.ReactElement {
 
         <Card title="Send inn søknad">
           <p className="text-sm text-slate-700 mb-4">
-            Vi bruker planen din og opplysningene over til å beregne dekning. Når du sender inn, får
-            du bekreftelse på e-post.
+            Når du sender inn, får du bekreftelse på e-post.
           </p>
           <Button type="button" onClick={onSendInsurance} disabled={isSending}>
             {isSending ? 'Sender...' : 'Send søknad'}

@@ -1,13 +1,24 @@
 package io.ltj.restructuring.config;
 
+import io.ltj.restructuring.application.auth.AuthUserArgumentResolver;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.util.List;
 
 /**
- * 🌐 WebConfig
- * Standard webkonfigurasjon.
- * CORS håndteres i SecurityConfig.
+ * Registers AuthUserArgumentResolver so @AuthUser Long userId works everywhere.
  */
 @Configuration
-public class WebConfig {
-    // Ingen CORS her – håndteres via SecurityConfig
+@RequiredArgsConstructor
+public class WebConfig implements WebMvcConfigurer {
+
+    private final AuthUserArgumentResolver authUserArgumentResolver;
+
+    @Override
+    public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
+        resolvers.add(authUserArgumentResolver);
+    }
 }

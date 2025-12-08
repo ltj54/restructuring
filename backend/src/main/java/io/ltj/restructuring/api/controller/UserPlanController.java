@@ -3,7 +3,7 @@ package io.ltj.restructuring.api.controller;
 import io.ltj.restructuring.api.dto.plan.UserPlanDto;
 import io.ltj.restructuring.api.dto.plan.UserPlanUpdateRequestDto;
 import io.ltj.restructuring.application.plan.UserPlanApplicationService;
-import io.ltj.restructuring.security.userdetails.UserPrincipal;
+import io.ltj.restructuring.security.JwtUserDetails;
 import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +28,7 @@ public class UserPlanController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<UserPlanDto> getMyPlan(@AuthenticationPrincipal UserPrincipal principal) {
+    public ResponseEntity<UserPlanDto> getMyPlan(@AuthenticationPrincipal JwtUserDetails principal) {
         if (principal == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Ingen aktiv bruker.");
         }
@@ -39,7 +39,7 @@ public class UserPlanController {
 
     @PutMapping("/me")
     public ResponseEntity<UserPlanDto> upsertMyPlan(
-            @AuthenticationPrincipal UserPrincipal principal,
+            @AuthenticationPrincipal JwtUserDetails principal,
             @RequestBody UserPlanUpdateRequestDto request
     ) {
         if (principal == null) {

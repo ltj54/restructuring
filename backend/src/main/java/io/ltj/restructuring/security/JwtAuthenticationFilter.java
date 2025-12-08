@@ -2,13 +2,13 @@ package io.ltj.restructuring.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
+import io.ltj.restructuring.domain.user.UserEntity;
+import io.ltj.restructuring.domain.user.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -19,18 +19,19 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Optional;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
-
     private final JwtDecoder jwtDecoder;
-    private final UserDetailsService userDetailsService;
+    private final UserRepository userRepository;
 
-    public JwtAuthenticationFilter(JwtDecoder jwtDecoder, UserDetailsService userDetailsService) {
+    public JwtAuthenticationFilter(JwtDecoder jwtDecoder, UserRepository userRepository) {
         this.jwtDecoder = jwtDecoder;
-        this.userDetailsService = userDetailsService;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -44,13 +45,32 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (authorization != null && authorization.startsWith("Bearer ")) {
             String token = authorization.substring(7);
+
             try {
                 Claims claims = jwtDecoder.decode(token);
-                String username = claims.getSubject();
 
-                if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                    UserDetails userDetails =
-                            userDetailsService.loadUserByUsername(username);
+                Long userId = claims.get("userId", Long.class);
+                String email = claims.getSubject();
+
+                if (email != null &&
+                        userId != null &&
+                        SecurityContextHolder.getContext().getAuthentication() == null) {
+
+                    Optional<UserEntity> userOpt = userRepository.findById(userId);
+                    if (userOpt.isEmpty() || !email.equalsIgnoreCase(userOpt.get().getEmail())) {
+                        log.atWarn()
+                                .addKeyValue("userId", userId)
+                                .addKeyValue("email", email)
+                                .log("JWT rejected because user no longer exists or email mismatch");
+                        filterChain.doFilter(request, response);
+                        return;
+                    }
+
+                    JwtUserDetails userDetails = new JwtUserDetails(
+                            userId,
+                            userOpt.get().getEmail(),
+                            Collections.emptyList()
+                    );
 
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(

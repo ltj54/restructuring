@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useMemo, useState } from 'react';
+import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useStructuredLogger } from '@/logging/useStructuredLogger';
 import { useAuth } from '@/hooks/useAuth';
@@ -38,12 +38,32 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
   }, [user]);
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement | null>(null);
+  const menuPanelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     logEvent('navigation_change', {
       meta: { path: location.pathname },
     });
   }, [location.pathname, logEvent]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (
+        menuPanelRef.current?.contains(target) ||
+        menuButtonRef.current?.contains(target)
+      ) {
+        return;
+      }
+      setMenuOpen(false);
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [menuOpen]);
 
   const effectiveNavLinks = navLinks.filter((link) => {
     if (!isAuthenticated) return true;
@@ -94,6 +114,7 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
             )}
 
             <button
+              ref={menuButtonRef}
               onClick={() => setMenuOpen((prev) => !prev)}
               className="flex items-center gap-1 hover:text-emerald-800 transition text-slate-900"
               aria-expanded={menuOpen}
@@ -110,6 +131,7 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
                   className="fixed inset-0 bg-black/10 backdrop-blur-sm z-40"
                 />
                 <div
+                  ref={menuPanelRef}
                   className="
                     absolute z-50 rounded-xl shadow-xl border border-slate-200
                     bg-white

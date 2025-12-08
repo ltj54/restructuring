@@ -69,7 +69,8 @@ public class AuthServiceImpl implements AuthService {
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalStateException("USER_NOT_FOUND"));
 
-        String token = jwtUtil.generateToken(user.getEmail());
+        // ⭐ Now includes userId + email
+        String token = jwtUtil.generateToken(user.getId(), user.getEmail());
         long expiresInSeconds = 60L * 60L * 24L; // 24h
 
         return new LoginResponseDto(

@@ -9,6 +9,7 @@ const InsurancePage = lazy(() => import('@/pages/InsurancePage'));
 const PlanPage = lazy(() => import('@/pages/PlanPage'));
 const PurchasePage = lazy(() => import('@/pages/PurchasePage'));
 const ResourcesPage = lazy(() => import('@/pages/ResourcesPage'));
+const JournalPage = lazy(() => import('@/pages/JournalPage'));
 const WizardPage = lazy(() => import('@/pages/WizardPage'));
 const LoginPage = lazy(() => import('@/pages/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/RegisterPage'));
@@ -24,6 +25,7 @@ const mainNavLinks: MainNavLink[] = [
   { path: '/wizard', label: 'Veiviser' },
   { path: '/insurance', label: 'Forsikring' },
   { path: '/plan', label: 'Plan' },
+  { path: '/journal', label: 'Dagbok' },
   { path: '/resources', label: 'Ressurser' },
   { path: '/purchase', label: 'Kjøp' },
   { path: '/systeminfo', label: 'Systeminfo' },
@@ -58,6 +60,7 @@ export const appRoutes: RouteObject[] = [
         element: <ProtectedLayout />,
         children: [
           { path: 'plan', element: <PlanPage /> },
+          { path: 'journal', element: <JournalPage /> },
           { path: 'me', element: <MePage /> },
         ],
       },

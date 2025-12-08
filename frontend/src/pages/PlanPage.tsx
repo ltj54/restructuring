@@ -378,32 +378,9 @@ export default function PlanPage(): React.ReactElement {
         {isLoadingRemotePlan && <p className="mb-3 text-xs text-slate-500">Laster plan ...</p>}
 
         <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 text-sm">
-          <h2 className="text-base md:text-lg font-semibold text-slate-900">Velg fase og behov</h2>
+          <h2 className="text-base md:text-lg font-semibold text-slate-900">Velg behov og fase</h2>
 
           <div className="mt-3 space-y-4">
-            <div>
-              <div className="text-sm font-semibold mb-2">Fase</div>
-              <div className="flex flex-wrap gap-2">
-                {PHASE_OPTIONS.map((option) => {
-                  const active = selectedPhase === option;
-                  return (
-                    <button
-                      key={option}
-                      type="button"
-                      onClick={() => handlePhaseSelect(option)}
-                      className={`px-3 py-2 rounded-full text-xs border ${
-                        active
-                          ? 'bg-slate-900 text-white border-slate-900'
-                          : 'bg-white text-slate-700 border-slate-300'
-                      }`}
-                    >
-                      {option}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
             <div>
               <div className="text-sm font-semibold mb-2">Hva trenger du nå?</div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
