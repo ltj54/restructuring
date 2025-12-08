@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useNavigate } from 'react-router-dom';
 
 import { API_BASE_URL } from '@/utils/config';
 import { FormFeedback } from '@/components/form/types';
@@ -13,6 +14,7 @@ export function useRegisterForm() {
   const [feedback, setFeedback] = useState<FormFeedback | null>(null);
   const [apiMessage, setApiMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
 
   // -------------------------------------------------------------
   // FORM SETUP
@@ -88,11 +90,8 @@ export function useRegisterForm() {
             message: 'Bruker registrert! Du kan nå logge inn.',
           });
 
-          form.reset({
-            email: '',
-            password: '',
-            repeatPassword: '',
-          });
+          // Send brukeren til login etter vellykket registrering
+          navigate('/login', { replace: true });
         } catch (err) {
           setFeedback({
             variant: 'error',
@@ -102,7 +101,7 @@ export function useRegisterForm() {
           setIsSubmitting(false);
         }
       }),
-    [form]
+    [form, navigate]
   );
 
   // -------------------------------------------------------------

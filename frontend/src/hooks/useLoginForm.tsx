@@ -30,7 +30,7 @@ export function useLoginForm() {
         try {
           await login(
             { email: values.email, password: values.password },
-            { redirectTo: redirectTarget || undefined }
+            { redirectTo: redirectTarget || '/plan' }
           );
         } catch (err) {
           if (isApiError(err)) {
@@ -56,7 +56,13 @@ export function useLoginForm() {
             if (err.status >= 500) {
               setFeedback({
                 variant: 'error',
-                message: 'Det oppstod en teknisk feil. Prøv igjen senere.',
+                message:
+                  'Kunne ikke logge inn. Brukeren finnes kanskje ikke, eller det oppstod en teknisk feil.',
+                action: {
+                  type: 'link',
+                  to: '/register',
+                  label: 'Opprett bruker',
+                },
               });
               return;
             }

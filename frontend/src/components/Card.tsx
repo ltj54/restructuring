@@ -11,9 +11,8 @@ export default function Card({ title, actions, className = '', children }: CardP
   return (
     <section
       className={[
-        'bg-white dark:bg-darkcard rounded-3xl',
-        'border border-slate-200/70 dark:border-slate-700',
-        'shadow-sm p-6 md:p-8',
+        'bg-white rounded-3xl text-slate-900',
+        'border border-slate-200 shadow-sm p-6 md:p-8',
         className,
       ]
         .filter(Boolean)

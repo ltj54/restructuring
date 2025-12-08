@@ -16,9 +16,9 @@ const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('@/pages/ResetPasswordPage'));
 const SystemInfoPage = lazy(() => import('@/pages/SystemInfoPage'));
 const DownloadAppPage = lazy(() => import('@/pages/DownloadAppPage'));
-const MePage = lazy(() => import('@/pages/MePage'));  // NY
+const MePage = lazy(() => import('@/pages/MePage')); // NY
 
-// Main navigation links
+// Main navigation links (consistent icons for all pages)
 const mainNavLinks: MainNavLink[] = [
   { path: '/', label: 'Hjem' },
   { path: '/wizard', label: 'Veiviser' },

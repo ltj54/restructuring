@@ -23,7 +23,7 @@ export default function Button({
     'border border-slate-300 bg-white text-slate-800 ' +
     'px-4 py-2 text-sm ' +
     'hover:bg-slate-50 transition ' +
-    'disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed';
+    'disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed';
 
   if (to) {
     return (

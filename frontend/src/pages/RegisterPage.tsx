@@ -64,8 +64,17 @@ export default function RegisterPage() {
             {...register('password')}
           />
 
+          <TextField
+            type="password"
+            label="Gjenta passord"
+            placeholder="Gjenta passord"
+            autoComplete="new-password"
+            error={errors.repeatPassword?.message}
+            {...register('repeatPassword')}
+          />
+
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Registrerer…' : 'Registrer'}
+            {isSubmitting ? 'Registrerer.' : 'Registrer'}
           </Button>
 
           <div className="text-center mt-1">

@@ -2,22 +2,94 @@
 @import 'tailwindcss';
 
 :root {
-  --rc-bg: #f3f4ff;
+  --ink: #0f172a;
+  --ink-soft: #1e293b;
+  --panel: #ffffff;
+  --panel-border: #e2e8f0;
+  --panel-glow: 0 15px 40px rgba(15, 23, 42, 0.08);
+  --accent: #0f766e;
+  --accent-2: #0284c7;
+  --muted: #475569;
 }
 
 body {
-  @apply bg-slate-50 text-slate-900;
+  background: radial-gradient(circle at 20% 15%, rgba(2, 132, 199, 0.08), transparent 30%),
+    radial-gradient(circle at 80% 10%, rgba(15, 118, 110, 0.08), transparent 28%),
+    radial-gradient(circle at 70% 80%, rgba(59, 130, 246, 0.06), transparent 26%),
+    linear-gradient(180deg, #f8fafc 0%, #eef2f7 60%, #e2e8f0 100%);
+  color: var(--ink);
   font-family:
+    'Inter',
+    'Segoe UI',
+    'Manrope',
     system-ui,
     -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
     sans-serif;
+  min-height: 100vh;
 }
 
-/* Globale styles ved behov */
+a {
+  color: inherit;
+}
 
-/* ? Animasjon for toast (ProtectedRoute) */
+.app-shell {
+  min-height: 100vh;
+  color: var(--ink);
+}
+
+.page-shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(20px, 3vw, 36px);
+}
+
+.surface-card {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--panel-glow);
+  border-radius: 20px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(15, 118, 110, 0.12);
+  color: #0f766e;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.nav-pill {
+  border-radius: 12px;
+  padding: 0.55rem 0.7rem;
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  transition: background 0.15s ease, color 0.15s ease, border 0.15s ease;
+}
+
+.nav-pill:hover {
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.nav-pill.is-active {
+  background: rgba(15, 118, 110, 0.14);
+  color: #0f5138;
+  border: 1px solid rgba(15, 118, 110, 0.4);
+}
+
+.menu-panel {
+  background: #ffffff;
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--panel-glow);
+}
+
+/* 🔔 Animasjon for toast (ProtectedRoute) */
 @keyframes fade-in {
   from {
     opacity: 0;

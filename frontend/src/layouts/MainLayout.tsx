@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 export interface MainNavLink {
   path: string;
-  icon: string;
+  icon?: string;
   label: string;
 }
 
@@ -41,9 +41,7 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
 
   useEffect(() => {
     logEvent('navigation_change', {
-      meta: {
-        path: location.pathname,
-      },
+      meta: { path: location.pathname },
     });
   }, [location.pathname, logEvent]);
 
@@ -59,34 +57,26 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-brand-soft via-white to-slate-50 text-slate-900 flex flex-col dark:from-darkbg dark:via-slate-950 dark:to-darkbg dark:text-gray-100">
-
-      {/* -------------------------------------------------------------------
-         TOP HEADER
-      ------------------------------------------------------------------- */}
-      <header className="w-full bg-transparent shadow-none sticky top-0 z-40 backdrop-blur-sm">
-        <nav className="relative max-w-5xl mx-auto flex items-center justify-between px-4 py-3">
-
+    <div className="min-h-screen bg-gradient-to-b from-brand-soft via-white to-slate-50 text-slate-900 flex flex-col">
+      {/* HEADER */}
+      <header className="w-full sticky top-0 z-40 backdrop-blur-xl bg-white/95 border-b border-slate-200 shadow-sm">
+        <nav className="relative max-w-5xl mx-auto flex items-center justify-between px-4 py-3 text-slate-900">
           {/* AVATAR + INFO */}
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-slate-900 text-white flex items-center justify-center rounded-md font-bold dark:bg-slate-700">
+            <div className="w-9 h-9 bg-slate-900 text-white flex items-center justify-center rounded-md font-bold">
               {isAuthenticated ? initials : '--'}
             </div>
-
             <div className="flex flex-col">
-              <span className="font-medium truncate max-w-[160px]">
-                {displayName}
-              </span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="font-medium truncate max-w-[160px]">{displayName}</span>
+              <span className="text-xs text-slate-600">
                 {isAuthenticated ? 'Pålogget' : 'Ikke pålogget'}
               </span>
             </div>
-
-            <div className="hidden sm:flex flex-col pl-4 border-l border-slate-200 dark:border-slate-700 ml-2">
-              <span className="text-[10px] uppercase tracking-[0.18em] text-brand-dark/80 dark:text-brand-soft/80">
+            <div className="hidden sm:flex flex-col pl-4 border-l border-slate-200 ml-2">
+              <span className="text-[10px] uppercase tracking-[0.18em] text-emerald-800">
                 Restructuring
               </span>
-              <span className="text-sm font-semibold text-slate-900 dark:text-slate-50">
+              <span className="text-sm font-semibold text-slate-900">
                 Omstillingsveiviser
               </span>
             </div>
@@ -94,21 +84,20 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
 
           {/* LOGG UT + HAMBURGER */}
           <div className="relative flex items-center gap-4">
-
-            {/* 👈🏼 New: Logg ut is now here */}
             {isAuthenticated && (
               <button
                 onClick={handleLogout}
-                className="text-sm text-red-600 hover:text-red-800 dark:text-red-300 dark:hover:text-red-400 font-medium"
+                className="text-sm text-red-700 hover:text-red-800 font-medium"
               >
                 Logg ut
               </button>
             )}
 
-            {/* Hamburger */}
             <button
               onClick={() => setMenuOpen((prev) => !prev)}
-              className="flex items-center gap-1 hover:text-brand-dark transition text-slate-900 dark:text-gray-100"
+              className="flex items-center gap-1 hover:text-emerald-800 transition text-slate-900"
+              aria-expanded={menuOpen}
+              aria-label="Åpne meny"
             >
               <span className="text-lg">☰</span>
               <span className="text-sm">Meny</span>
@@ -122,9 +111,8 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
                 />
                 <div
                   className="
-                    absolute z-50 rounded-xl shadow-xl border border-gray-200 dark:border-slate-700
-                    bg-white dark:bg-slate-900
-                    animate-[fadeInScale_0.18s_ease-out]
+                    absolute z-50 rounded-xl shadow-xl border border-slate-200
+                    bg-white
                     right-3 left-auto top-9 w-[75vw]
                     sm:right-0 sm:left-auto sm:top-10 sm:w-64
                   "
@@ -132,8 +120,7 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
                   <div
                     className="
                       absolute w-4 h-4 rotate-45 border-l border-t
-                      bg-white dark:bg-slate-900
-                      border-gray-200 dark:border-slate-700
+                      bg-white border-slate-200
                       -top-2 right-6
                     "
                   />
@@ -147,19 +134,17 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
                         className={({ isActive }) =>
                           [
                             'flex items-center gap-2 px-4 py-2 text-sm transition rounded-lg',
-                            'hover:bg-slate-100 dark:hover:bg-slate-800',
+                            'hover:bg-slate-100',
                             isActive
-                              ? 'font-semibold text-brand bg-brand-soft dark:text-brand-soft dark:bg-slate-800'
-                              : 'text-slate-800 dark:text-gray-100',
+                              ? 'font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200'
+                              : 'text-slate-800',
                           ].join(' ')
                         }
                       >
-                        <span>{link.icon}</span>
+                        {link.icon && <span aria-hidden="true">{link.icon}</span>}
                         <span>{link.label}</span>
                       </NavLink>
                     ))}
-
-                    {/* ❌ Logg ut removed from menu */}
                   </div>
                 </div>
               </>
@@ -168,13 +153,11 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
         </nav>
       </header>
 
-      {/* ❌ SESSION BAR REMOVED */}
-
       {/* CONTENT */}
       <main className="flex-grow">
         <Suspense
           fallback={
-            <div className="flex h-full items-center justify-center text-brand dark:text-brand-soft">
+            <div className="flex h-full items-center justify-center text-emerald-700">
               Laster inn side ...
             </div>
           }
@@ -185,10 +168,3 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
     </div>
   );
 }
-
-/*
-@keyframes fadeInScale {
-  0%   { opacity: 0; transform: scale(0.94); }
-  100% { opacity: 1; transform: scale(1); }
-}
-*/
