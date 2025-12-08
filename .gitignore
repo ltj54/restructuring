@@ -105,3 +105,8 @@ tree.txt
 *.swp
 *.swo
 /openai-test/
+
+###############################################
+# Egne greier
+###############################################
+scripts/connect-render-db.ps1

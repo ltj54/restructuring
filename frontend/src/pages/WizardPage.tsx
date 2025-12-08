@@ -46,20 +46,6 @@ const personaShort: Record<PersonaKey, string> = {
   annet: 'Generelle råd om avtaler og CV.',
 };
 
-// ------------------------------------------------------------
-// BEHOV / FASE
-// ------------------------------------------------------------
-
-const NEED_OPTIONS: string[] = [
-  'Få oversikt over rettigheter og avtaler',
-  'Forstå hva omstillingen betyr for lønn og økonomi',
-  'Planlegge neste karrieresteg',
-  'Snakke med noen om situasjonen',
-  'Få kontroll på forsikringer og inntektssikring',
-];
-
-const phaseOptions = ['Før omstilling', 'Under omstilling', 'Etter omstilling'];
-
 type UserPlanResponse = {
   persona: string | null;
   phase: string | null;
@@ -75,7 +61,7 @@ export default function WizardPage(): React.ReactElement {
   const { isAuthenticated } = useAuth();
 
   const [persona, setPersona] = useState<PersonaKey | null>(null);
-  const [phase, setPhase] = useState<string>(phaseOptions[0]);
+  const [phase, setPhase] = useState<string>('Før omstilling');
   const [needs, setNeeds] = useState<string[]>([]);
   const [status, setStatus] = useState<string | null>(null);
 
@@ -104,12 +90,6 @@ export default function WizardPage(): React.ReactElement {
     () => (persona ? personaLabels[persona] : 'Ikke valgt'),
     [persona]
   );
-
-  const toggleNeed = (option: string) => {
-    setNeeds((current) =>
-      current.includes(option) ? current.filter((n) => n !== option) : [...current, option]
-    );
-  };
 
   const handleSave = async () => {
     setStatus(null);
@@ -152,7 +132,7 @@ export default function WizardPage(): React.ReactElement {
   return (
     <PageLayout
       title="Veiviser"
-      subtitle="Velg rolle, fase og behov – så bygger vi planen din."
+      subtitle="Velg rolle - vi bygger planen din."
       maxWidthClassName="max-w-5xl"
       actions={
         <Button
@@ -189,74 +169,12 @@ export default function WizardPage(): React.ReactElement {
             })}
           </div>
         </Card>
-
-        {/* ------------------------------------------------------------
-            FASE + BEHOV
-        ------------------------------------------------------------ */}
-        <Card title="Velg fase og behov">
-          <div className="space-y-4">
-            {/* Phase */}
-            <div>
-              <div className="text-sm font-semibold mb-2">Fase</div>
-              <div className="flex flex-wrap gap-2">
-                {phaseOptions.map((option) => {
-                  const active = phase === option;
-                  return (
-                    <button
-                      key={option}
-                      type="button"
-                      onClick={() => setPhase(option)}
-                      className={`px-3 py-2 rounded-full text-xs border ${
-                        active
-                          ? 'bg-slate-900 text-white border-slate-900'
-                          : 'bg-white text-slate-700'
-                      }`}
-                    >
-                      {option}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Needs */}
-            <div>
-              <div className="text-sm font-semibold mb-2">Hva trenger du nå?</div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {NEED_OPTIONS.map((need) => {
-                  const active = needs.includes(need);
-                  return (
-                    <label
-                      key={need}
-                      className={`cursor-pointer rounded-lg border px-3 py-2 text-sm transition ${
-                        active
-                          ? 'border-slate-900 bg-slate-900 text-white'
-                          : 'border-slate-200 bg-white'
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        className="hidden"
-                        checked={active}
-                        onChange={() => toggleNeed(need)}
-                      />
-                      {need}
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </Card>
-
         {/* ------------------------------------------------------------
             OPPSUMMERING
         ------------------------------------------------------------ */}
         <Card title="Oppsummering">
           <p className="text-sm text-slate-700 mb-3">
-            <strong>Rolle:</strong> {personaDisplay} <br />
-            <strong>Fase:</strong> {phase} <br />
-            <strong>Behov:</strong> {needs.length > 0 ? needs.join(', ') : 'Ingen valgt ennå'}
+            <strong>Rolle:</strong> {personaDisplay}
           </p>
 
           {status && <p className="text-sm text-slate-600 mb-3">{status}</p>}

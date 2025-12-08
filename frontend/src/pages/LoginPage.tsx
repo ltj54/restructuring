@@ -84,6 +84,12 @@ export default function LoginPage() {
           </Link>
           .
         </p>
+
+        <p className="mt-3 text-center text-sm text-slate-600">
+          <Link to="/" className="text-brand-dark font-medium hover:underline">
+            Gå til hjem-siden
+          </Link>
+        </p>
       </Card>
     </PageLayout>
   );

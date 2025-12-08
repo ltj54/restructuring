@@ -23,19 +23,19 @@ const phaseSections: Record<
   }
 > = {
   'Før omstilling': {
-    title: 'Før omstilling – bygg trygghet tidlig',
+    title: 'Før omstilling - bygg trygghet tidlig',
     description:
       'Du er i en tidlig fase. Målet nå er å skaffe oversikt og forberede deg uten unødig stress.',
     bullets: [
-      'Skriv ned hva som bekymrer deg konkret – ikke bare «omstilling generelt».',
+      'Skriv ned hva som bekymrer deg konkret - ikke bare «omstilling generelt».',
       'Finn ut hvem som faktisk vet hva (leder, HR, tillitsvalgt).',
       'Sjekk hvilke forsikringer og ordninger du allerede har.',
     ],
-    diaryTitle: 'Dagbok – før omstilling',
+    diaryTitle: 'Dagbok - før omstilling',
     diaryDescription: 'Skriv ned bekymringer, spørsmål og hva du bør sjekke tidlig.',
     diaryPlaceholder: 'Hva lurer du på nå? Hva trenger du svar på? Hva bekymrer deg?',
     actions: [
-      'Lag liste over hva du vet – og hva du ikke vet.',
+      'Lag liste over hva du vet - og hva du ikke vet.',
       'Ta kontakt med leder eller HR for avklaringer.',
       'Kartlegg dine forsikringer og økonomi.',
       'Begynn stille med oppdatering av CV.',
@@ -43,7 +43,7 @@ const phaseSections: Record<
   },
 
   'Under omstilling': {
-    title: 'Under omstilling – ta kontroll på endringene',
+    title: 'Under omstilling - ta kontroll på endringene',
     description:
       'Endringene er i gang. Her handler planen om å beholde oversikt og bruke rettighetene dine aktivt.',
     bullets: [
@@ -51,7 +51,7 @@ const phaseSections: Record<
       'Be om et konkret møte om din rolle og dine alternativer.',
       'Lag et regneark med «nå» og «etter omstilling» for lønn og arbeidstid.',
     ],
-    diaryTitle: 'Dagbok – under omstilling',
+    diaryTitle: 'Dagbok - under omstilling',
     diaryDescription: 'Skriv ned punkter fra møter, frister og ting du må følge opp.',
     diaryPlaceholder: 'Hva ble sagt i møtet? Hva må du følge opp? Hvilke frister kom opp?',
     actions: [
@@ -63,14 +63,14 @@ const phaseSections: Record<
   },
 
   'Etter omstilling': {
-    title: 'Etter omstilling – juster økonomi og kurs',
+    title: 'Etter omstilling - juster økonomi og kurs',
     description: 'Omstillingen er gjennomført. Nå handler det om økonomi, karriere og neste steg.',
     bullets: [
       'Oppdater budsjett basert på ny inntekt og arbeidstid.',
       'Lag en 3-måneders plan for kompetanse, CV og søknader.',
       'Vurder behov for ekstra inntektssikring.',
     ],
-    diaryTitle: 'Dagbok – etter omstilling',
+    diaryTitle: 'Dagbok - etter omstilling',
     diaryDescription: 'Bruk notater til å planlegge neste steg: karriere, økonomi og mål.',
     diaryPlaceholder: 'Hva er neste steg? Hvilke jobber vurderer du? Hva er målene dine?',
     actions: [
@@ -80,6 +80,22 @@ const phaseSections: Record<
       'Lag en 3-måneders utviklingsplan.',
     ],
   },
+};
+
+const PHASE_OPTIONS = ['Før omstilling', 'Under omstilling', 'Etter omstilling'];
+
+const NEED_OPTIONS: string[] = [
+  'Få oversikt over rettigheter og avtaler',
+  'Forstå hva omstillingen betyr for lønn og økonomi',
+  'Planlegge neste karrieresteg',
+  'Snakke med noen om situasjonen',
+  'Få kontroll på forsikringer og inntektssikring',
+];
+
+const normalizePhase = (phase: string | null | undefined): string => {
+  if (!phase) return PHASE_OPTIONS[0];
+  if (phase === 'For omstilling') return 'Før omstilling';
+  return phase;
 };
 
 // -----------------------------------------------------------
@@ -120,11 +136,54 @@ export default function PlanPage(): React.ReactElement {
   const [isLoadingRemotePlan, setIsLoadingRemotePlan] = useState(false);
   const [isSavingDiary, setIsSavingDiary] = useState(false);
   const [diarySaveError, setDiarySaveError] = useState<string | null>(null);
+  const [selectedPhase, setSelectedPhase] = useState<string>(PHASE_OPTIONS[0]);
+  const [selectedNeeds, setSelectedNeeds] = useState<string[]>([]);
+  const [planSaveMessage, setPlanSaveMessage] = useState<string | null>(null);
+  const [isSavingPlan, setIsSavingPlan] = useState(false);
 
   // Den aktive fasen som styrer HELE UI-et
-  const displayedPhase = activeDiaryPhase || plan?.fase || phaseFromQuery || 'Før omstilling';
+  const displayedPhase = activeDiaryPhase || selectedPhase || PHASE_OPTIONS[0];
 
-  const phaseContent = phaseSections[displayedPhase];
+  const phaseContent = phaseSections[displayedPhase] ?? phaseSections[PHASE_OPTIONS[0]];
+
+  // Last lokalt lagret planvalg
+  useEffect(() => {
+    const stored = localStorage.getItem('myPlan');
+    if (!stored) return;
+
+    try {
+      const parsed = JSON.parse(stored) as UserPlanResponse;
+      const normalizedPhase = normalizePhase(parsed.phase);
+
+      setSelectedPhase(normalizedPhase);
+      if (parsed.needs) setSelectedNeeds(parsed.needs);
+      if (parsed.persona || parsed.phase || parsed.needs) {
+        setPlan((current) => current ?? {
+          persona: parsed.persona ?? 'Annet',
+          fase: normalizedPhase,
+          behov: parsed.needs ?? [],
+          createdAt: new Date().toISOString(),
+        });
+      }
+      setActiveDiaryPhase((current) => current || normalizedPhase);
+    } catch {
+      // ignore malformed local storage
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!activeDiaryPhase) {
+      setActiveDiaryPhase(selectedPhase);
+    }
+  }, [activeDiaryPhase, selectedPhase]);
+
+  useEffect(() => {
+    if (phaseFromQuery) {
+      const normalized = normalizePhase(phaseFromQuery);
+      setSelectedPhase(normalized);
+      setActiveDiaryPhase(normalized);
+    }
+  }, [phaseFromQuery]);
 
   // -----------------------------------------------------------
   // LASTER PLAN FRA SERVER
@@ -144,16 +203,19 @@ export default function PlanPage(): React.ReactElement {
           return;
         }
 
+        const normalizedPhase = normalizePhase(remote.phase);
         const normalizedPlan: PlanState | null = remote.phase
           ? {
               persona: remote.persona ?? 'Annet',
-              fase: remote.phase,
+              fase: normalizedPhase,
               behov: remote.needs ?? [],
               createdAt: remote.createdAt ?? new Date().toISOString(),
             }
           : null;
 
         setPlan(normalizedPlan);
+        setSelectedPhase(normalizedPhase);
+        setSelectedNeeds(remote.needs ?? []);
 
         const allDiaries: Record<string, string> = {
           ...remote.diaries,
@@ -163,10 +225,15 @@ export default function PlanPage(): React.ReactElement {
           allDiaries[remote.phase] = remote.diary;
         }
 
-        setDiariesByPhase(allDiaries);
+        const normalizedDiaries: Record<string, string> = {};
+        Object.entries(allDiaries).forEach(([key, value]) => {
+          normalizedDiaries[normalizePhase(key)] = value;
+        });
+
+        setDiariesByPhase(normalizedDiaries);
 
         if (!activeDiaryPhase) {
-          const initialPhase = phaseFromQuery || remote.phase || 'Før omstilling';
+          const initialPhase = normalizePhase(phaseFromQuery || remote.phase);
           setActiveDiaryPhase(initialPhase);
         }
       } catch {
@@ -176,6 +243,65 @@ export default function PlanPage(): React.ReactElement {
       }
     })();
   }, [isAuthenticated, activeDiaryPhase, phaseFromQuery]);
+
+  // -----------------------------------------------------------
+  // VALG AV FASE/BEHOV
+  // -----------------------------------------------------------
+
+  const handlePhaseSelect = (phase: string) => {
+    setSelectedPhase(phase);
+    setActiveDiaryPhase(phase);
+  };
+
+  const toggleNeed = (option: string) => {
+    setSelectedNeeds((current) =>
+      current.includes(option) ? current.filter((n) => n !== option) : [...current, option]
+    );
+  };
+
+  const handleSavePlan = async () => {
+    setPlanSaveMessage(null);
+
+    const normalizedPhase = normalizePhase(selectedPhase);
+    const persona = plan?.persona ?? 'Annet';
+    const nextPlan: PlanState = {
+      persona,
+      fase: normalizedPhase,
+      behov: selectedNeeds,
+      createdAt: plan?.createdAt ?? new Date().toISOString(),
+    };
+
+    setIsSavingPlan(true);
+    setPlan(nextPlan);
+    setActiveDiaryPhase((current) => current || normalizedPhase);
+
+    localStorage.setItem(
+      'myPlan',
+      JSON.stringify({ persona, phase: normalizedPhase, needs: selectedNeeds })
+    );
+    localStorage.setItem('personaLabel', persona);
+
+    if (isAuthenticated) {
+      try {
+        await fetchJson('/plan/me', {
+          method: 'PUT',
+          body: {
+            persona,
+            phase: normalizedPhase,
+            needs: selectedNeeds,
+          },
+        });
+        setPlanSaveMessage('Planen er lagret.');
+      } catch {
+        setPlanSaveMessage('Kunne ikke lagre hos serveren, men planen er lagret lokalt.');
+      } finally {
+        setIsSavingPlan(false);
+      }
+    } else {
+      setIsSavingPlan(false);
+      setPlanSaveMessage('Planen er lagret lokalt.');
+    }
+  };
 
   // -----------------------------------------------------------
   // LAGRING AV DAGBOK
@@ -198,12 +324,13 @@ export default function PlanPage(): React.ReactElement {
 
     (async () => {
       try {
+        const needsPayload = selectedNeeds.length ? selectedNeeds : plan?.behov ?? [];
         await fetchJson('/plan/me', {
           method: 'PUT',
           body: {
             persona: plan?.persona ?? 'Annet',
             phase: activeDiaryPhase,
-            needs: plan?.behov ?? [],
+            needs: needsPayload,
             diary: next,
           },
         });
@@ -249,6 +376,69 @@ export default function PlanPage(): React.ReactElement {
     >
       <Card>
         {isLoadingRemotePlan && <p className="mb-3 text-xs text-slate-500">Laster plan ...</p>}
+
+        <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 text-sm">
+          <h2 className="text-base md:text-lg font-semibold text-slate-900">Velg fase og behov</h2>
+
+          <div className="mt-3 space-y-4">
+            <div>
+              <div className="text-sm font-semibold mb-2">Fase</div>
+              <div className="flex flex-wrap gap-2">
+                {PHASE_OPTIONS.map((option) => {
+                  const active = selectedPhase === option;
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => handlePhaseSelect(option)}
+                      className={`px-3 py-2 rounded-full text-xs border ${
+                        active
+                          ? 'bg-slate-900 text-white border-slate-900'
+                          : 'bg-white text-slate-700 border-slate-300'
+                      }`}
+                    >
+                      {option}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div>
+              <div className="text-sm font-semibold mb-2">Hva trenger du nå?</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {NEED_OPTIONS.map((need) => {
+                  const active = selectedNeeds.includes(need);
+                  return (
+                    <label
+                      key={need}
+                      className={`cursor-pointer rounded-lg border px-3 py-2 text-sm transition ${
+                        active
+                          ? 'border-slate-900 bg-slate-900 text-white'
+                          : 'border-slate-200 bg-white'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        className="hidden"
+                        checked={active}
+                        onChange={() => toggleNeed(need)}
+                      />
+                      {need}
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 flex-wrap">
+              <Button onClick={handleSavePlan} disabled={isSavingPlan}>
+                {isSavingPlan ? 'Lagrer...' : 'Lagre fase og behov'}
+              </Button>
+              {planSaveMessage && <span className="text-xs text-slate-600">{planSaveMessage}</span>}
+            </div>
+          </div>
+        </section>
 
         {/* -----------------------------------------------------------
            FASEINNHOLD
@@ -344,3 +534,4 @@ export default function PlanPage(): React.ReactElement {
     </PageLayout>
   );
 }
+
