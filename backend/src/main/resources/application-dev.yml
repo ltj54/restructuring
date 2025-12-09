@@ -11,7 +11,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: none          # Flyway styrer schema i dev (riktig!)
+      ddl-auto: none
     properties:
       hibernate:
         format_sql: true
@@ -22,10 +22,10 @@ spring:
     init:
       mode: always
       data-locations: classpath:data-test.sql
-      # schema.sql må IKKE kjøres her, Flyway gjør jobben
 
   flyway:
     enabled: true
+    baseline-on-migrate: true     # ⭐ MANGLET – nå virker lokal migration
     locations: classpath:migration
 
 jwt:
