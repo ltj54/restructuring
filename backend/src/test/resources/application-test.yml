@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:55432/restructuring_test
+    url: JDBC:postgresql://localhost:55432/restructuring_test
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
