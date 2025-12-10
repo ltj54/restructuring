@@ -18,7 +18,7 @@ env:
 jobs:
 
   # ---------------------------------------------------------
-  # 1) DETECT CHANGES (frontend/backend)
+  # 1) DETECT CHANGES
   # ---------------------------------------------------------
   detect_changes:
     runs-on: ubuntu-latest
@@ -41,7 +41,7 @@ jobs:
 
 
   # ---------------------------------------------------------
-  # 2) FRONTEND – tests + build + GitHub Pages deploy
+  # 2) FRONTEND
   # ---------------------------------------------------------
   frontend:
     needs: detect_changes
@@ -80,7 +80,7 @@ jobs:
 
 
   # ---------------------------------------------------------
-  # 3) BACKEND – Flyway, tests, build, Docker-check, Render deploy
+  # 3) BACKEND
   # ---------------------------------------------------------
   backend:
     needs: detect_changes
@@ -106,7 +106,8 @@ jobs:
       SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/prod_ci
       SPRING_DATASOURCE_USERNAME: restructuring
       SPRING_DATASOURCE_PASSWORD: restructuring
-      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      SPRING_PROFILES_ACTIVE: ci
 
     steps:
       - uses: actions/checkout@v4

@@ -64,7 +64,8 @@ jobs:
       SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/pr_ci
       SPRING_DATASOURCE_USERNAME: restructuring
       SPRING_DATASOURCE_PASSWORD: restructuring
-      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      SPRING_PROFILES_ACTIVE: ci
 
     steps:
       - uses: actions/checkout@v4
