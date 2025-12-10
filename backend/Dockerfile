@@ -21,13 +21,24 @@ RUN mvn -B clean package -DskipTests
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 
+# 🛠 Installer verktøy som brukes i HEALTHCHECK (curl mangler i base-image)
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY --from=build /build/target/restructuring-backend-0.0.1-SNAPSHOT.jar /app/app.jar
 
 ENV SPRING_PROFILES_ACTIVE=prod
 EXPOSE 8080
 
-# 🩺 Healthcheck (fungerer i Render)
-HEALTHCHECK --interval=30s --timeout=5s --retries=5 \
-  CMD curl -f http://localhost:8080/actuator/health || exit 1
+# 🩺 Healthcheck (bruk liveness-endepunktet som ikke feiler selv om databasen er treg)
+# - start-period gir applikasjonen tid til å starte før første sjekk
+# - flere retries gjør at treg oppstart ikke markerer containeren som "unhealthy"
+HEALTHCHECK \
+  --interval=30s \
+  --timeout=5s \
+  --retries=10 \
+  --start-period=120s \
+  CMD ["/bin/sh", "-c", "PORT=${PORT:-8080}; curl --silent --show-error --fail --max-time 5 http://localhost:${PORT}/actuator/health/liveness || exit 1"]
 
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
