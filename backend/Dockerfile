@@ -32,13 +32,8 @@ ENV SPRING_PROFILES_ACTIVE=prod
 EXPOSE 8080
 
 # 🩺 Healthcheck (bruk liveness-endepunktet som ikke feiler selv om databasen er treg)
-# - start-period gir applikasjonen tid til å starte før første sjekk
-# - flere retries gjør at treg oppstart ikke markerer containeren som "unhealthy"
-HEALTHCHECK \
-  --interval=30s \
-  --timeout=5s \
-  --retries=10 \
-  --start-period=120s \
-  CMD ["CMD-SHELL", "curl --fail http://localhost:8080/actuator/health/liveness || exit 1"]
+# Dette unngår at Render dreper containeren mens databasen starter opp
+HEALTHCHECK --interval=30s --timeout=5s --retries=5 \
+  CMD curl -f http://localhost:8080/actuator/health/liveness || exit 1
 
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
