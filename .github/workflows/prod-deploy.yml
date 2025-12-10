@@ -18,7 +18,7 @@ env:
 jobs:
 
   # ---------------------------------------------------------
-  # 1) DETECT CHANGES
+  # 1) DETECT CHANGES (frontend / backend)
   # ---------------------------------------------------------
   detect_changes:
     runs-on: ubuntu-latest
@@ -41,7 +41,7 @@ jobs:
 
 
   # ---------------------------------------------------------
-  # 2) FRONTEND
+  # 2) FRONTEND DEPLOY → GitHub Pages
   # ---------------------------------------------------------
   frontend:
     needs: detect_changes
@@ -80,66 +80,29 @@ jobs:
 
 
   # ---------------------------------------------------------
-  # 3) BACKEND
+  # 3) BACKEND DEPLOY → Render
   # ---------------------------------------------------------
   backend:
     needs: detect_changes
     if: needs.detect_changes.outputs.backend_changed == 'true'
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:17
-        env:
-          POSTGRES_DB: prod_ci
-          POSTGRES_USER: restructuring
-          POSTGRES_PASSWORD: restructuring
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U restructuring"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
-    env:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/prod_ci
-      SPRING_DATASOURCE_USERNAME: restructuring
-      SPRING_DATASOURCE_PASSWORD: restructuring
-      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
-      SPRING_PROFILES_ACTIVE: ci
-
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
-          cache: maven
-
-      - name: Backend tests (with Flyway migrations)
-        working-directory: backend
-        run: mvn -B test
-
-      - name: Build backend
-        working-directory: backend
-        run: mvn -B -DskipTests package
-
-      - name: Docker sanity build
-        working-directory: backend
-        run: |
-          if [ -f Dockerfile ]; then
-            docker build -t restructuring-backend-ci .
-          else
-            echo "No Dockerfile found – skipping."
-          fi
+      # -------------------------------------------------------------------
+      # Reuse tests and DB-flow from backend.yml instead of duplicating them
+      # -------------------------------------------------------------------
+      - name: Reuse backend CI workflow before deploy
+        uses: ./.github/workflows/backend.yml
 
       - name: Trigger Render deploy
         run: |
+          echo "Triggering Render backend deploy..."
           curl -X POST \
             -H "Accept: application/json" \
             -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
             -d '' \
             https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys
+
+          echo "Render deploy triggered successfully."

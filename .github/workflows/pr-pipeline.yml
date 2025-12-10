@@ -5,7 +5,6 @@ on:
     branches: [ main ]
 
 jobs:
-
   # ---------------------------------------------------------
   # FRONTEND – lint + tests + preview build
   # ---------------------------------------------------------
@@ -40,43 +39,7 @@ jobs:
 
 
   # ---------------------------------------------------------
-  # BACKEND – Flyway + tests
+  # BACKEND – reuse backend.yml (single source of truth!)
   # ---------------------------------------------------------
   backend:
-    runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:17
-        env:
-          POSTGRES_DB: pr_ci
-          POSTGRES_USER: restructuring
-          POSTGRES_PASSWORD: restructuring
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U restructuring"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
-    env:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/pr_ci
-      SPRING_DATASOURCE_USERNAME: restructuring
-      SPRING_DATASOURCE_PASSWORD: restructuring
-      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
-      SPRING_PROFILES_ACTIVE: ci
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
-          cache: maven
-
-      - name: Backend tests (with Flyway migrations)
-        working-directory: backend
-        run: mvn -B test
+    uses: ./.github/workflows/backend.yml

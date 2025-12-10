@@ -18,7 +18,7 @@ env:
 
 jobs:
   # ---------------------------------------------------------
-  # 1) Sikker og robust deteksjon av backend-endringer
+  # 1) Detect backend changes
   # ---------------------------------------------------------
   detect-backend-changes:
     name: Detect backend changes
@@ -27,7 +27,7 @@ jobs:
       backend_changed: ${{ steps.detect.outputs.backend_changed }}
 
     steps:
-      - name: Checkout repo (depth=2 to allow HEAD^)
+      - name: Checkout repo (depth=2)
         uses: actions/checkout@v4
         with:
           fetch-depth: 2
@@ -38,14 +38,12 @@ jobs:
         run: |
           echo "Checking for changes in backend/..."
 
-          # Hvis HEAD^ ikke finnes (første commit eller store repo-endringer)
           if ! git rev-parse HEAD^ >/dev/null 2>&1; then
             echo "backend_changed=true" >> "$GITHUB_OUTPUT"
             echo "No previous commit → treating backend as changed."
             exit 0
           fi
 
-          # Faktisk sjekk etter endringer i backend/
           if git diff --name-only HEAD^ HEAD | grep "^backend/" >/dev/null 2>&1; then
             echo "backend_changed=true" >> "$GITHUB_OUTPUT"
             echo "Backend changed."
@@ -55,7 +53,7 @@ jobs:
           fi
 
   # ---------------------------------------------------------
-  # 2) Bygg frontend og last opp GitHub Pages artifact
+  # 2) Build frontend & upload Pages artifact
   # ---------------------------------------------------------
   build-frontend:
     name: Build Frontend (GitHub Pages)
@@ -94,7 +92,7 @@ jobs:
           path: ${{ env.FRONTEND_DIR }}/dist
 
   # ---------------------------------------------------------
-  # 3) Deploy frontend til GitHub Pages
+  # 3) Deploy Frontend to GitHub Pages
   # ---------------------------------------------------------
   deploy-frontend:
     name: Deploy to GitHub Pages
@@ -110,7 +108,7 @@ jobs:
         uses: actions/deploy-pages@v4
 
   # ---------------------------------------------------------
-  # 4) Deploy backend til Render (kun hvis endret)
+  # 4) Deploy backend to Render (only if backend changed)
   # ---------------------------------------------------------
   deploy-backend:
     name: Deploy Backend to Render
