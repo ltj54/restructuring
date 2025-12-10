@@ -66,7 +66,7 @@ jobs:
           echo "Checking DB status..."
           pg_isready -h localhost -p 5432 -U postgres || exit 1
           echo "Listing databases:"
-          PGPASSWORD=postgres psql -h localhost -U postgres -c "\l"
+          PGPASSWORD=postgres psql -h localhost -U postgres -c "SELECT datname FROM pg_database;"
 
       - name: Build & test backend
         working-directory: backend
