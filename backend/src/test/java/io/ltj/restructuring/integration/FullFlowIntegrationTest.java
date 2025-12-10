@@ -32,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles({"test", "ci"})   // ← 🟢 NØKKELENDRINGEN
+@ActiveProfiles({"ci"})   // ← 🟢 NØKKELENDRINGEN
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FullFlowIntegrationTest {
 
