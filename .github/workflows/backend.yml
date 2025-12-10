@@ -1,79 +1,62 @@
 name: Backend Pipeline
 
 on:
-  push:
+  pull_request:
     paths:
       - "backend/**"
       - ".github/workflows/backend.yml"
-  pull_request:
+  push:
     paths:
       - "backend/**"
       - ".github/workflows/backend.yml"
 
 jobs:
-  backend:
-    name: Build & Test Backend
+  build-test:
     runs-on: ubuntu-latest
 
     services:
       postgres:
-        image: postgres:17
+        image: postgres:18
+        env:
+          POSTGRES_DB: dev_ci
+          POSTGRES_USER: restructuring
+          POSTGRES_PASSWORD: restructuring
         ports:
           - 5432:5432
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: dev_ci
         options: >-
-          --health-cmd="pg_isready -U postgres -d dev_ci"
+          --health-cmd="pg_isready -U restructuring"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
 
     env:
-      # Spring profile used for CI/tests
       SPRING_PROFILES_ACTIVE: ci
-
-      # Values that application-ci.properties expects
       SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/dev_ci
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
-
-      # Avoid Maven using interactive mode
-      MAVEN_OPTS: -Djava.awt.headless=true
+      SPRING_DATASOURCE_USERNAME: restructuring
+      SPRING_DATASOURCE_PASSWORD: restructuring
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
           cache: maven
 
-      - name: Wait for Postgres to be available
+      - name: Wait for Postgres
         run: |
-          for i in {1..12}; do
-            pg_isready -h localhost -p 5432 -U postgres && break
-            echo "⏳ Waiting for Postgres..."
-            sleep 5
+          for i in {1..20}; do
+            pg_isready -h localhost -p 5432 -U restructuring && break
+            echo "Waiting for Postgres..."
+            sleep 2
           done
 
-      - name: Show PostgreSQL status
+      - name: Show DBs
         run: |
-          echo "Checking DB status..."
-          pg_isready -h localhost -p 5432 -U postgres || exit 1
-          echo "Listing databases:"
-          PGPASSWORD=postgres psql -h localhost -U postgres -c "SELECT datname FROM pg_database;"
+          echo "Listing databases safely:"
+          PGPASSWORD=restructuring psql -h localhost -U restructuring -c "SELECT datname FROM pg_database;"
 
-      - name: Build & test backend
+      - name: Build & Test Backend
         working-directory: backend
         run: mvn -B -Dspring.profiles.active=ci clean verify
-
-      - name: Print test report folder if exists
-        if: always()
-        run: |
-          echo "Dumping surefire-reports:"
-          find backend -name "surefire-reports" -type d -print || true

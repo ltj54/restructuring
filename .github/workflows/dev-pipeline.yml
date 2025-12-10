@@ -6,30 +6,17 @@ on:
       - "feature/*"
 
 jobs:
-  # -------------------------------------------------------------------
-  # FRONTEND VALIDATION
-  # -------------------------------------------------------------------
   frontend:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
-
-      - name: Install frontend dependencies
+      - run: npm ci
         working-directory: frontend
-        run: npm ci
-
-      - name: Frontend tests
+      - run: npm test
         working-directory: frontend
-        run: npm test
 
-  # -------------------------------------------------------------------
-  # BACKEND VALIDATION — reuses backend.yml (no duplication!)
-  # -------------------------------------------------------------------
   backend:
     uses: ./.github/workflows/backend.yml
