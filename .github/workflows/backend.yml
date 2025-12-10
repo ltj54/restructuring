@@ -55,7 +55,8 @@ jobs:
       - name: Show DBs
         run: |
           echo "Listing databases safely:"
-          PGPASSWORD=restructuring psql -h localhost -U restructuring -c "SELECT datname FROM pg_database;"
+          # MUST specify database, otherwise psql defaults to db=restructuring (which does not exist)
+          PGPASSWORD=restructuring psql -h localhost -U restructuring -d postgres -c "SELECT datname FROM pg_database;"
 
       - name: Build & Test Backend
         working-directory: backend
