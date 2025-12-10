@@ -39,6 +39,6 @@ HEALTHCHECK \
   --timeout=5s \
   --retries=10 \
   --start-period=120s \
-  CMD ["CMD-SHELL", "PORT=${PORT:-8080}; curl --silent --show-error --fail --max-time 5 http://localhost:${PORT}/actuator/health/liveness || exit 1"]
+  CMD ["sh", "-c", "PORT=${PORT:-8080}; curl --silent --show-error --fail --max-time 5 http://localhost:${PORT}/actuator/health/liveness || exit 1"]
 
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
