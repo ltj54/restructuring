@@ -26,9 +26,10 @@ jobs:
         env:
           QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
         with:
-          pr-mode: true           # Only analyze changed files
+          pr-mode: true            # Analyze changed files only
           use-caches: true
           post-pr-comment: true
           use-annotations: true
           upload-result: false
           push-fixes: 'none'
+          args: --disable-local-changes   # ← 💥 FIX for crashing Qodana
