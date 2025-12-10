@@ -3,10 +3,6 @@ param(
     [string]$Body    = "Automatisk generert PR via super-deploy.ps1"
 )
 
-# =====================================================================
-# 🚀 SUPER-DEPLOY — FULL AUTO (branch → PR, main → deploy)
-# =====================================================================
-
 $ErrorActionPreference = "Stop"
 
 $Yellow = [ConsoleColor]::Yellow
@@ -16,124 +12,98 @@ $Cyan   = [ConsoleColor]::Cyan
 
 Write-Host ""
 Write-Host "============================================" -ForegroundColor $Cyan
-Write-Host " 🚀 SUPER DEPLOY — Auto PR / Auto Deploy" -ForegroundColor $Cyan
+Write-Host " SUPER DEPLOY - Auto PR / Auto Deploy" -ForegroundColor $Cyan
 Write-Host "============================================" -ForegroundColor $Cyan
 Write-Host ""
 
-# Finn repo-root
+# Locate repo root relative to this script
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot  = Resolve-Path (Join-Path $scriptDir "..")
 Set-Location $repoRoot
 
-# Finn nåværende branch
+# Find current branch
 $currentBranch = git rev-parse --abbrev-ref HEAD
 
 if ($currentBranch -eq "HEAD") {
-    Write-Host "`n❌ ERROR: Du er i DETACHED HEAD state. Avbryter." -ForegroundColor $Red
+    Write-Host "`nERROR: Detached HEAD. Aborting." -ForegroundColor $Red
     exit 1
 }
 
-Write-Host "🔎 Nåværende branch: $currentBranch" -ForegroundColor $Yellow
+Write-Host "Current branch: $currentBranch" -ForegroundColor $Yellow
 
-# Standard commit-melding
-if ($Message -eq "") {
+# Default commit message
+if ([string]::IsNullOrWhiteSpace($Message)) {
     $Message = "Auto-commit ($currentBranch) - $(Get-Date -Format 'yyyy-MM-dd HH:mm')"
 }
 
-# ---------------------------------------------------------------------
-# 1️⃣ Git add + commit
-# ---------------------------------------------------------------------
-Write-Host "`n➕ Legger til endringer..." -ForegroundColor $Yellow
+# Stage + commit
+Write-Host "`nAdding changes..." -ForegroundColor $Yellow
 git add -A
 
 $changes = git diff --cached --name-only
 
 if (-not [string]::IsNullOrWhiteSpace($changes)) {
-    Write-Host "`n💾 Committer: $Message" -ForegroundColor $Yellow
+    Write-Host "`nCommitting: $Message" -ForegroundColor $Yellow
     git commit -m "$Message"
-}
-else {
-    Write-Host "`nℹ️ Ingen endringer å committe." -ForegroundColor $Yellow
+} else {
+    Write-Host "`nNo changes to commit." -ForegroundColor $Yellow
 }
 
-# ---------------------------------------------------------------------
-# Hvis vi er på MAIN → gjør deploy
-# ---------------------------------------------------------------------
+# If on main -> push and exit
 if ($currentBranch -eq "main") {
-    Write-Host "`n⬆️ På main → Pusher til origin/main..." -ForegroundColor $Yellow
+    Write-Host "`nOn main -> pushing to origin/main..." -ForegroundColor $Yellow
     git push origin main
 
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "`n❌ git push feilet på main." -ForegroundColor $Red
+        Write-Host "`ngit push failed on main." -ForegroundColor $Red
         exit 1
     }
 
-    Write-Host "`n✅ MAIN push OK! GitHub Actions trigges nå:" -ForegroundColor $Green
-    Write-Host "   → Frontend -> GitHub Pages" -ForegroundColor $Green
-    Write-Host "   → Backend -> Render (hvis endret)" -ForegroundColor $Green
-    Write-Host ""
+    Write-Host "`nMain push OK. GitHub Actions will run." -ForegroundColor $Green
     exit 0
 }
 
-# ---------------------------------------------------------------------
-# 2️⃣ Hvis vi IKKE er på main → håndter PR
-# ---------------------------------------------------------------------
-Write-Host "`n➡️ Ikke på main → Oppretter / oppdaterer Pull Request..." -ForegroundColor $Yellow
+# Not on main -> handle PR
+Write-Host "`nNot on main -> creating/updating PR..." -ForegroundColor $Yellow
 
-# Sjekk om gh CLI er installert
 if (-not (Get-Command "gh" -ErrorAction SilentlyContinue)) {
-    Write-Host "`n❌ GitHub CLI (gh) mangler!" -ForegroundColor $Red
-    Write-Host "Installer: https://cli.github.com/" -ForegroundColor $Yellow
+    Write-Host "`nGitHub CLI (gh) is missing. Install from https://cli.github.com/" -ForegroundColor $Red
     exit 1
 }
 
-# Push branchen
-Write-Host "`n⬆️ Pusher branch: $currentBranch" -ForegroundColor $Yellow
+Write-Host "`nPushing branch: $currentBranch" -ForegroundColor $Yellow
 git push origin $currentBranch
 
-# Finn eksisterende PR
 $existingPR = gh pr list --head $currentBranch --json number --jq ".[0].number" 2>$null
 
 if ($existingPR) {
-    Write-Host "`nℹ️ PR finnes allerede (#$existingPR). Oppdaterer den..." -ForegroundColor $Yellow
+    Write-Host "`nPR already exists (#$existingPR). Updating..." -ForegroundColor $Yellow
 
-    # ---------------------------------------------------------------
-    # 🔧 AUTOMATISK OPPDATER PR
-    # ---------------------------------------------------------------
-
-    # 1) Oppdater PR-body
     $autoBody = @"
-🔄 **SUPER-DEPLOY: Automatisk oppdatert**
+**SUPER-DEPLOY: Automatisk oppdatert**
 
-Branch: \`$currentBranch\`
+Branch: `$currentBranch`
 Tid: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
 
 Endringer er pushet og CI er trigget på nytt.
 "@
 
     gh pr edit $existingPR --body "$autoBody"
+    gh pr comment $existingPR --body "SUPER-DEPLOY: Ny push + restart CI"
 
-    # 2) Legg til kommentar
-    gh pr comment $existingPR --body "🔁 SUPER-DEPLOY: Ny push + restart CI"
-
-    # 3) Re-run GitHub Actions for siste workflow
-    Write-Host "🔁 Trigger GitHub Actions på nytt..." -ForegroundColor $Cyan
-
+    Write-Host "Triggering latest GitHub Actions run..." -ForegroundColor $Cyan
     $runId = gh run list --limit 1 --json databaseId --jq ".[0].databaseId" 2>$null
     if ($runId) {
         gh run rerun $runId | Out-Null
     }
 
-    Write-Host "`n📬 Åpner PR i nettleser..." -ForegroundColor $Yellow
+    Write-Host "`nOpening PR in browser..." -ForegroundColor $Yellow
     gh pr view $existingPR --web
-
     exit 0
 }
 
-# ---------------------------------------------------------------------
-# 3️⃣ Ingen PR → Opprett ny
-# ---------------------------------------------------------------------
-Write-Host "`n📬 Oppretter Pull Request..." -ForegroundColor $Yellow
+# Create new PR
+Write-Host "`nCreating Pull Request..." -ForegroundColor $Yellow
 
 gh pr create `
     --base main `
@@ -143,11 +113,11 @@ gh pr create `
     --assignee "@me"
 
 if ($LASTEXITCODE -eq 0) {
-    Write-Host "`n✅ Pull Request opprettet!" -ForegroundColor $Green
-    Write-Host "👉 Åpner PR..." -ForegroundColor $Yellow
+    Write-Host "`nPull Request created!" -ForegroundColor $Green
+    Write-Host "Opening PR..." -ForegroundColor $Yellow
     gh pr view --web
 } else {
-    Write-Host "`n❌ Kunne ikke opprette PR." -ForegroundColor $Red
+    Write-Host "`nCould not create PR." -ForegroundColor $Red
 }
 
 Write-Host ""
