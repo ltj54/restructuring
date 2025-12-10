@@ -1,0 +1,58 @@
+name: Dev Pipeline
+
+on:
+  push:
+    branches:
+      - "feature/*"
+
+jobs:
+  validation:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: dev_ci
+          POSTGRES_USER: restructuring
+          POSTGRES_PASSWORD: restructuring
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U restructuring"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/dev_ci
+      SPRING_DATASOURCE_USERNAME: restructuring
+      SPRING_DATASOURCE_PASSWORD: restructuring
+      SPRING_PROFILES_ACTIVE: dev
+
+    steps:
+      # Checkout repo
+      - uses: actions/checkout@v4
+
+      # Frontend environment
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Frontend tests
+        working-directory: frontend
+        run: npm test
+
+      # Backend environment
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Backend tests (with Flyway migrations)
+        working-directory: backend
+        run: mvn -B test
