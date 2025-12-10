@@ -31,8 +31,9 @@ COPY --from=build /build/target/restructuring-backend-0.0.1-SNAPSHOT.jar /app/ap
 ENV SPRING_PROFILES_ACTIVE=prod
 EXPOSE 8080
 
-# 🩺 Healthcheck (fungerer i Render)
+# 🩺 Healthcheck (bruk liveness-endepunktet som ikke feiler selv om databasen er treg)
+# Dette unngår at Render dreper containeren mens databasen starter opp
 HEALTHCHECK --interval=30s --timeout=5s --retries=5 \
-  CMD curl -f http://localhost:8080/actuator/health || exit 1
+  CMD curl -f http://localhost:8080/actuator/health/liveness || exit 1
 
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
