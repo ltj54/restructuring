@@ -76,9 +76,9 @@ if ($currentBranch -eq "main") {
 }
 
 # ---------------------------------------------------------------------
-# 2️⃣ Hvis vi IKKE er på main → opprett PR
+# 2️⃣ Hvis vi IKKE er på main → håndter PR
 # ---------------------------------------------------------------------
-Write-Host "`n➡️ Ikke på main → Oppretter Pull Request..." -ForegroundColor $Yellow
+Write-Host "`n➡️ Ikke på main → Oppretter / oppdaterer Pull Request..." -ForegroundColor $Yellow
 
 # Sjekk om gh CLI er installert
 if (-not (Get-Command "gh" -ErrorAction SilentlyContinue)) {
@@ -95,12 +95,44 @@ git push origin $currentBranch
 $existingPR = gh pr list --head $currentBranch --json number --jq ".[0].number" 2>$null
 
 if ($existingPR) {
-    Write-Host "`nℹ️ PR finnes allerede (#$existingPR). Viser den:" -ForegroundColor $Yellow
-    gh pr view $existingPR
+    Write-Host "`nℹ️ PR finnes allerede (#$existingPR). Oppdaterer den..." -ForegroundColor $Yellow
+
+    # ---------------------------------------------------------------
+    # 🔧 AUTOMATISK OPPDATER PR
+    # ---------------------------------------------------------------
+
+    # 1) Oppdater PR-body
+    $autoBody = @"
+🔄 **SUPER-DEPLOY: Automatisk oppdatert**
+
+Branch: \`$currentBranch\`
+Tid: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+
+Endringer er pushet og CI er trigget på nytt.
+"@
+
+    gh pr edit $existingPR --body "$autoBody"
+
+    # 2) Legg til kommentar
+    gh pr comment $existingPR --body "🔁 SUPER-DEPLOY: Ny push + restart CI"
+
+    # 3) Re-run GitHub Actions for siste workflow
+    Write-Host "🔁 Trigger GitHub Actions på nytt..." -ForegroundColor $Cyan
+
+    $runId = gh run list --limit 1 --json databaseId --jq ".[0].databaseId" 2>$null
+    if ($runId) {
+        gh run rerun $runId | Out-Null
+    }
+
+    Write-Host "`n📬 Åpner PR i nettleser..." -ForegroundColor $Yellow
+    gh pr view $existingPR --web
+
     exit 0
 }
 
-# Opprett ny PR
+# ---------------------------------------------------------------------
+# 3️⃣ Ingen PR → Opprett ny
+# ---------------------------------------------------------------------
 Write-Host "`n📬 Oppretter Pull Request..." -ForegroundColor $Yellow
 
 gh pr create `
