@@ -1,29 +1,26 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:restructuring_test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
-  flyway:
-    enabled: false
+    url: jdbc:postgresql://localhost:55432/restructuring_test
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
     open-in-view: false
-    defer-datasource-initialization: true
+
   sql:
     init:
       mode: always
-      schema-locations: classpath:schema.sql
       data-locations: classpath:data-test.sql
 
-jwt:
-  secret: MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=
+  jpa.defer-datasource-initialization: true
 
 logging:
   level:
-    org.springframework: INFO
-
-openai:
-  api:
-    key: dummy-test-key
+    org.springframework.jdbc.datasource.init: DEBUG
