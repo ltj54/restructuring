@@ -1,6 +1,6 @@
 -- H2-friendly seed data for test profile (no PostgreSQL-specific syntax)
 
-MERGE INTO users KEY(email)
+MERGE INTO users (email, password, first_name, last_name, ssn) KEY(email)
 VALUES (
   'test@example.com',
   '$2a$10$abcdefghijklmnopqrstuv',
