@@ -41,7 +41,7 @@ jobs:
           # Hvis HEAD^ ikke finnes (første commit eller store repo-endringer)
           if ! git rev-parse HEAD^ >/dev/null 2>&1; then
             echo "backend_changed=true" >> "$GITHUB_OUTPUT"
-            echo "No previous commit → treating backend as changed."
+            echo "No previous commit - treating backend as changed."
             exit 0
           fi
 
@@ -128,3 +128,4 @@ jobs:
             -d '{"clearCache": true}'
 
           echo "Render deploy triggered successfully."
+

@@ -8,9 +8,7 @@ export default function ProtectedLayout() {
 
   // Ikke innlogget → send til login med redirect
   if (!isAuthenticated) {
-    const redirectTo = encodeURIComponent(
-      location.pathname + location.search + location.hash
-    );
+    const redirectTo = encodeURIComponent(location.pathname + location.search + location.hash);
     return <Navigate to={`/login?redirect=${redirectTo}`} replace />;
   }
 

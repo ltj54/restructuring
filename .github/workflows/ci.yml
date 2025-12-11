@@ -1,9 +1,18 @@
 name: CI
 
 on:
+  push:
+    branches:
+      - main
+      - 'feature/**'
   pull_request:
     branches:
-      - '*'
+      - main
+      - 'feature/**'
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: "22"
 
 jobs:
   build-and-test:
@@ -20,8 +29,12 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: "17"
           cache: maven
+
+      - name: Ensure mvnw is executable
+        working-directory: ./backend
+        run: chmod +x ./mvnw
 
       - name: Run backend build and tests
         working-directory: ./backend
@@ -33,7 +46,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: ./frontend/package-lock.json
 

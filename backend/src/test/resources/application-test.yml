@@ -14,6 +14,8 @@ spring:
       mode: always
       schema-locations: classpath:schema.sql
       data-locations: classpath:data-test.sql
+  flyway:
+    enabled: false
 
 jwt:
   secret: MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=

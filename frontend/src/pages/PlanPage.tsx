@@ -158,12 +158,15 @@ export default function PlanPage(): React.ReactElement {
       setSelectedPhase(normalizedPhase);
       if (parsed.needs) setSelectedNeeds(parsed.needs);
       if (parsed.persona || parsed.phase || parsed.needs) {
-        setPlan((current) => current ?? {
-          persona: parsed.persona ?? 'Annet',
-          fase: normalizedPhase,
-          behov: parsed.needs ?? [],
-          createdAt: new Date().toISOString(),
-        });
+        setPlan(
+          (current) =>
+            current ?? {
+              persona: parsed.persona ?? 'Annet',
+              fase: normalizedPhase,
+              behov: parsed.needs ?? [],
+              createdAt: new Date().toISOString(),
+            }
+        );
       }
       setActiveDiaryPhase((current) => current || normalizedPhase);
     } catch {
@@ -324,7 +327,7 @@ export default function PlanPage(): React.ReactElement {
 
     (async () => {
       try {
-        const needsPayload = selectedNeeds.length ? selectedNeeds : plan?.behov ?? [];
+        const needsPayload = selectedNeeds.length ? selectedNeeds : (plan?.behov ?? []);
         await fetchJson('/plan/me', {
           method: 'PUT',
           body: {
@@ -511,4 +514,3 @@ export default function PlanPage(): React.ReactElement {
     </PageLayout>
   );
 }
-
