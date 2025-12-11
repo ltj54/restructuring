@@ -28,12 +28,7 @@ function Spinner() {
 }
 
 function SkeletonBlock({ width = '100%', height = '1rem' }) {
-  return (
-    <div
-      className="animate-pulse rounded bg-slate-200/70"
-      style={{ width, height }}
-    />
-  );
+  return <div className="animate-pulse rounded bg-slate-200/70" style={{ width, height }} />;
 }
 
 function SkeletonCard() {
@@ -52,15 +47,11 @@ function StatusBadge({ status }: { status: Health }) {
     status === 'ok'
       ? 'bg-emerald-100 text-emerald-700 border-emerald-300'
       : status === 'feil'
-      ? 'bg-rose-100 text-rose-700 border-rose-300'
-      : 'bg-slate-100 text-slate-700 border-slate-300';
+        ? 'bg-rose-100 text-rose-700 border-rose-300'
+        : 'bg-slate-100 text-slate-700 border-slate-300';
 
   const dot =
-    status === 'ok'
-      ? 'bg-emerald-500'
-      : status === 'feil'
-      ? 'bg-rose-500'
-      : 'bg-slate-500';
+    status === 'ok' ? 'bg-emerald-500' : status === 'feil' ? 'bg-rose-500' : 'bg-slate-500';
 
   return (
     <span
@@ -88,22 +79,17 @@ function HistoryList({ history }: { history: HistoryEntry[] }) {
   return (
     <div className="space-y-3 text-sm">
       {history.map((entry, i) => {
-        const ratio = entry.durationMs
-          ? Math.min(100, (entry.durationMs / maxDuration) * 100)
-          : 5;
+        const ratio = entry.durationMs ? Math.min(100, (entry.durationMs / maxDuration) * 100) : 5;
 
         const bar =
           entry.status === 'ok'
             ? 'bg-emerald-500'
             : entry.status === 'feil'
-            ? 'bg-rose-500'
-            : 'bg-slate-400';
+              ? 'bg-rose-500'
+              : 'bg-slate-400';
 
         return (
-          <div
-            key={i}
-            className="border border-slate-200 rounded-xl bg-white p-3 shadow-sm"
-          >
+          <div key={i} className="border border-slate-200 rounded-xl bg-white p-3 shadow-sm">
             <div className="flex justify-between text-xs text-slate-500">
               <span>{entry.time.toLocaleTimeString()}</span>
               <span className="font-semibold text-slate-700">

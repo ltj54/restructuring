@@ -22,13 +22,11 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
   const isAuthenticated = !!user;
 
   const displayName: string =
-    (user && (user.fullName || user.name || user.displayName || user.email)) ||
-    'Ikke pålogget';
+    (user && (user.fullName || user.name || user.displayName || user.email)) || 'Ikke pålogget';
 
   const initials = useMemo(() => {
     if (!user) return '--';
-    const source =
-      user.fullName || user.name || user.displayName || user.email || '';
+    const source = user.fullName || user.name || user.displayName || user.email || '';
     const parts = String(source).split('@')[0].split(' ');
     const letters = parts
       .filter((p: string) => p.trim().length > 0)
@@ -52,10 +50,7 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
 
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
-      if (
-        menuPanelRef.current?.contains(target) ||
-        menuButtonRef.current?.contains(target)
-      ) {
+      if (menuPanelRef.current?.contains(target) || menuButtonRef.current?.contains(target)) {
         return;
       }
       setMenuOpen(false);
@@ -96,9 +91,7 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
               <span className="text-[10px] uppercase tracking-[0.18em] text-emerald-800">
                 Restructuring
               </span>
-              <span className="text-sm font-semibold text-slate-900">
-                Omstillingsveiviser
-              </span>
+              <span className="text-sm font-semibold text-slate-900">Omstillingsveiviser</span>
             </div>
           </div>
 

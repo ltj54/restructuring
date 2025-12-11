@@ -24,7 +24,9 @@ export default function ProfilePage() {
       <div className="bg-white rounded-xl shadow p-5 border border-slate-200 space-y-4">
         <div>
           <h2 className="font-semibold text-slate-800">Navn</h2>
-          <p className="text-slate-700">{user.fullName || user.name || user.displayName || 'Ukjent'}</p>
+          <p className="text-slate-700">
+            {user.fullName || user.name || user.displayName || 'Ukjent'}
+          </p>
         </div>
 
         <div>

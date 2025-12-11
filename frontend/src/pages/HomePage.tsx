@@ -15,9 +15,7 @@ export default function HomePage(): React.ReactElement {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
 
-  const redirectParam = encodeURIComponent(
-    location.pathname + location.search + location.hash,
-  );
+  const redirectParam = encodeURIComponent(location.pathname + location.search + location.hash);
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-gradient-to-b from-slate-50 via-emerald-50/25 to-white text-slate-900">

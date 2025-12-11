@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { useAddJournalEntry } from "@/hooks/useAddJournalEntry";
-import Card from "@/components/Card";
+import React, { useState } from 'react';
+import { useAddJournalEntry } from '@/hooks/useAddJournalEntry';
+import Card from '@/components/Card';
 
 type AddToJournalModalProps = {
   open: boolean;
@@ -16,7 +16,7 @@ export default function AddToJournalModal({
   const { addEntry, loading } = useAddJournalEntry();
 
   const [phase, setPhase] = useState(1);
-  const [comment, setComment] = useState("");
+  const [comment, setComment] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   if (!open) return null;
@@ -24,15 +24,13 @@ export default function AddToJournalModal({
   async function handleSave() {
     setError(null);
 
-    const content =
-      defaultContent +
-      (comment ? `\n\nKommentar: ${comment}` : "");
+    const content = defaultContent + (comment ? `\n\nKommentar: ${comment}` : '');
 
     try {
       await addEntry(phase, content);
       onClose();
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Kunne ikke lagre journalinnlegget.";
+      const message = err instanceof Error ? err.message : 'Kunne ikke lagre journalinnlegget.';
       setError(message);
     }
   }
@@ -78,7 +76,7 @@ export default function AddToJournalModal({
             onClick={handleSave}
             disabled={loading}
           >
-            {loading ? "Lagrer..." : "Lagre"}
+            {loading ? 'Lagrer...' : 'Lagre'}
           </button>
         </div>
       </Card>

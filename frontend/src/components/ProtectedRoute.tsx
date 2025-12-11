@@ -10,9 +10,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
 
-  const redirectParam = encodeURIComponent(
-    location.pathname + location.search + location.hash,
-  );
+  const redirectParam = encodeURIComponent(location.pathname + location.search + location.hash);
 
   if (!isAuthenticated) {
     return <Navigate to={`/login?redirect=${redirectParam}`} replace />;
