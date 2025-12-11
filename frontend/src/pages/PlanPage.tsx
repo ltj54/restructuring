@@ -251,11 +251,6 @@ export default function PlanPage(): React.ReactElement {
   // VALG AV FASE/BEHOV
   // -----------------------------------------------------------
 
-  const handlePhaseSelect = (phase: string) => {
-    setSelectedPhase(phase);
-    setActiveDiaryPhase(phase);
-  };
-
   const toggleNeed = (option: string) => {
     setSelectedNeeds((current) =>
       current.includes(option) ? current.filter((n) => n !== option) : [...current, option]
