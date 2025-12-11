@@ -139,12 +139,12 @@ Dagpenge-beregning:
                 {bufferMnd === 0 && <>Skriv inn tall for å få en vurdering.</>}
               </div>
 
-              {/* 💾 Legg til i dagbok */}
+              {/* 💾 Legg til i journalen */}
               <button
                 className="mt-3 px-4 py-2 bg-emerald-700 text-white rounded-lg text-sm"
                 onClick={openJournalWithEconomy}
               >
-                Legg denne beregningen i dagboken
+                Legg denne beregningen i journalen
               </button>
             </div>
           </div>
@@ -183,12 +183,12 @@ Dagpenge-beregning:
                 Tall er kun et grovt estimat basert på NAVs standardmodell (62.4 %).
               </div>
 
-              {/* 💾 Legg til i dagbok */}
+              {/* 💾 Legg til i journal */}
               <button
                 className="mt-3 px-4 py-2 bg-emerald-700 text-white rounded-lg text-sm"
                 onClick={openJournalWithDagpenger}
               >
-                Legg denne beregningen i dagboken
+                Legg denne beregningen i journalen
               </button>
             </div>
           </div>

@@ -34,15 +34,15 @@ export default function JournalPage(): React.ReactElement {
         if (!res.ok) {
           const message =
             res.status === 401
-              ? 'Du må være logget inn for å se dagboken.'
-              : 'Kunne ikke hente dagboken.';
+              ? 'Du må være logget inn for å se notatene.'
+              : 'Kunne ikke hente notatene.';
           setError(message);
           return;
         }
         const data = await res.json();
         setEntries(data);
       } catch {
-        setError('Kunne ikke hente dagboken.');
+        setError('Kunne ikke hente notatene.');
       } finally {
         setLoading(false);
       }
@@ -51,10 +51,10 @@ export default function JournalPage(): React.ReactElement {
   }, []);
 
   const phases = {
-    1: 'Fase 1 – Kartlegging',
-    2: 'Fase 2 – Kompetanseløft',
-    3: 'Fase 3 – Aktiv jobbsøking',
-    4: 'Fase 4 – Ny jobb',
+    1: 'Fase 1 - Kartlegging',
+    2: 'Fase 2 - Kompetanseløft',
+    3: 'Fase 3 - Aktiv jobbsøking',
+    4: 'Fase 4 - Ny jobb',
   };
 
   const grouped = { 1: [], 2: [], 3: [], 4: [] } as Record<number, JournalEntry[]>;
@@ -65,8 +65,8 @@ export default function JournalPage(): React.ReactElement {
 
   return (
     <PageLayout
-      title="Dagbok"
-      subtitle="Notater og refleksjoner fra din omstillingsreise."
+      title="Journal"
+      subtitle="Samle oppdateringer og refleksjoner fra omstillingsreisen."
       maxWidthClassName="max-w-4xl"
     >
       {loading && <div>Laster...</div>}

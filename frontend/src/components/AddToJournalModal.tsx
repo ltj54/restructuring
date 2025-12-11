@@ -38,7 +38,7 @@ export default function AddToJournalModal({
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <Card className="max-w-md w-full p-4">
-        <h2 className="text-lg font-semibold mb-4">Legg til i dagbok</h2>
+        <h2 className="text-lg font-semibold mb-4">Legg til i notater</h2>
 
         <label className="block text-sm mb-3">
           Velg fase:

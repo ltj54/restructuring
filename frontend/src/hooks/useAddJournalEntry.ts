@@ -10,7 +10,7 @@ export function useAddJournalEntry() {
     const token = localStorage.getItem('token');
     if (!token) {
       setLoading(false);
-      throw new Error('Du må være logget inn for å lagre i dagboken.');
+      throw new Error('Du må være logget inn for å lagre i journalen.');
     }
 
     try {

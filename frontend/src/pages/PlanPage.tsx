@@ -31,7 +31,7 @@ const phaseSections: Record<
       'Finn ut hvem som faktisk vet hva (leder, HR, tillitsvalgt).',
       'Sjekk hvilke forsikringer og ordninger du allerede har.',
     ],
-    diaryTitle: 'Dagbok - før omstilling',
+    diaryTitle: 'Notater - før omstilling',
     diaryDescription: 'Skriv ned bekymringer, spørsmål og hva du bør sjekke tidlig.',
     diaryPlaceholder: 'Hva lurer du på nå? Hva trenger du svar på? Hva bekymrer deg?',
     actions: [
@@ -51,14 +51,14 @@ const phaseSections: Record<
       'Be om et konkret møte om din rolle og dine alternativer.',
       'Lag et regneark med «nå» og «etter omstilling» for lønn og arbeidstid.',
     ],
-    diaryTitle: 'Dagbok - under omstilling',
+    diaryTitle: 'Notater - under omstilling',
     diaryDescription: 'Skriv ned punkter fra møter, frister og ting du må følge opp.',
     diaryPlaceholder: 'Hva ble sagt i møtet? Hva må du følge opp? Hvilke frister kom opp?',
     actions: [
       'Be om alt skriftlig.',
       'Lag oversikt over konsekvenser (lønn, arbeidstid, arbeidsoppgaver).',
       'Book rådgiving (tillitsvalgt/HR).',
-      'Loggfør alle møter i dagboken.',
+      'Loggfør alle møter i notatene.',
     ],
   },
 
@@ -70,7 +70,7 @@ const phaseSections: Record<
       'Lag en 3-måneders plan for kompetanse, CV og søknader.',
       'Vurder behov for ekstra inntektssikring.',
     ],
-    diaryTitle: 'Dagbok - etter omstilling',
+    diaryTitle: 'Notater - etter omstilling',
     diaryDescription: 'Bruk notater til å planlegge neste steg: karriere, økonomi og mål.',
     diaryPlaceholder: 'Hva er neste steg? Hvilke jobber vurderer du? Hva er målene dine?',
     actions: [
@@ -302,7 +302,7 @@ export default function PlanPage(): React.ReactElement {
   };
 
   // -----------------------------------------------------------
-  // LAGRING AV DAGBOK
+  // LAGRING AV NOTATER
   // -----------------------------------------------------------
 
   const handleDiaryChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -344,6 +344,10 @@ export default function PlanPage(): React.ReactElement {
   // HANDLINGER I TOPPEN
   // -----------------------------------------------------------
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   const planActions = (
     <>
       <Button
@@ -357,6 +361,12 @@ export default function PlanPage(): React.ReactElement {
         className="bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50 font-semibold"
       >
         Se ressurser
+      </Button>
+      <Button
+        onClick={handlePrint}
+        className="bg-slate-900 text-white border-slate-900 hover:bg-slate-800"
+      >
+        Skriv ut / lagre som PDF
       </Button>
     </>
   );
@@ -431,7 +441,7 @@ export default function PlanPage(): React.ReactElement {
         </section>
 
         {/* -----------------------------------------------------------
-           DAGBOK
+           NOTATER
         ----------------------------------------------------------- */}
         <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 text-sm">
           <h2 className="text-base md:text-lg font-semibold text-slate-900">

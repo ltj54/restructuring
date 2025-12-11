@@ -104,3 +104,24 @@ a {
 .animate-fade-in {
   animation: fade-in 0.3s ease-out;
 }
+
+/* Print-stil: fjern bakgrunn og skjul handlinger som ikke trengs i PDF */
+@media print {
+  body {
+    background: #ffffff;
+  }
+
+  main {
+    background: #ffffff !important;
+  }
+
+  .print-hidden {
+    display: none !important;
+  }
+
+  .surface-card,
+  .card {
+    box-shadow: none !important;
+    border-color: #d9e0e9 !important;
+  }
+}

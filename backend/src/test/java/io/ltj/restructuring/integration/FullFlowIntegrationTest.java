@@ -105,7 +105,7 @@ class FullFlowIntegrationTest {
                 "DEFAULT",
                 "PREPARE_CHANGE",
                 List.of("need-1", "need-2"),
-                "Dette er en test-dagbok for full-flow integrasjonstesten."
+                "Dette er en test-journal for full-flow integrasjonstesten."
         );
 
         String planResp = mockMvc.perform(put("/api/plan/me")

@@ -25,7 +25,7 @@ const mainNavLinks: MainNavLink[] = [
   { path: '/wizard', label: 'Veiviser' },
   { path: '/insurance', label: 'Forsikring' },
   { path: '/plan', label: 'Plan' },
-  { path: '/journal', label: 'Dagbok' },
+  { path: '/journal', label: 'Journal' },
   { path: '/resources', label: 'Ressurser' },
   { path: '/purchase', label: 'Kjøp' },
   { path: '/systeminfo', label: 'Systeminfo' },
