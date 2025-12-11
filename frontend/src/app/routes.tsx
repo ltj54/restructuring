@@ -3,11 +3,12 @@ import { Navigate, RouteObject, useRoutes } from 'react-router-dom';
 import MainLayout, { MainNavLink } from '@/layouts/MainLayout';
 import ProtectedLayout from '@/app/ProtectedLayout';
 
-// Pages
+// -----------------------------------------------------
+// Lazy-loaded pages
+// -----------------------------------------------------
 const HomePage = lazy(() => import('@/pages/HomePage'));
 const InsurancePage = lazy(() => import('@/pages/InsurancePage'));
 const PlanPage = lazy(() => import('@/pages/PlanPage'));
-const PurchasePage = lazy(() => import('@/pages/PurchasePage'));
 const ResourcesPage = lazy(() => import('@/pages/ResourcesPage'));
 const JournalPage = lazy(() => import('@/pages/JournalPage'));
 const WizardPage = lazy(() => import('@/pages/WizardPage'));
@@ -17,9 +18,11 @@ const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('@/pages/ResetPasswordPage'));
 const SystemInfoPage = lazy(() => import('@/pages/SystemInfoPage'));
 const DownloadAppPage = lazy(() => import('@/pages/DownloadAppPage'));
-const MePage = lazy(() => import('@/pages/MePage')); // NY
+const MePage = lazy(() => import('@/pages/MePage'));
 
-// Main navigation links (consistent icons for all pages)
+// -----------------------------------------------------
+// Navigation definition – clean & grouped
+// -----------------------------------------------------
 const mainNavLinks: MainNavLink[] = [
   { path: '/', label: 'Hjem' },
   { path: '/wizard', label: 'Veiviser' },
@@ -27,35 +30,44 @@ const mainNavLinks: MainNavLink[] = [
   { path: '/plan', label: 'Plan' },
   { path: '/journal', label: 'Journal' },
   { path: '/resources', label: 'Ressurser' },
-  { path: '/purchase', label: 'Kjøp' },
   { path: '/systeminfo', label: 'Systeminfo' },
   { path: '/last-ned', label: 'Last ned app' },
   { path: '/me', label: 'Profil' },
+
+  // Auth — vises kun når bruker ER UINNLOGGET
   { path: '/login', label: 'Logg inn' },
   { path: '/register', label: 'Registrer' },
 ];
 
+// -----------------------------------------------------
+// Route configuration
+// -----------------------------------------------------
 export const appRoutes: RouteObject[] = [
   {
     path: '/',
     element: <MainLayout navLinks={mainNavLinks} />,
     children: [
-      // Public pages
+      // -----------------------------
+      // Public routes
+      // -----------------------------
       { index: true, element: <HomePage /> },
       { path: 'wizard', element: <WizardPage /> },
       { path: 'insurance', element: <InsurancePage /> },
       { path: 'resources', element: <ResourcesPage /> },
-      { path: 'purchase', element: <PurchasePage /> },
       { path: 'systeminfo', element: <SystemInfoPage /> },
       { path: 'last-ned', element: <DownloadAppPage /> },
 
-      // Auth pages
+      // -----------------------------
+      // AUTH routes
+      // -----------------------------
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },
       { path: 'forgot-password', element: <ForgotPasswordPage /> },
       { path: 'reset-password', element: <ResetPasswordPage /> },
 
-      // Protected pages
+      // -----------------------------
+      // PROTECTED routes
+      // -----------------------------
       {
         element: <ProtectedLayout />,
         children: [
@@ -67,7 +79,9 @@ export const appRoutes: RouteObject[] = [
     ],
   },
 
-  // Fallback
+  // -----------------------------------------------------
+  // Catch-all fallback
+  // -----------------------------------------------------
   { path: '*', element: <Navigate to="/" replace /> },
 ];
 

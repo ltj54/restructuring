@@ -1,10 +1,17 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FormAlert } from '@/components/form/FormAlert';
 import TextField from '@/components/form/TextField';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
 import PageLayout from '@/components/PageLayout';
 import { useInsurancePage } from '@/hooks/useInsurancePage';
+import { API_BASE_URL } from '@/utils/config';
+import { getErrorMessage } from '@/utils/api';
+
+type InsuranceOffer = {
+  price: number;
+  coverage: string;
+};
 
 export default function InsurancePage(): React.ReactElement {
   const {
@@ -18,10 +25,51 @@ export default function InsurancePage(): React.ReactElement {
     onSendInsurance,
   } = useInsurancePage();
 
+  const [offer, setOffer] = useState<InsuranceOffer | null>(null);
+  const [offerError, setOfferError] = useState<string | null>(null);
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
   const {
     register,
     formState: { errors },
   } = form;
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchOffer = async () => {
+      if (!token) {
+        setOffer(null);
+        setOfferError('Du må være innlogget for å se tilbudet.');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/private/offer`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const data = (await response.json()) as InsuranceOffer;
+        if (isMounted) {
+          setOffer(data);
+          setOfferError(null);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setOffer(null);
+          setOfferError(getErrorMessage(err, 'Kunne ikke hente tilbud.'));
+        }
+      }
+    };
+
+    fetchOffer();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [token]);
 
   if (isLoading) {
     return (
@@ -50,6 +98,22 @@ export default function InsurancePage(): React.ReactElement {
       }
     >
       <div className="space-y-6">
+        <Card title="Ditt forsikringstilbud">
+          {offerError && <p className="mb-3 text-sm text-red-600">{offerError}</p>}
+          {offer ? (
+            <div className="border rounded-xl p-4 bg-slate-50 text-sm space-y-2">
+              <p>
+                <strong>Pris per måned:</strong> {offer.price} kr
+              </p>
+              <p>
+                <strong>Dekning:</strong> {offer.coverage}
+              </p>
+            </div>
+          ) : (
+            !offerError && <p className="text-sm text-slate-600">Henter tilbud ...</p>
+          )}
+        </Card>
+
         {banner && (
           <FormAlert variant={banner.variant} message={banner.message} action={banner.action} />
         )}
