@@ -28,8 +28,8 @@ function useNavSections(navLinks: MainNavLink[], isAuthenticated: boolean): NavS
     navLinks.find((l) => l.path === '/'),
     navLinks.find((l) => l.path === '/wizard'),
     navLinks.find((l) => l.path === '/plan'),
-    navLinks.find((l) => l.path === '/journal'),
     navLinks.find((l) => l.path === '/resources'),
+    navLinks.find((l) => l.path === '/journal'),
     navLinks.find((l) => l.path === '/insurance'),
     navLinks.find((l) => l.path === '/purchase'),
   ].filter(Boolean) as MainNavLink[];
