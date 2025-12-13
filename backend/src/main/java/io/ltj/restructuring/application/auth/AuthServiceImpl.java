@@ -47,31 +47,32 @@ public class AuthServiceImpl implements AuthService {
     public LoginResponseDto login(LoginRequestDto request) {
         String email = request.email();
 
-        Authentication auth;
+        Authentication authentication;
         try {
-            auth = authenticationManager.authenticate(
+            authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(email, request.password())
             );
 
             log.atDebug()
                     .addKeyValue(EMAIL_KEY, email)
-                    .log("User authenticated successfully");
+                    .log("User authenticated");
 
         } catch (BadCredentialsException ex) {
+            // 🔒 Viktig: samme melding uansett årsak
             log.atWarn()
                     .addKeyValue(EMAIL_KEY, email)
-                    .log("Invalid credentials");
-            throw ex;
+                    .log("Login failed");
+
+            throw new InvalidLoginException();
         }
 
-        UserDetails principal = (UserDetails) auth.getPrincipal();
+        UserDetails principal = (UserDetails) authentication.getPrincipal();
 
-        UserEntity user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalStateException("USER_NOT_FOUND"));
+        UserEntity user = userRepository.findByEmail(principal.getUsername())
+                .orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
 
-        // ⭐ Now includes userId + email
         String token = jwtUtil.generateToken(user.getId(), user.getEmail());
-        long expiresInSeconds = 60L * 60L * 24L; // 24h
+        long expiresInSeconds = 60L * 60L * 24L;
 
         return new LoginResponseDto(
                 token,
@@ -102,8 +103,6 @@ public class AuthServiceImpl implements AuthService {
         UserEntity user = new UserEntity();
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(request.password()));
-
-        // Optional
         user.setFirstName(request.firstName());
         user.setLastName(request.lastName());
 
@@ -112,7 +111,7 @@ public class AuthServiceImpl implements AuthService {
         log.atInfo()
                 .addKeyValue("userId", saved.getId())
                 .addKeyValue(EMAIL_KEY, saved.getEmail())
-                .log("User registered successfully");
+                .log("User registered");
 
         return new RegisterResponseDto(
                 saved.getId(),

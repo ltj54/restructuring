@@ -13,6 +13,60 @@ interface MainLayoutProps {
   navLinks: MainNavLink[];
 }
 
+/* -------------------------------------------------------------
+   SEKSJONERING + SORTERING
+------------------------------------------------------------- */
+
+interface NavSection {
+  title: string;
+  items: MainNavLink[];
+}
+
+function useNavSections(navLinks: MainNavLink[], isAuthenticated: boolean): NavSection[] {
+  // --- HOVEDMENY --- (din rekkefølge)
+  const hovedmeny = [
+    navLinks.find((l) => l.path === '/'),
+    navLinks.find((l) => l.path === '/wizard'),
+    navLinks.find((l) => l.path === '/plan'),
+    navLinks.find((l) => l.path === '/resources'),
+    navLinks.find((l) => l.path === '/journal'),
+    navLinks.find((l) => l.path === '/insurance'),
+    navLinks.find((l) => l.path === '/insurance/quick'),
+    navLinks.find((l) => l.path === '/purchase'),
+  ].filter(Boolean) as MainNavLink[];
+
+  // --- SYSTEM ---
+  const system = [
+    navLinks.find((l) => l.path === '/systeminfo'),
+    navLinks.find((l) => l.path === '/last-ned'),
+  ].filter(Boolean) as MainNavLink[];
+
+  // --- PROFIL ---
+  const profileLink = navLinks.find((l) => l.path === '/me');
+
+  // --- AUTENTISERING ---
+  const authLinks = navLinks.filter((l) => ['/login', '/register'].includes(l.path));
+
+  const sections: NavSection[] = [
+    { title: 'HOVEDMENY', items: hovedmeny },
+    { title: 'SYSTEM', items: system },
+  ];
+
+  if (isAuthenticated && profileLink) {
+    sections.push({ title: 'PROFIL', items: [profileLink] });
+  }
+
+  if (!isAuthenticated) {
+    sections.push({ title: 'AUTENTISERING', items: authLinks });
+  }
+
+  return sections;
+}
+
+/* -------------------------------------------------------------
+   MAINLAYOUT KOMPONENTEN
+------------------------------------------------------------- */
+
 export default function MainLayout({ navLinks }: MainLayoutProps) {
   const location = useLocation();
   const { logEvent } = useStructuredLogger('MainLayout');
@@ -20,6 +74,8 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
   const auth = useAuth();
   const user = auth?.user;
   const isAuthenticated = !!user;
+
+  const navSections = useNavSections(navLinks, isAuthenticated);
 
   const displayName: string =
     (user && (user.fullName || user.name || user.displayName || user.email)) || 'Ikke pålogget';
@@ -39,12 +95,12 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
   const menuButtonRef = useRef<HTMLButtonElement | null>(null);
   const menuPanelRef = useRef<HTMLDivElement | null>(null);
 
+  /* LOGGING */
   useEffect(() => {
-    logEvent('navigation_change', {
-      meta: { path: location.pathname },
-    });
+    logEvent('navigation_change', { meta: { path: location.pathname } });
   }, [location.pathname, logEvent]);
 
+  /* KLIKKE UTENFOR MENY */
   useEffect(() => {
     if (!menuOpen) return;
 
@@ -60,16 +116,15 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
     return () => document.removeEventListener('click', handleClickOutside);
   }, [menuOpen]);
 
-  const effectiveNavLinks = navLinks.filter((link) => {
-    if (!isAuthenticated) return true;
-    if (link.path === '/login' || link.path === '/register') return false;
-    return true;
-  });
-
+  /* HANDLE LOGOUT */
   const handleLogout = () => {
     auth?.logout?.();
     setMenuOpen(false);
   };
+
+  /* -------------------------------------------------------------
+     RENDER
+  ------------------------------------------------------------- */
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-brand-soft via-white to-slate-50 text-slate-900 flex flex-col">
@@ -81,12 +136,14 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
             <div className="w-9 h-9 bg-slate-900 text-white flex items-center justify-center rounded-md font-bold">
               {isAuthenticated ? initials : '--'}
             </div>
+
             <div className="flex flex-col">
               <span className="font-medium truncate max-w-[160px]">{displayName}</span>
               <span className="text-xs text-slate-600">
                 {isAuthenticated ? 'Pålogget' : 'Ikke pålogget'}
               </span>
             </div>
+
             <div className="hidden sm:flex flex-col pl-4 border-l border-slate-200 ml-2">
               <span className="text-[10px] uppercase tracking-[0.18em] text-emerald-800">
                 Restructuring
@@ -95,7 +152,7 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
             </div>
           </div>
 
-          {/* LOGG UT + HAMBURGER */}
+          {/* LOGG UT + BURGER */}
           <div className="relative flex items-center gap-4">
             {isAuthenticated && (
               <button
@@ -117,12 +174,14 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
               <span className="text-sm">Meny</span>
             </button>
 
+            {/* DROPDOWN-MENY */}
             {menuOpen && (
               <>
                 <div
                   onClick={() => setMenuOpen(false)}
                   className="fixed inset-0 bg-black/10 backdrop-blur-sm z-40"
                 />
+
                 <div
                   ref={menuPanelRef}
                   className="
@@ -141,24 +200,39 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
                   />
 
                   <div className="py-3">
-                    {effectiveNavLinks.map((link) => (
-                      <NavLink
-                        key={link.path}
-                        to={link.path}
-                        onClick={() => setMenuOpen(false)}
-                        className={({ isActive }) =>
-                          [
-                            'flex items-center gap-2 px-4 py-2 text-sm transition rounded-lg',
-                            'hover:bg-slate-100',
-                            isActive
-                              ? 'font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200'
-                              : 'text-slate-800',
-                          ].join(' ')
-                        }
-                      >
-                        {link.icon && <span aria-hidden="true">{link.icon}</span>}
-                        <span>{link.label}</span>
-                      </NavLink>
+                    {/* SEKSJONSVIS RENDERING */}
+                    {navSections.map((section, sectionIdx) => (
+                      <div key={section.title} className="mb-3">
+                        {/* HEADER */}
+                        <div className="px-4 pb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                          {section.title}
+                        </div>
+
+                        {/* LINKS */}
+                        {section.items.map((link) => (
+                          <NavLink
+                            key={link.path}
+                            to={link.path}
+                            onClick={() => setMenuOpen(false)}
+                            className={({ isActive }) =>
+                              [
+                                'flex items-center gap-2 px-4 py-2 text-sm transition rounded-lg',
+                                'hover:bg-slate-100',
+                                isActive
+                                  ? 'font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200'
+                                  : 'text-slate-800',
+                              ].join(' ')
+                            }
+                          >
+                            <span>{link.label}</span>
+                          </NavLink>
+                        ))}
+
+                        {/* Separator */}
+                        {sectionIdx < navSections.length - 1 && (
+                          <div className="my-2 mx-4 border-t border-slate-200" />
+                        )}
+                      </div>
                     ))}
                   </div>
                 </div>
