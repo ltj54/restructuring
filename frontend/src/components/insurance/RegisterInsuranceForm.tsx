@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { registerMyInsurance } from '@/api/insuranceApi';
 
-export default function RegisterInsuranceForm({
-  onSaved,
-}: {
-  onSaved?: () => void;
-}) {
-  const [source, setSource] = useState<'EMPLOYER' | 'PRIVATE' | 'OTHER'>('EMPLOYER');
+type InsuranceSource = 'EMPLOYER' | 'PRIVATE' | 'OTHER';
+
+export default function RegisterInsuranceForm({ onSaved }: { onSaved?: () => void }) {
+  const [source, setSource] = useState<InsuranceSource>('EMPLOYER');
   const [providerName, setProviderName] = useState('');
   const [productName, setProductName] = useState('');
   const [validFrom, setValidFrom] = useState('');
@@ -25,7 +23,9 @@ export default function RegisterInsuranceForm({
         validTo: validTo || undefined,
         notes: notes || undefined,
       });
+
       onSaved?.();
+
       setProviderName('');
       setProductName('');
       setValidFrom('');
@@ -41,16 +41,14 @@ export default function RegisterInsuranceForm({
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <h3 className="mb-3 text-lg font-semibold text-slate-900">
-        Registrer forsikring
-      </h3>
+      <h3 className="mb-3 text-lg font-semibold text-slate-900">Registrer forsikring</h3>
 
       <div className="space-y-3">
         <label className="block text-sm">
           Kilde
           <select
             value={source}
-            onChange={(e) => setSource(e.target.value as any)}
+            onChange={(e) => setSource(e.target.value as InsuranceSource)}
             className="mt-1 w-full rounded border px-2 py-1"
           >
             <option value="EMPLOYER">Gjennom arbeidsgiver</option>
@@ -89,6 +87,7 @@ export default function RegisterInsuranceForm({
               className="mt-1 w-full rounded border px-2 py-1"
             />
           </label>
+
           <label className="block text-sm">
             Gyldig til
             <input

@@ -41,8 +41,7 @@ export default function InsurancePage() {
   const [loadingMyInsurances, setLoadingMyInsurances] = useState(false);
 
   // -------- LOSS --------
-  const [lossResult, setLossResult] =
-    useState<CoverageLossAnalysisResponse | null>(null);
+  const [lossResult, setLossResult] = useState<CoverageLossAnalysisResponse | null>(null);
   const [lossLoading, setLossLoading] = useState(false);
 
   // -------- GAP --------
@@ -57,8 +56,7 @@ export default function InsurancePage() {
     hasTravel: true,
     hasChildInsurance: false,
   });
-  const [gapResult, setGapResult] =
-    useState<CoverageGapAnalysisResponse | null>(null);
+  const [gapResult, setGapResult] = useState<CoverageGapAnalysisResponse | null>(null);
   const [gapLoading, setGapLoading] = useState(false);
 
   // -------- INIT --------
@@ -67,9 +65,7 @@ export default function InsurancePage() {
     setProductsError(null);
     getInsuranceProducts()
       .then(setProducts)
-      .catch(() =>
-        setProductsError('Kunne ikke laste forsikringskatalogen.')
-      )
+      .catch(() => setProductsError('Kunne ikke laste forsikringskatalogen.'))
       .finally(() => setLoadingProducts(false));
   }, []);
 
@@ -83,10 +79,7 @@ export default function InsurancePage() {
   }, [activeTab]);
 
   // -------- HANDLERS --------
-  const handleGapChange = (
-    field: keyof CoverageGapAnalysisRequest,
-    value: boolean | number,
-  ) => {
+  const handleGapChange = (field: keyof CoverageGapAnalysisRequest, value: boolean | number) => {
     setGapForm((prev) => ({ ...prev, [field]: value as never }));
   };
 
@@ -140,14 +133,10 @@ export default function InsurancePage() {
           <div>
             <h2 className="mb-2 text-xl font-semibold">Mine forsikringer</h2>
 
-            {loadingMyInsurances && (
-              <p className="text-slate-500">Laster forsikringer…</p>
-            )}
+            {loadingMyInsurances && <p className="text-slate-500">Laster forsikringer…</p>}
 
             {!loadingMyInsurances && myInsurances.length === 0 && (
-              <p className="text-slate-600">
-                Du har ikke registrert noen forsikringer ennå.
-              </p>
+              <p className="text-slate-600">Du har ikke registrert noen forsikringer ennå.</p>
             )}
 
             <ul className="space-y-2">
@@ -156,20 +145,12 @@ export default function InsurancePage() {
                   <div className="flex justify-between gap-4">
                     <div>
                       <strong>{i.productName || 'Ukjent produkt'}</strong>
-                      <div className="text-sm text-slate-600">
-                        {i.providerName}
-                      </div>
+                      <div className="text-sm text-slate-600">{i.providerName}</div>
                     </div>
-                    <span className="rounded bg-slate-100 px-2 py-1 text-xs">
-                      {i.source}
-                    </span>
+                    <span className="rounded bg-slate-100 px-2 py-1 text-xs">{i.source}</span>
                   </div>
 
-                  {i.notes && (
-                    <div className="mt-1 text-xs text-slate-600">
-                      {i.notes}
-                    </div>
-                  )}
+                  {i.notes && <div className="mt-1 text-xs text-slate-600">{i.notes}</div>}
                 </li>
               ))}
             </ul>
@@ -186,10 +167,7 @@ export default function InsurancePage() {
           {lossResult && (
             <ul className="space-y-2">
               {lossResult.losses.map((l, i) => (
-                <li
-                  key={i}
-                  className={`rounded border p-2 ${severityColorClass[l.severity]}`}
-                >
+                <li key={i} className={`rounded border p-2 ${severityColorClass[l.severity]}`}>
                   <strong>{l.area}</strong> – {l.description}
                 </li>
               ))}
@@ -212,10 +190,7 @@ export default function InsurancePage() {
           {gapResult && (
             <ul className="space-y-4">
               {gapResult.gaps.map((g, i) => (
-                <li
-                  key={i}
-                  className={`rounded border p-3 ${severityColorClass[g.severity]}`}
-                >
+                <li key={i} className={`rounded border p-3 ${severityColorClass[g.severity]}`}>
                   <div className="flex justify-between">
                     <strong>{g.area}</strong>
                     <span className="text-xs font-semibold uppercase">
@@ -233,10 +208,7 @@ export default function InsurancePage() {
                       <ul className="space-y-1 text-sm">
                         {g.recommendedProducts.map((p) => (
                           <li key={p.id}>
-                            {p.name}{' '}
-                            <span className="text-slate-500">
-                              ({p.provider})
-                            </span>
+                            {p.name} <span className="text-slate-500">({p.provider})</span>
                           </li>
                         ))}
                       </ul>
@@ -253,9 +225,7 @@ export default function InsurancePage() {
       {activeTab === 'catalog' && (
         <section>
           {loadingProducts && <p>Laster…</p>}
-          {productsError && (
-            <p className="text-red-600">{productsError}</p>
-          )}
+          {productsError && <p className="text-red-600">{productsError}</p>}
 
           {products.map((p) => (
             <div key={p.id} className="mb-2 border-b pb-2">
@@ -285,9 +255,7 @@ function TabButton({
   return (
     <button
       onClick={() => onClick(tab)}
-      className={`pb-2 ${
-        active ? 'border-b-2 font-semibold' : 'text-slate-500'
-      }`}
+      className={`pb-2 ${active ? 'border-b-2 font-semibold' : 'text-slate-500'}`}
     >
       {children}
     </button>

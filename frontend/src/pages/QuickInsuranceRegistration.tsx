@@ -9,13 +9,7 @@ import Button from '@/components/Button';
 
 export type InsuranceSource = 'EMPLOYER' | 'PRIVATE' | 'UNKNOWN';
 
-export type InsuranceType =
-  | 'TREATMENT'
-  | 'INCOME'
-  | 'DISABILITY'
-  | 'LIFE'
-  | 'PENSION'
-  | 'UNKNOWN';
+export type InsuranceType = 'TREATMENT' | 'INCOME' | 'DISABILITY' | 'LIFE' | 'PENSION' | 'UNKNOWN';
 
 interface QuickInsuranceRegistrationProps {
   onSubmit?: (data: {
@@ -25,43 +19,40 @@ interface QuickInsuranceRegistrationProps {
   }) => void;
 }
 
-const INSURANCE_OPTIONS: { type: InsuranceType; label: string; hint: string }[] =
-  [
-    {
-      type: 'TREATMENT',
-      label: 'Behandlingsforsikring',
-      hint: 'Rask tilgang til privat behandling – faller ofte bort ved jobbslutt',
-    },
-    {
-      type: 'INCOME',
-      label: 'Inntektsforsikring',
-      hint: 'Ekstra inntekt hvis du mister jobben',
-    },
-    {
-      type: 'DISABILITY',
-      label: 'Uføreforsikring',
-      hint: 'Økonomisk trygghet ved varig sykdom',
-    },
-    {
-      type: 'LIFE',
-      label: 'Livsforsikring',
-      hint: 'Utbetaling til etterlatte',
-    },
-    {
-      type: 'PENSION',
-      label: 'Pensjon',
-      hint: 'Tjenestepensjon via arbeidsgiver',
-    },
-    {
-      type: 'UNKNOWN',
-      label: 'Usikker / vet ikke',
-      hint: 'Helt greit – vi tar høyde for det',
-    },
-  ];
+const INSURANCE_OPTIONS: { type: InsuranceType; label: string; hint: string }[] = [
+  {
+    type: 'TREATMENT',
+    label: 'Behandlingsforsikring',
+    hint: 'Rask tilgang til privat behandling – faller ofte bort ved jobbslutt',
+  },
+  {
+    type: 'INCOME',
+    label: 'Inntektsforsikring',
+    hint: 'Ekstra inntekt hvis du mister jobben',
+  },
+  {
+    type: 'DISABILITY',
+    label: 'Uføreforsikring',
+    hint: 'Økonomisk trygghet ved varig sykdom',
+  },
+  {
+    type: 'LIFE',
+    label: 'Livsforsikring',
+    hint: 'Utbetaling til etterlatte',
+  },
+  {
+    type: 'PENSION',
+    label: 'Pensjon',
+    hint: 'Tjenestepensjon via arbeidsgiver',
+  },
+  {
+    type: 'UNKNOWN',
+    label: 'Usikker / vet ikke',
+    hint: 'Helt greit – vi tar høyde for det',
+  },
+];
 
-export default function QuickInsuranceRegistration({
-  onSubmit,
-}: QuickInsuranceRegistrationProps) {
+export default function QuickInsuranceRegistration({ onSubmit }: QuickInsuranceRegistrationProps) {
   const [source, setSource] = useState<InsuranceSource | null>(null);
   const [types, setTypes] = useState<Set<InsuranceType>>(new Set());
 
@@ -93,9 +84,7 @@ export default function QuickInsuranceRegistration({
 
   return (
     <Card>
-      <h2 className="text-xl font-semibold mb-2">
-        Forsikringer du kan miste ved jobbslutt
-      </h2>
+      <h2 className="text-xl font-semibold mb-2">Forsikringer du kan miste ved jobbslutt</h2>
 
       <p className="text-muted mb-6">
         Dette tar under ett minutt. Du kan være usikker – det er helt greit.
@@ -103,9 +92,7 @@ export default function QuickInsuranceRegistration({
 
       {/* Steg 1 – kilde */}
       <div className="mb-6">
-        <p className="font-medium mb-2">
-          Har du forsikringer gjennom arbeidsgiver?
-        </p>
+        <p className="font-medium mb-2">Har du forsikringer gjennom arbeidsgiver?</p>
 
         <div className="flex flex-col gap-2">
           <label className="flex items-center gap-2 cursor-pointer">
@@ -143,16 +130,11 @@ export default function QuickInsuranceRegistration({
       {/* Steg 2 – typer */}
       {(source === 'EMPLOYER' || source === 'UNKNOWN') && (
         <div className="mb-6">
-          <p className="font-medium mb-2">
-            Hvilke typer gjelder for deg?
-          </p>
+          <p className="font-medium mb-2">Hvilke typer gjelder for deg?</p>
 
           <div className="flex flex-col gap-3">
             {INSURANCE_OPTIONS.map((opt) => (
-              <label
-                key={opt.type}
-                className="flex items-start gap-2 cursor-pointer"
-              >
+              <label key={opt.type} className="flex items-start gap-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={types.has(opt.type)}
@@ -160,9 +142,7 @@ export default function QuickInsuranceRegistration({
                 />
                 <span>
                   <span className="font-medium">{opt.label}</span>
-                  <div className="text-sm text-muted">
-                    {opt.hint}
-                  </div>
+                  <div className="text-sm text-muted">{opt.hint}</div>
                 </span>
               </label>
             ))}
@@ -170,10 +150,7 @@ export default function QuickInsuranceRegistration({
         </div>
       )}
 
-      <Button
-        disabled={!source}
-        onClick={handleSubmit}
-      >
+      <Button disabled={!source} onClick={handleSubmit}>
         Fortsett
       </Button>
     </Card>

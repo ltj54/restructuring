@@ -1,4 +1,4 @@
-import { fetchJson } from "@/utils/api";
+import { fetchJson } from '@/utils/api';
 
 /* ============================================================
    MINE FORSIKRINGER
@@ -13,9 +13,7 @@ export interface RegisterUserInsuranceRequest {
   notes?: string;
 }
 
-export async function registerMyInsurance(
-  payload: RegisterUserInsuranceRequest,
-): Promise<void> {
+export async function registerMyInsurance(payload: RegisterUserInsuranceRequest): Promise<void> {
   await fetchJson('/insurance/my', {
     method: 'POST',
     body: payload, // fetchJson serialiserer selv
@@ -91,7 +89,7 @@ export interface CoverageGapAnalysisResponse {
 }
 
 export async function analyzeCoverageGaps(
-  payload: CoverageGapAnalysisRequest,
+  payload: CoverageGapAnalysisRequest
 ): Promise<CoverageGapAnalysisResponse> {
   return fetchJson('/insurance/analysis/gaps', {
     method: 'POST',
