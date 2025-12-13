@@ -45,7 +45,7 @@ export default function InsurancePage() {
   const [lossLoading, setLossLoading] = useState(false);
 
   // -------- GAP --------
-  const [gapForm, setGapForm] = useState<CoverageGapAnalysisRequest>({
+  const [gapForm] = useState<CoverageGapAnalysisRequest>({
     age: 45,
     hasChildren: true,
     hasMortgage: true,
@@ -79,10 +79,6 @@ export default function InsurancePage() {
   }, [activeTab]);
 
   // -------- HANDLERS --------
-  const handleGapChange = (field: keyof CoverageGapAnalysisRequest, value: boolean | number) => {
-    setGapForm((prev) => ({ ...prev, [field]: value as never }));
-  };
-
   const runLossAnalysis = async () => {
     setLossLoading(true);
     try {

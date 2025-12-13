@@ -12,6 +12,7 @@ const PlanPage = lazy(() => import('@/pages/PlanPage'));
 const ResourcesPage = lazy(() => import('@/pages/ResourcesPage'));
 const JournalPage = lazy(() => import('@/pages/JournalPage'));
 const WizardPage = lazy(() => import('@/pages/WizardPage'));
+const QuickInsuranceRegistrationPage = lazy(() => import('@/pages/QuickInsuranceRegistration'));
 const LoginPage = lazy(() => import('@/pages/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage'));
@@ -27,6 +28,7 @@ const mainNavLinks: MainNavLink[] = [
   { path: '/', label: 'Hjem' },
   { path: '/wizard', label: 'Veiviser' },
   { path: '/insurance', label: 'Forsikring' },
+  { path: '/insurance/quick', label: 'Hurtigregistrering' },
   { path: '/plan', label: 'Plan' },
   { path: '/journal', label: 'Journal' },
   { path: '/resources', label: 'Ressurser' },
@@ -53,6 +55,7 @@ export const appRoutes: RouteObject[] = [
       { index: true, element: <HomePage /> },
       { path: 'wizard', element: <WizardPage /> },
       { path: 'insurance', element: <InsurancePage /> },
+      { path: 'insurance/quick', element: <QuickInsuranceRegistrationPage /> },
       { path: 'resources', element: <ResourcesPage /> },
       { path: 'systeminfo', element: <SystemInfoPage /> },
       { path: 'last-ned', element: <DownloadAppPage /> },
