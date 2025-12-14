@@ -18,6 +18,24 @@ type HealthResponse = {
   timestamp?: string;
 };
 
+type UsersResponse = {
+  users: UserRow[];
+  offset: number;
+  limit: number;
+  total?: number;
+  hasMore: boolean;
+};
+
+type UserRow = {
+  id: number;
+  email: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  ssn?: string | null;
+};
+
+const USERS_PAGE_SIZE = 20;
+
 // ----------------------------------------------------
 //  Small UI helpers
 // ----------------------------------------------------
@@ -134,6 +152,13 @@ export default function SystemInfoPage(): React.ReactElement {
   const [dbHttpCode, setDbHttpCode] = useState<number | null>(null);
   const [dbMessage, setDbMessage] = useState<string>('');
 
+  const [users, setUsers] = useState<UserRow[]>([]);
+  const [usersLoading, setUsersLoading] = useState<boolean>(false);
+  const [usersError, setUsersError] = useState<string | null>(null);
+  const [usersOffset, setUsersOffset] = useState<number>(0);
+  const [usersHasMore, setUsersHasMore] = useState<boolean>(false);
+  const [usersTotal, setUsersTotal] = useState<number | null>(null);
+
   const [userIdInput, setUserIdInput] = useState<string>('1');
   const [userProfileRaw, setUserProfileRaw] = useState<string>('');
   const [userProfileParsed, setUserProfileParsed] = useState<unknown>(null);
@@ -150,6 +175,7 @@ export default function SystemInfoPage(): React.ReactElement {
   const healthUrl = useMemo(() => `${API_BASE_URL}/system/health`, []);
   const dbInfoUrl = useMemo(() => `${API_BASE_URL}/system/dbinfo`, []);
   const userProfileBaseUrl = useMemo(() => `${API_BASE_URL}/system/user-profile`, []);
+  const usersUrl = useMemo(() => `${API_BASE_URL}/system/users`, []);
 
   // ---------------------------------------
   // Backend check
@@ -232,6 +258,51 @@ export default function SystemInfoPage(): React.ReactElement {
   }, [dbInfoUrl]);
 
   // ---------------------------------------
+  // Users list
+  // ---------------------------------------
+  const fetchUsers = useCallback(async () => {
+    setUsersLoading(true);
+    setUsersError(null);
+
+    try {
+      const res = await fetch(`${usersUrl}?offset=${usersOffset}&limit=${USERS_PAGE_SIZE}`);
+      if (!res.ok) {
+        setUsersError(`Feil fra server (${res.status})`);
+        setUsersHasMore(false);
+        setUsersTotal(null);
+        setUsers([]);
+        return;
+      }
+
+      const data = (await res.json()) as UsersResponse;
+      setUsers(data.users ?? []);
+      setUsersHasMore(Boolean(data.hasMore));
+      setUsersTotal(typeof data.total === 'number' ? data.total : null);
+
+      if (typeof data.offset === 'number' && data.offset !== usersOffset) {
+        setUsersOffset(data.offset);
+      }
+    } catch {
+      setUsersError('Kunne ikke hente brukere.');
+      setUsersHasMore(false);
+      setUsersTotal(null);
+      setUsers([]);
+    } finally {
+      setUsersLoading(false);
+    }
+  }, [usersUrl, usersOffset]);
+
+  const handleUsersPrev = useCallback(() => {
+    setUsersOffset((prev) => Math.max(0, prev - USERS_PAGE_SIZE));
+  }, []);
+
+  const handleUsersNext = useCallback(() => {
+    if (usersHasMore) {
+      setUsersOffset((prev) => prev + USERS_PAGE_SIZE);
+    }
+  }, [usersHasMore]);
+
+  // ---------------------------------------
   // User profile
   // ---------------------------------------
   const fetchUserProfile = useCallback(async () => {
@@ -298,6 +369,13 @@ export default function SystemInfoPage(): React.ReactElement {
 
     return () => id && clearInterval(id);
   }, [status, dbStatus, checkBackend, checkDb]);
+
+  // Hent brukere én gang når backend er ok
+  useEffect(() => {
+    if (status === 'ok') {
+      fetchUsers();
+    }
+  }, [status, fetchUsers]);
 
   const loading = status !== 'ok';
 
@@ -430,6 +508,92 @@ export default function SystemInfoPage(): React.ReactElement {
         ) : (
           <HistoryList history={history} />
         )}
+      </Card>
+
+      {/* --------------------------------------- */}
+      {/* USERS TABLE */}
+      {/* --------------------------------------- */}
+      <Card title="Brukere (get_users)" className="mt-6">
+        <div className="space-y-3 text-sm">
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div className="text-slate-600">
+              <p>Lister id, email, first_name, last_name, ssn</p>
+              <p className="text-xs text-slate-500">
+                Viser{' '}
+                {users.length > 0 ? `${usersOffset + 1}-${usersOffset + users.length}` : '-'}
+                {typeof usersTotal === 'number' ? ` av ${usersTotal}` : ''}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleUsersPrev}
+                disabled={usersLoading || usersOffset === 0}
+                className="inline-flex items-center rounded border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100"
+              >
+                Forrige
+              </button>
+              <button
+                onClick={handleUsersNext}
+                disabled={usersLoading || !usersHasMore}
+                className="inline-flex items-center rounded border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100"
+              >
+                Neste
+              </button>
+              <button
+                onClick={fetchUsers}
+                disabled={usersLoading}
+                className="inline-flex items-center rounded border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100"
+              >
+                {usersLoading ? 'Oppdaterer...' : 'Oppdater'}
+              </button>
+            </div>
+          </div>
+
+          {usersError && (
+            <div className="rounded border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+              {usersError}
+            </div>
+          )}
+
+          <div className="overflow-auto rounded border border-slate-200 bg-white">
+            <table className="min-w-full text-xs text-slate-800">
+              <thead className="bg-slate-50 text-left font-semibold text-slate-600">
+                <tr>
+                  <th className="px-3 py-2">ID</th>
+                  <th className="px-3 py-2">Email</th>
+                  <th className="px-3 py-2">First name</th>
+                  <th className="px-3 py-2">Last name</th>
+                  <th className="px-3 py-2">SSN</th>
+                </tr>
+              </thead>
+              <tbody>
+                {usersLoading ? (
+                  <tr>
+                    <td className="px-3 py-3 text-center text-slate-500" colSpan={5}>
+                      Laster ...
+                    </td>
+                  </tr>
+                ) : users.length === 0 ? (
+                  <tr>
+                    <td className="px-3 py-3 text-center text-slate-500" colSpan={5}>
+                      Ingen brukere funnet.
+                    </td>
+                  </tr>
+                ) : (
+                  users.map((u) => (
+                    <tr key={u.id} className="border-t border-slate-100">
+                      <td className="px-3 py-2 font-mono text-[11px] text-slate-700">{u.id}</td>
+                      <td className="px-3 py-2">{u.email}</td>
+                      <td className="px-3 py-2">{u.first_name ?? '-'}</td>
+                      <td className="px-3 py-2">{u.last_name ?? '-'}</td>
+                      <td className="px-3 py-2">{u.ssn ?? '-'}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </Card>
 
       {/* --------------------------------------- */}
