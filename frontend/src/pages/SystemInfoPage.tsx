@@ -519,8 +519,7 @@ export default function SystemInfoPage(): React.ReactElement {
             <div className="text-slate-600">
               <p>Lister id, email, first_name, last_name, ssn</p>
               <p className="text-xs text-slate-500">
-                Viser{' '}
-                {users.length > 0 ? `${usersOffset + 1}-${usersOffset + users.length}` : '-'}
+                Viser {users.length > 0 ? `${usersOffset + 1}-${usersOffset + users.length}` : '-'}
                 {typeof usersTotal === 'number' ? ` av ${usersTotal}` : ''}
               </p>
             </div>
