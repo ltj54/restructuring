@@ -2,11 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
-import {
-  InsuranceSource,
-  InsuranceType,
-  saveInsuranceSnapshot,
-} from '@/api/insuranceApi';
+import { InsuranceSource, InsuranceType, saveInsuranceSnapshot } from '@/api/insuranceApi';
 
 /**
  * Hurtigregistrering av forsikringer i omstilling
@@ -99,7 +95,8 @@ export default function QuickInsuranceRegistration({ onSubmit }: QuickInsuranceR
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">Hurtigregistrering</h1>
         <p className="text-slate-600 max-w-2xl">
-          Registrer raskt hvilke forsikringer du kan miste når du slutter i jobben. Tar under ett minutt.
+          Registrer raskt hvilke forsikringer du kan miste når du slutter i jobben. Tar under ett
+          minutt.
         </p>
       </div>
 

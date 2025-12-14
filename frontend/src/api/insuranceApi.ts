@@ -60,13 +60,7 @@ export async function analyzeCoverageLoss(): Promise<CoverageLossAnalysisRespons
    ============================================================ */
 
 export type InsuranceSource = 'EMPLOYER' | 'PRIVATE' | 'UNKNOWN';
-export type InsuranceType =
-  | 'TREATMENT'
-  | 'INCOME'
-  | 'DISABILITY'
-  | 'LIFE'
-  | 'PENSION'
-  | 'UNKNOWN';
+export type InsuranceType = 'TREATMENT' | 'INCOME' | 'DISABILITY' | 'LIFE' | 'PENSION' | 'UNKNOWN';
 
 export interface InsuranceSnapshotRequest {
   source: InsuranceSource;

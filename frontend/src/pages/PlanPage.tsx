@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
@@ -142,47 +142,49 @@ export default function PlanPage(): React.ReactElement {
   const [isSavingPlan, setIsSavingPlan] = useState(false);
   const [isPreparingPrint, setIsPreparingPrint] = useState(false);
 
-  const applyRemotePlan = (remote?: UserPlanResponse | null) => {
-    if (!remote) return;
+  const applyRemotePlan = useCallback(
+    (remote?: UserPlanResponse | null) => {
+      if (!remote) return;
 
-    const normalizedPhase = normalizePhase(remote.phase);
-    const normalizedPlan: PlanState | null = remote.phase
-      ? {
-          persona: remote.persona ?? 'Annet',
-          fase: normalizedPhase,
-          behov: remote.needs ?? [],
-          createdAt: remote.createdAt ?? new Date().toISOString(),
-        }
-      : null;
+      const normalizedPhase = normalizePhase(remote.phase);
+      const normalizedPlan: PlanState | null = remote.phase
+        ? {
+            persona: remote.persona ?? 'Annet',
+            fase: normalizedPhase,
+            behov: remote.needs ?? [],
+            createdAt: remote.createdAt ?? new Date().toISOString(),
+          }
+        : null;
 
-    setPlan(normalizedPlan);
-    setSelectedPhase(normalizedPhase);
-    setSelectedNeeds(remote.needs ?? []);
+      setPlan(normalizedPlan);
+      setSelectedPhase(normalizedPhase);
+      setSelectedNeeds(remote.needs ?? []);
 
-    const allDiaries: Record<string, string> = {
-      ...remote.diaries,
-    };
+      const allDiaries: Record<string, string> = {
+        ...remote.diaries,
+      };
 
-    if (remote.phase && remote.diary && !allDiaries[remote.phase]) {
-      allDiaries[remote.phase] = remote.diary;
-    }
+      if (remote.phase && remote.diary && !allDiaries[remote.phase]) {
+        allDiaries[remote.phase] = remote.diary;
+      }
 
-    const normalizedDiaries: Record<string, string> = {};
-    Object.entries(allDiaries).forEach(([key, value]) => {
-      normalizedDiaries[normalizePhase(key)] = value;
-    });
+      const normalizedDiaries: Record<string, string> = {};
+      Object.entries(allDiaries).forEach(([key, value]) => {
+        normalizedDiaries[normalizePhase(key)] = value;
+      });
 
-    setDiariesByPhase(normalizedDiaries);
+      setDiariesByPhase(normalizedDiaries);
 
-    if (!activeDiaryPhase) {
-      const initialPhase = normalizePhase(phaseFromQuery || remote.phase);
-      setActiveDiaryPhase(initialPhase);
-    }
-  };
+      if (!activeDiaryPhase) {
+        const initialPhase = normalizePhase(phaseFromQuery || remote.phase);
+        setActiveDiaryPhase(initialPhase);
+      }
+    },
+    [activeDiaryPhase, phaseFromQuery]
+  );
 
   // Den aktive fasen som styrer HELE UI-et
   const displayedPhase = activeDiaryPhase || selectedPhase || PHASE_OPTIONS[0];
-
   const phaseContent = phaseSections[displayedPhase] ?? phaseSections[PHASE_OPTIONS[0]];
 
   // Last lokalt lagret planvalg
@@ -239,15 +241,12 @@ export default function PlanPage(): React.ReactElement {
     (async () => {
       try {
         const remote = await fetchJson<UserPlanResponse | undefined>('/plan/me');
-
         applyRemotePlan(remote);
-      } catch {
-        // intentionally left comment so eslint doesn't treat this as empty block
       } finally {
         setIsLoadingRemotePlan(false);
       }
     })();
-  }, [isAuthenticated, activeDiaryPhase, phaseFromQuery]);
+  }, [isAuthenticated, applyRemotePlan]);
 
   // -----------------------------------------------------------
   // VALG AV FASE/BEHOV

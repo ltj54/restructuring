@@ -13,7 +13,8 @@
 }
 
 body {
-  background: radial-gradient(circle at 20% 15%, rgba(2, 132, 199, 0.08), transparent 30%),
+  background:
+    radial-gradient(circle at 20% 15%, rgba(2, 132, 199, 0.08), transparent 30%),
     radial-gradient(circle at 80% 10%, rgba(15, 118, 110, 0.08), transparent 28%),
     radial-gradient(circle at 70% 80%, rgba(59, 130, 246, 0.06), transparent 26%),
     linear-gradient(180deg, #f8fafc 0%, #eef2f7 60%, #e2e8f0 100%);
@@ -70,7 +71,10 @@ a {
   display: inline-flex;
   align-items: center;
   gap: 0.55rem;
-  transition: background 0.15s ease, color 0.15s ease, border 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border 0.15s ease;
 }
 
 .nav-pill:hover {
