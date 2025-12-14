@@ -169,7 +169,9 @@ export default function SystemInfoPage(): React.ReactElement {
 
       if (res.ok) {
         const data = (await res.json()) as HealthResponse;
-        const timeText = data?.timestamp ? ` (oppdatert ${new Date(data.timestamp).toLocaleTimeString()})` : '';
+        const timeText = data?.timestamp
+          ? ` (oppdatert ${new Date(data.timestamp).toLocaleTimeString()})`
+          : '';
         newStatus = 'ok';
         setStatus('ok');
         setHealthDetails(data);
@@ -265,7 +267,7 @@ export default function SystemInfoPage(): React.ReactElement {
       } catch {
         setUserProfileParsed(text);
       }
-    } catch (err) {
+    } catch {
       setUserProfileError('Kunne ikke hente brukerprofil.');
       setUserProfileRaw('');
     } finally {
