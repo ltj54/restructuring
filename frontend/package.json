@@ -9,7 +9,7 @@
     "preview": "vite preview --strictPort --port 5173",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix",
-    "lint:ci": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0",
+    "lint:ci": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0 --fix",
     "format": "prettier --write \"{src,public}/**/*.{ts,tsx,js,jsx,css,html,json,md}\"",
     "format:check": "prettier --check \"{src,public}/**/*.{ts,tsx,js,jsx,css,html,json,md}\"",
     "type-check": "tsc --noEmit",
