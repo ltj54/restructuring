@@ -46,8 +46,7 @@ user_insurances AS (
                  'notes', up.notes,
                  'active', up.active,
                  'valid_from', up.valid_from,
-                 'valid_to', up.valid_to,
-                 'created_at', up.created_at
+                 'valid_to', up.valid_to
              )
              ORDER BY up.id DESC
          ) AS insurances

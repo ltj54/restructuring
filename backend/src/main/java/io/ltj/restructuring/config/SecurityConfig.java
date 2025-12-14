@@ -47,6 +47,7 @@ public class SecurityConfig {
                                 "/api/dbinfo",
                                 "/api/log",
                                 "/api/health",
+                                "/api/system/**",
                                 "/favicon.ico",
                                 "/actuator/**",
                                 "/api/health"

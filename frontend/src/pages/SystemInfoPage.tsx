@@ -13,6 +13,11 @@ type HistoryEntry = {
   durationMs: number | null;
 };
 
+type HealthResponse = {
+  status?: string;
+  timestamp?: string;
+};
+
 // ----------------------------------------------------
 //  Small UI helpers
 // ----------------------------------------------------
@@ -121,6 +126,7 @@ export default function SystemInfoPage(): React.ReactElement {
   const [status, setStatus] = useState<Health>('ukjent');
   const [httpCode, setHttpCode] = useState<number | null>(null);
   const [message, setMessage] = useState<string>('');
+  const [healthDetails, setHealthDetails] = useState<HealthResponse | null>(null);
   const [, setChecking] = useState(false);
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
 
@@ -128,11 +134,22 @@ export default function SystemInfoPage(): React.ReactElement {
   const [dbHttpCode, setDbHttpCode] = useState<number | null>(null);
   const [dbMessage, setDbMessage] = useState<string>('');
 
+  const [userIdInput, setUserIdInput] = useState<string>('1');
+  const [userProfileRaw, setUserProfileRaw] = useState<string>('');
+  const [userProfileParsed, setUserProfileParsed] = useState<unknown>(null);
+  const [userProfileError, setUserProfileError] = useState<string | null>(null);
+  const [userProfileLoading, setUserProfileLoading] = useState<boolean>(false);
+
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const latestEntry = history[0];
+  const healthUpdated = useMemo(
+    () => (healthDetails?.timestamp ? new Date(healthDetails.timestamp) : null),
+    [healthDetails]
+  );
 
-  const healthUrl = useMemo(() => `${API_BASE_URL}/health`, []);
-  const dbInfoUrl = useMemo(() => `${API_BASE_URL}/dbinfo`, []);
+  const healthUrl = useMemo(() => `${API_BASE_URL}/system/health`, []);
+  const dbInfoUrl = useMemo(() => `${API_BASE_URL}/system/dbinfo`, []);
+  const userProfileBaseUrl = useMemo(() => `${API_BASE_URL}/system/user-profile`, []);
 
   // ---------------------------------------
   // Backend check
@@ -151,18 +168,23 @@ export default function SystemInfoPage(): React.ReactElement {
       setHttpCode(code);
 
       if (res.ok) {
+        const data = (await res.json()) as HealthResponse;
+        const timeText = data?.timestamp ? ` (oppdatert ${new Date(data.timestamp).toLocaleTimeString()})` : '';
         newStatus = 'ok';
         setStatus('ok');
-        setMessage('Backend svarer som forventet.');
+        setHealthDetails(data);
+        setMessage(`Backend svarer som forventet.${timeText}`);
       } else {
         newStatus = 'feil';
         setStatus('feil');
+        setHealthDetails(null);
         setMessage('Backend svarte, men med feil.');
       }
     } catch {
       newStatus = 'feil';
       setStatus('feil');
       setHttpCode(null);
+      setHealthDetails(null);
       setMessage('Ingen respons fra backend.');
     } finally {
       const durationMs = performance.now() - start;
@@ -206,6 +228,50 @@ export default function SystemInfoPage(): React.ReactElement {
       setDbMessage('Ingen respons fra DB-endepunkt.');
     }
   }, [dbInfoUrl]);
+
+  // ---------------------------------------
+  // User profile
+  // ---------------------------------------
+  const fetchUserProfile = useCallback(async () => {
+    const trimmed = userIdInput.trim();
+    if (!trimmed) {
+      setUserProfileError('Oppgi et bruker-ID.');
+      return;
+    }
+
+    const id = Number(trimmed);
+    if (!Number.isFinite(id) || id < 0) {
+      setUserProfileError('Bruker-ID må være et positivt tall.');
+      return;
+    }
+
+    setUserProfileLoading(true);
+    setUserProfileError(null);
+    setUserProfileParsed(null);
+
+    try {
+      const res = await fetch(`${userProfileBaseUrl}/${id}`);
+      const text = await res.text();
+      setUserProfileRaw(text);
+
+      if (!res.ok) {
+        setUserProfileError(`Feil fra server (${res.status})`);
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(text);
+        setUserProfileParsed(parsed);
+      } catch {
+        setUserProfileParsed(text);
+      }
+    } catch (err) {
+      setUserProfileError('Kunne ikke hente brukerprofil.');
+      setUserProfileRaw('');
+    } finally {
+      setUserProfileLoading(false);
+    }
+  }, [userIdInput, userProfileBaseUrl]);
 
   // ---------------------------------------
   // Auto loop
@@ -290,6 +356,29 @@ export default function SystemInfoPage(): React.ReactElement {
               <p className="font-semibold text-slate-700">Melding</p>
               <p className="text-slate-600 mt-1">{message}</p>
             </div>
+
+            <div className="rounded-lg border border-slate-200 bg-white p-3 text-sm">
+              <p className="font-semibold text-slate-700">Detaljer (fra health-endepunktet)</p>
+              <div className="mt-2 grid grid-cols-1 gap-2 text-xs text-slate-600 md:grid-cols-2">
+                <div>
+                  <p className="text-slate-500">Status</p>
+                  <p className="font-semibold text-slate-800">{healthDetails?.status ?? '-'}</p>
+                </div>
+                <div>
+                  <p className="text-slate-500">Timestamp</p>
+                  <p className="font-semibold text-slate-800">
+                    {healthUpdated ? healthUpdated.toLocaleString() : '-'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-3 rounded border border-slate-200 bg-slate-50 p-2 text-[11px] text-slate-700">
+                <p className="mb-1 font-semibold text-slate-600">Rådata</p>
+                <pre className="overflow-auto whitespace-pre-wrap">
+                  {healthDetails ? JSON.stringify(healthDetails, null, 2) : 'Ingen data ennå.'}
+                </pre>
+              </div>
+            </div>
           </div>
         </Card>
 
@@ -339,6 +428,60 @@ export default function SystemInfoPage(): React.ReactElement {
         ) : (
           <HistoryList history={history} />
         )}
+      </Card>
+
+      {/* --------------------------------------- */}
+      {/* USER PROFILE */}
+      {/* --------------------------------------- */}
+      <Card title="Brukerprofil (get_user_profile)" className="mt-6">
+        <div className="space-y-4 text-sm">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
+            <div className="flex flex-1 items-center gap-2">
+              <label htmlFor="userId" className="text-xs text-slate-600">
+                Bruker-ID
+              </label>
+              <input
+                id="userId"
+                type="number"
+                value={userIdInput}
+                onChange={(e) => setUserIdInput(e.target.value)}
+                className="w-32 rounded border border-slate-300 bg-white px-2 py-1 text-sm focus:border-blue-400 focus:outline-none"
+                min={0}
+              />
+            </div>
+            <button
+              onClick={fetchUserProfile}
+              disabled={userProfileLoading}
+              className="inline-flex items-center justify-center rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+            >
+              {userProfileLoading ? 'Henter...' : 'Hent profil'}
+            </button>
+          </div>
+
+          {userProfileError && (
+            <div className="rounded border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+              {userProfileError}
+            </div>
+          )}
+
+          {userProfileRaw && !userProfileError && (
+            <div className="rounded border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+              <p className="mb-1 font-semibold text-slate-700">Rådata</p>
+              <pre className="overflow-auto whitespace-pre-wrap text-[11px] leading-snug">
+                {userProfileRaw}
+              </pre>
+            </div>
+          )}
+
+          {userProfileParsed && typeof userProfileParsed === 'object' && (
+            <div className="rounded border border-slate-200 bg-white p-3 text-xs text-slate-700">
+              <p className="mb-2 font-semibold text-slate-700">Parset JSON</p>
+              <pre className="overflow-auto whitespace-pre-wrap text-[11px] leading-snug">
+                {JSON.stringify(userProfileParsed, null, 2)}
+              </pre>
+            </div>
+          )}
+        </div>
       </Card>
     </PageLayout>
   );
