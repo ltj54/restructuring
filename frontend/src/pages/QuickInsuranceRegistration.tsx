@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
+import { InsuranceSource, InsuranceType, saveInsuranceSnapshot } from '@/api/insuranceApi';
 
 /**
  * Hurtigregistrering av forsikringer i omstilling
  * Mål: maks 60 sek innsats, lav friksjon
  */
-
-export type InsuranceSource = 'EMPLOYER' | 'PRIVATE' | 'UNKNOWN';
-
-export type InsuranceType = 'TREATMENT' | 'INCOME' | 'DISABILITY' | 'LIFE' | 'PENSION' | 'UNKNOWN';
 
 interface QuickInsuranceRegistrationProps {
   onSubmit?: (data: {
@@ -23,7 +21,7 @@ const INSURANCE_OPTIONS: { type: InsuranceType; label: string; hint: string }[] 
   {
     type: 'TREATMENT',
     label: 'Behandlingsforsikring',
-    hint: 'Rask tilgang til privat behandling – faller ofte bort ved jobbslutt',
+    hint: 'Rask tilgang til privat behandling - faller ofte bort ved jobbslutt',
   },
   {
     type: 'INCOME',
@@ -48,13 +46,15 @@ const INSURANCE_OPTIONS: { type: InsuranceType; label: string; hint: string }[] 
   {
     type: 'UNKNOWN',
     label: 'Usikker / vet ikke',
-    hint: 'Helt greit – vi tar høyde for det',
+    hint: 'Helt greit - vi tar høyde for det',
   },
 ];
 
 export default function QuickInsuranceRegistration({ onSubmit }: QuickInsuranceRegistrationProps) {
   const [source, setSource] = useState<InsuranceSource | null>(null);
   const [types, setTypes] = useState<Set<InsuranceType>>(new Set());
+  const [saving, setSaving] = useState(false);
+  const navigate = useNavigate();
 
   const toggleType = (type: InsuranceType) => {
     setTypes((prev) => {
@@ -68,7 +68,7 @@ export default function QuickInsuranceRegistration({ onSubmit }: QuickInsuranceR
     });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!source) return;
 
     const payload = {
@@ -77,82 +77,100 @@ export default function QuickInsuranceRegistration({ onSubmit }: QuickInsuranceR
       uncertain: source === 'UNKNOWN' || types.has('UNKNOWN'),
     };
 
-    console.log('QuickInsuranceRegistration submit:', payload);
-
-    onSubmit?.(payload);
+    setSaving(true);
+    try {
+      await saveInsuranceSnapshot(payload);
+      onSubmit?.(payload);
+      navigate('/insurance');
+    } catch (e) {
+      console.error('Kunne ikke lagre snapshot', e);
+      alert('Kunne ikke lagre valg. Forsøk igjen.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
-    <Card>
-      <h2 className="text-xl font-semibold mb-2">Forsikringer du kan miste ved jobbslutt</h2>
-
-      <p className="text-muted mb-6">
-        Dette tar under ett minutt. Du kan være usikker – det er helt greit.
-      </p>
-
-      {/* Steg 1 – kilde */}
+    <div className="mx-auto max-w-5xl px-4 py-8">
       <div className="mb-6">
-        <p className="font-medium mb-2">Har du forsikringer gjennom arbeidsgiver?</p>
-
-        <div className="flex flex-col gap-2">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="source"
-              checked={source === 'EMPLOYER'}
-              onChange={() => setSource('EMPLOYER')}
-            />
-            Ja
-          </label>
-
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="source"
-              checked={source === 'UNKNOWN'}
-              onChange={() => setSource('UNKNOWN')}
-            />
-            Usikker
-          </label>
-
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="source"
-              checked={source === 'PRIVATE'}
-              onChange={() => setSource('PRIVATE')}
-            />
-            Nei, kun private forsikringer
-          </label>
-        </div>
+        <h1 className="text-3xl font-bold mb-2">Hurtigregistrering</h1>
+        <p className="text-slate-600 max-w-2xl">
+          Registrer raskt hvilke forsikringer du kan miste når du slutter i jobben. Tar under ett
+          minutt.
+        </p>
       </div>
 
-      {/* Steg 2 – typer */}
-      {(source === 'EMPLOYER' || source === 'UNKNOWN') && (
-        <div className="mb-6">
-          <p className="font-medium mb-2">Hvilke typer gjelder for deg?</p>
+      <Card>
+        <h2 className="text-xl font-semibold mb-2">Forsikringer du kan miste ved jobbslutt</h2>
 
-          <div className="flex flex-col gap-3">
-            {INSURANCE_OPTIONS.map((opt) => (
-              <label key={opt.type} className="flex items-start gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={types.has(opt.type)}
-                  onChange={() => toggleType(opt.type)}
-                />
-                <span>
-                  <span className="font-medium">{opt.label}</span>
-                  <div className="text-sm text-muted">{opt.hint}</div>
-                </span>
-              </label>
-            ))}
+        <p className="text-muted mb-6">
+          Dette tar under ett minutt. Du kan være usikker - det er helt greit.
+        </p>
+
+        {/* Steg 1 - kilde */}
+        <div className="mb-6">
+          <p className="font-medium mb-2">Har du forsikringer gjennom arbeidsgiver?</p>
+
+          <div className="flex flex-col gap-2">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="source"
+                checked={source === 'EMPLOYER'}
+                onChange={() => setSource('EMPLOYER')}
+              />
+              Ja
+            </label>
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="source"
+                checked={source === 'UNKNOWN'}
+                onChange={() => setSource('UNKNOWN')}
+              />
+              Usikker
+            </label>
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="source"
+                checked={source === 'PRIVATE'}
+                onChange={() => setSource('PRIVATE')}
+              />
+              Nei, kun private forsikringer
+            </label>
           </div>
         </div>
-      )}
 
-      <Button disabled={!source} onClick={handleSubmit}>
-        Fortsett
-      </Button>
-    </Card>
+        {/* Steg 2 - typer */}
+        {(source === 'EMPLOYER' || source === 'UNKNOWN') && (
+          <div className="mb-6">
+            <p className="font-medium mb-2">Hvilke typer gjelder for deg?</p>
+
+            <div className="flex flex-col gap-3">
+              {INSURANCE_OPTIONS.map((opt) => (
+                <label key={opt.type} className="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={types.has(opt.type)}
+                    onChange={() => toggleType(opt.type)}
+                  />
+                  <span>
+                    <span className="font-medium">{opt.label}</span>
+                    <div className="text-sm text-muted">{opt.hint}</div>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <Button disabled={!source || saving} onClick={handleSubmit}>
+          {saving ? 'Lagrer...' : 'Fortsett'}
+        </Button>
+      </Card>
+    </div>
   );
 }
