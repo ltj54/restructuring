@@ -140,6 +140,45 @@ export default function PlanPage(): React.ReactElement {
   const [selectedNeeds, setSelectedNeeds] = useState<string[]>([]);
   const [planSaveMessage, setPlanSaveMessage] = useState<string | null>(null);
   const [isSavingPlan, setIsSavingPlan] = useState(false);
+  const [isPreparingPrint, setIsPreparingPrint] = useState(false);
+
+  const applyRemotePlan = (remote?: UserPlanResponse | null) => {
+    if (!remote) return;
+
+    const normalizedPhase = normalizePhase(remote.phase);
+    const normalizedPlan: PlanState | null = remote.phase
+      ? {
+          persona: remote.persona ?? 'Annet',
+          fase: normalizedPhase,
+          behov: remote.needs ?? [],
+          createdAt: remote.createdAt ?? new Date().toISOString(),
+        }
+      : null;
+
+    setPlan(normalizedPlan);
+    setSelectedPhase(normalizedPhase);
+    setSelectedNeeds(remote.needs ?? []);
+
+    const allDiaries: Record<string, string> = {
+      ...remote.diaries,
+    };
+
+    if (remote.phase && remote.diary && !allDiaries[remote.phase]) {
+      allDiaries[remote.phase] = remote.diary;
+    }
+
+    const normalizedDiaries: Record<string, string> = {};
+    Object.entries(allDiaries).forEach(([key, value]) => {
+      normalizedDiaries[normalizePhase(key)] = value;
+    });
+
+    setDiariesByPhase(normalizedDiaries);
+
+    if (!activeDiaryPhase) {
+      const initialPhase = normalizePhase(phaseFromQuery || remote.phase);
+      setActiveDiaryPhase(initialPhase);
+    }
+  };
 
   // Den aktive fasen som styrer HELE UI-et
   const displayedPhase = activeDiaryPhase || selectedPhase || PHASE_OPTIONS[0];
@@ -201,44 +240,7 @@ export default function PlanPage(): React.ReactElement {
       try {
         const remote = await fetchJson<UserPlanResponse | undefined>('/plan/me');
 
-        if (!remote) {
-          setIsLoadingRemotePlan(false);
-          return;
-        }
-
-        const normalizedPhase = normalizePhase(remote.phase);
-        const normalizedPlan: PlanState | null = remote.phase
-          ? {
-              persona: remote.persona ?? 'Annet',
-              fase: normalizedPhase,
-              behov: remote.needs ?? [],
-              createdAt: remote.createdAt ?? new Date().toISOString(),
-            }
-          : null;
-
-        setPlan(normalizedPlan);
-        setSelectedPhase(normalizedPhase);
-        setSelectedNeeds(remote.needs ?? []);
-
-        const allDiaries: Record<string, string> = {
-          ...remote.diaries,
-        };
-
-        if (remote.phase && remote.diary && !allDiaries[remote.phase]) {
-          allDiaries[remote.phase] = remote.diary;
-        }
-
-        const normalizedDiaries: Record<string, string> = {};
-        Object.entries(allDiaries).forEach(([key, value]) => {
-          normalizedDiaries[normalizePhase(key)] = value;
-        });
-
-        setDiariesByPhase(normalizedDiaries);
-
-        if (!activeDiaryPhase) {
-          const initialPhase = normalizePhase(phaseFromQuery || remote.phase);
-          setActiveDiaryPhase(initialPhase);
-        }
+        applyRemotePlan(remote);
       } catch {
         // intentionally left comment so eslint doesn't treat this as empty block
       } finally {
@@ -344,8 +346,19 @@ export default function PlanPage(): React.ReactElement {
   // HANDLINGER I TOPPEN
   // -----------------------------------------------------------
 
-  const handlePrint = () => {
-    window.print();
+  const handlePrint = async () => {
+    setIsPreparingPrint(true);
+    try {
+      if (isAuthenticated) {
+        const remote = await fetchJson<UserPlanResponse | undefined>('/plan/me');
+        applyRemotePlan(remote);
+      }
+    } catch {
+      setPlanSaveMessage('Kunne ikke hente siste data før utskrift. Viser lagret versjon.');
+    } finally {
+      setIsPreparingPrint(false);
+      window.print();
+    }
   };
 
   const planActions = (
@@ -364,9 +377,10 @@ export default function PlanPage(): React.ReactElement {
       </Button>
       <Button
         onClick={handlePrint}
-        className="bg-slate-900 text-white border-slate-900 hover:bg-slate-800"
+        disabled={isPreparingPrint}
+        className="bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50 font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
       >
-        Skriv ut / lagre som PDF
+        {isPreparingPrint ? 'Henter data...' : 'Skriv ut / lagre som PDF'}
       </Button>
     </>
   );
