@@ -26,7 +26,9 @@ jwt:
   secret: ${JWT_SECRET:MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=}
   expiration-hours: 24
 
-
+# ======================================================
+# DEV
+# ======================================================
 ---
 spring:
   config:
@@ -41,9 +43,93 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     properties:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
     open-in-view: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:migration,classpath:migration-postgres
+
+# ======================================================
+# PROD
+# ======================================================
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  main:
+    lazy-initialization: true
+    banner-mode: off
+
+  mvc:
+    problemdetails:
+      enabled: false
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      initializationFailTimeout: 0
+      connectionTimeout: 2000
+      maximumPoolSize: 2
+      minimumIdle: 1
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    locations: classpath:migration,classpath:migration-postgres
+
+jwt:
+  secret: ${JWT_SECRET}
+
+# ======================================================
+# TEST
+# ======================================================
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  datasource:
+    url: jdbc:h2:mem:restructuring_test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    defer-datasource-initialization: true
+
+  flyway:
+    enabled: true
+    locations: classpath:migration,classpath:migration-test
+
+  sql:
+    init:
+      mode: never
+
+jwt:
+  secret: MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=
+
+openai:
+  api:
+    key: dummy-test-key
