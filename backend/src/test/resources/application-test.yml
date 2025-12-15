@@ -7,7 +7,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: validate  # Endret fra 'none' til 'validate' for å validere schema etter Flyway
     open-in-view: false
     defer-datasource-initialization: true
 
