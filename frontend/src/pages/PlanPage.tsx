@@ -5,6 +5,7 @@ import Button from '@/components/Button';
 import PageLayout from '@/components/PageLayout';
 import { useAuth } from '@/hooks/useAuth';
 import { fetchJson } from '@/utils/api';
+import { API_BASE_URL } from '@/utils/config';
 
 // -----------------------------------------------------------
 // FASETEKSTER – dynamisk innhold
@@ -125,7 +126,7 @@ type UserPlanResponse = {
 
 export default function PlanPage(): React.ReactElement {
   const location = useLocation();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, token, userId } = useAuth();
 
   const searchParams = new URLSearchParams(location.search);
   const phaseFromQuery = searchParams.get('phase') ?? '';
@@ -140,7 +141,8 @@ export default function PlanPage(): React.ReactElement {
   const [selectedNeeds, setSelectedNeeds] = useState<string[]>([]);
   const [planSaveMessage, setPlanSaveMessage] = useState<string | null>(null);
   const [isSavingPlan, setIsSavingPlan] = useState(false);
-  const [isPreparingPrint, setIsPreparingPrint] = useState(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
 
   const applyRemotePlan = useCallback(
     (remote?: UserPlanResponse | null) => {
@@ -345,18 +347,47 @@ export default function PlanPage(): React.ReactElement {
   // HANDLINGER I TOPPEN
   // -----------------------------------------------------------
 
-  const handlePrint = async () => {
-    setIsPreparingPrint(true);
+  const handleDownloadPdf = async () => {
+    if (!userId) {
+      setPdfError('Du må være innlogget for å laste ned PDF.');
+      return;
+    }
+
+    setPdfError(null);
+    setIsDownloadingPdf(true);
+
     try {
-      if (isAuthenticated) {
-        const remote = await fetchJson<UserPlanResponse | undefined>('/plan/me');
-        applyRemotePlan(remote);
+      const res = await fetch(`${API_BASE_URL}/system/user-profile/${userId}/pdf`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+
+      if (!res.ok) {
+        if (res.status === 404) {
+          setPdfError('Fant ikke brukerprofil på server.');
+        } else {
+          setPdfError(`Kunne ikke generere PDF (status ${res.status}).`);
+        }
+        return;
       }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+
+      const contentDisposition = res.headers.get('Content-Disposition') || '';
+      const fileNameMatch = contentDisposition.match(/filename="?([^";]+)"?/i);
+      const fileName = fileNameMatch?.[1] ?? `plan_${userId}.pdf`;
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     } catch {
-      setPlanSaveMessage('Kunne ikke hente siste data før utskrift. Viser lagret versjon.');
+      setPdfError('Kunne ikke laste ned PDF-en. Prøv igjen.');
     } finally {
-      setIsPreparingPrint(false);
-      window.print();
+      setIsDownloadingPdf(false);
     }
   };
 
@@ -375,11 +406,11 @@ export default function PlanPage(): React.ReactElement {
         Se ressurser
       </Button>
       <Button
-        onClick={handlePrint}
-        disabled={isPreparingPrint}
+        onClick={handleDownloadPdf}
+        disabled={isDownloadingPdf}
         className="bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50 font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
       >
-        {isPreparingPrint ? 'Henter data...' : 'Skriv ut / lagre som PDF'}
+        {isDownloadingPdf ? 'Laster ned...' : 'Skriv ut / lagre som PDF'}
       </Button>
     </>
   );
@@ -397,6 +428,7 @@ export default function PlanPage(): React.ReactElement {
     >
       <Card>
         {isLoadingRemotePlan && <p className="mb-3 text-xs text-slate-500">Laster plan ...</p>}
+        {pdfError && <p className="mb-3 text-xs text-red-500">{pdfError}</p>}
 
         <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 text-sm">
           <h2 className="text-base md:text-lg font-semibold text-slate-900">Velg behov og fase</h2>
@@ -532,3 +564,4 @@ export default function PlanPage(): React.ReactElement {
     </PageLayout>
   );
 }
+
