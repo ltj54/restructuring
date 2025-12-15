@@ -44,7 +44,9 @@ function isAdminFromToken(token: string | null): boolean {
     if (parts.length < 2) return false;
     const payload = JSON.parse(atob(parts[1]));
     const roles: unknown =
-      (payload?.roles as unknown) ?? (payload?.role as unknown) ?? (payload?.authorities as unknown);
+      (payload?.roles as unknown) ??
+      (payload?.role as unknown) ??
+      (payload?.authorities as unknown);
 
     if (Array.isArray(roles)) {
       return roles.some((r) => String(r).toUpperCase() === 'ADMIN');
@@ -547,7 +549,8 @@ export default function SystemInfoPage(): React.ReactElement {
                 <div className="text-slate-600">
                   <p>Lister id, email, first_name, last_name, ssn, role</p>
                   <p className="text-xs text-slate-500">
-                    Viser {users.length > 0 ? `${usersOffset + 1}-${usersOffset + users.length}` : '-'}
+                    Viser{' '}
+                    {users.length > 0 ? `${usersOffset + 1}-${usersOffset + users.length}` : '-'}
                     {typeof usersTotal === 'number' ? ` av ${usersTotal}` : ''}
                   </p>
                 </div>

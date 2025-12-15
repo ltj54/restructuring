@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
 import PageLayout from '@/components/PageLayout';
@@ -45,8 +44,7 @@ const phaseSections: Record<
 
   'Under omstilling': {
     title: 'Under omstilling',
-    description:
-      'Endringene er i gang. Nå handler det om kontroll, dokumentasjon og riktige valg.',
+    description: 'Endringene er i gang. Nå handler det om kontroll, dokumentasjon og riktige valg.',
     bullets: [
       'Be om skriftlig informasjon.',
       'Avklar din rolle og alternativer.',
@@ -55,23 +53,13 @@ const phaseSections: Record<
     diaryTitle: 'Notater – under omstilling',
     diaryDescription: 'Møter, frister og oppfølging.',
     diaryPlaceholder: 'Hva ble sagt? Hva må følges opp?',
-    actions: [
-      'Be om alt skriftlig',
-      'Lag konsekvensoversikt',
-      'Book rådgiving',
-      'Loggfør møter',
-    ],
+    actions: ['Be om alt skriftlig', 'Lag konsekvensoversikt', 'Book rådgiving', 'Loggfør møter'],
   },
 
   'Etter omstilling': {
     title: 'Etter omstilling',
-    description:
-      'Omstillingen er gjennomført. Nå justerer du kurs, økonomi og neste steg.',
-    bullets: [
-      'Oppdater budsjett',
-      'Lag en 3-måneders plan',
-      'Vurder ekstra inntektssikring',
-    ],
+    description: 'Omstillingen er gjennomført. Nå justerer du kurs, økonomi og neste steg.',
+    bullets: ['Oppdater budsjett', 'Lag en 3-måneders plan', 'Vurder ekstra inntektssikring'],
     diaryTitle: 'Notater – etter omstilling',
     diaryDescription: 'Planlegging av neste steg.',
     diaryPlaceholder: 'Hva er målet nå?',
@@ -122,7 +110,6 @@ type UserPlanResponse = {
 ----------------------------------------------------------- */
 
 export default function PlanPage(): React.ReactElement {
-  const location = useLocation();
   const { isAuthenticated, token, userId } = useAuth();
 
   const [plan, setPlan] = useState<PlanState | null>(null);

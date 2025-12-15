@@ -125,9 +125,7 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
 
             <div className="flex flex-col">
               <span className="font-medium truncate max-w-[160px]">{displayName}</span>
-              <span className="text-xs text-slate-600">
-                {isAuthenticated ? 'Pålogget' : '...'}
-              </span>
+              <span className="text-xs text-slate-600">{isAuthenticated ? 'Pålogget' : '...'}</span>
             </div>
 
             <div className="hidden sm:flex flex-col pl-4 border-l border-slate-200 ml-2">
