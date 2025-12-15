@@ -7,12 +7,15 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate  # Endret fra 'none' til 'validate' for å validere schema etter Flyway
+      ddl-auto: none
     open-in-view: false
     defer-datasource-initialization: true
 
   flyway:
     enabled: true
+    locations:
+      - classpath:migration
+      - classpath:migration-test
 
   sql:
     init:
