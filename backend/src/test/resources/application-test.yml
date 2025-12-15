@@ -4,18 +4,19 @@ spring:
     username: sa
     password:
     driver-class-name: org.h2.Driver
+
   jpa:
     hibernate:
       ddl-auto: none
     open-in-view: false
     defer-datasource-initialization: true
+
+  flyway:
+    enabled: true
+
   sql:
     init:
       mode: never
-      schema-locations: classpath:schema.sql
-      data-locations: classpath:data-test.sql
-  flyway:
-    enabled: true
 
 jwt:
   secret: MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=
