@@ -40,7 +40,9 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                        // PUBLIC ENDPOINTS ---------------------
+                        // =====================
+                        // PUBLIC ENDPOINTS
+                        // =====================
                         .requestMatchers(
                                 "/api/hello",
                                 "/api/config",
@@ -49,8 +51,7 @@ public class SecurityConfig {
                                 "/api/health",
                                 "/api/system/**",
                                 "/favicon.ico",
-                                "/actuator/**",
-                                "/api/health"
+                                "/actuator/**"
                         ).permitAll()
 
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
@@ -59,7 +60,14 @@ public class SecurityConfig {
                         // OPTIONS always open
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Everything else requires JWT
+                        // =====================
+                        // ADMIN ENDPOINTS
+                        // =====================
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                        // =====================
+                        // AUTHENTICATED USERS
+                        // =====================
                         .anyRequest().authenticated()
                 )
 
@@ -97,8 +105,7 @@ public class SecurityConfig {
                 "Content-Type",
                 "Authorization",
                 "X-Requested-With",
-                "Accept",
-                "*"
+                "Accept"
         ));
 
         config.setExposedHeaders(List.of(
