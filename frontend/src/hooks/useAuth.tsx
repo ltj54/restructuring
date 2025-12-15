@@ -1,12 +1,5 @@
 // src/hooks/useAuth.tsx
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ApiError, configureApiClient, fetchJson, isApiError } from '@/utils/api';
 
@@ -65,9 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const locationState = (location.state ?? null) as AuthRedirectState;
 
-  const [token, setToken] = useState<string | null>(
-    localStorage.getItem('token')
-  );
+  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [isLoadingUser, setIsLoadingUser] = useState(Boolean(token));
@@ -118,9 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setIsLoadingUser(true);
       try {
-        const headers = tokenOverride
-          ? { Authorization: `Bearer ${tokenOverride}` }
-          : undefined;
+        const headers = tokenOverride ? { Authorization: `Bearer ${tokenOverride}` } : undefined;
 
         // 🔥 ENESTE RIKTIGE KALL
         const response = await fetchJson<MeResponse>('/me', { headers });

@@ -23,7 +23,6 @@ interface NavSection {
 }
 
 function useNavSections(navLinks: MainNavLink[], isAuthenticated: boolean): NavSection[] {
-  // --- HOVEDMENY --- (din rekkefølge)
   const hovedmeny = [
     navLinks.find((l) => l.path === '/'),
     navLinks.find((l) => l.path === '/wizard'),
@@ -35,16 +34,12 @@ function useNavSections(navLinks: MainNavLink[], isAuthenticated: boolean): NavS
     navLinks.find((l) => l.path === '/purchase'),
   ].filter(Boolean) as MainNavLink[];
 
-  // --- SYSTEM ---
   const system = [
     navLinks.find((l) => l.path === '/systeminfo'),
     navLinks.find((l) => l.path === '/last-ned'),
   ].filter(Boolean) as MainNavLink[];
 
-  // --- PROFIL ---
   const profileLink = navLinks.find((l) => l.path === '/me');
-
-  // --- AUTENTISERING ---
   const authLinks = navLinks.filter((l) => ['/login', '/register'].includes(l.path));
 
   const sections: NavSection[] = [
@@ -95,12 +90,10 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
   const menuButtonRef = useRef<HTMLButtonElement | null>(null);
   const menuPanelRef = useRef<HTMLDivElement | null>(null);
 
-  /* LOGGING */
   useEffect(() => {
     logEvent('navigation_change', { meta: { path: location.pathname } });
   }, [location.pathname, logEvent]);
 
-  /* KLIKKE UTENFOR MENY */
   useEffect(() => {
     if (!menuOpen) return;
 
@@ -116,22 +109,15 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
     return () => document.removeEventListener('click', handleClickOutside);
   }, [menuOpen]);
 
-  /* HANDLE LOGOUT */
   const handleLogout = () => {
     auth?.logout?.();
     setMenuOpen(false);
   };
 
-  /* -------------------------------------------------------------
-     RENDER
-  ------------------------------------------------------------- */
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-brand-soft via-white to-slate-50 text-slate-900 flex flex-col">
-      {/* HEADER */}
       <header className="w-full sticky top-0 z-40 backdrop-blur-xl bg-white/95 border-b border-slate-200 shadow-sm">
         <nav className="relative max-w-5xl mx-auto flex items-center justify-between px-4 py-3 text-slate-900">
-          {/* AVATAR + INFO */}
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-slate-900 text-white flex items-center justify-center rounded-md font-bold">
               {isAuthenticated ? initials : '--'}
@@ -139,20 +125,16 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
 
             <div className="flex flex-col">
               <span className="font-medium truncate max-w-[160px]">{displayName}</span>
-              <span className="text-xs text-slate-600">
-                {isAuthenticated ? 'Pålogget' : 'Ikke pålogget'}
-              </span>
+              <span className="text-xs text-slate-600">{isAuthenticated ? 'Pålogget' : '...'}</span>
             </div>
 
             <div className="hidden sm:flex flex-col pl-4 border-l border-slate-200 ml-2">
-              <span className="text-[10px] uppercase tracking-[0.18em] text-emerald-800">
-                Restructuring
+              <span className="text-[13px] uppercase tracking-[0.18em] text-emerald-800">
+                Omstillingsveiviser
               </span>
-              <span className="text-sm font-semibold text-slate-900">Omstillingsveiviser</span>
             </div>
           </div>
 
-          {/* LOGG UT + BURGER */}
           <div className="relative flex items-center gap-4">
             {isAuthenticated && (
               <button
@@ -174,7 +156,6 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
               <span className="text-sm">Meny</span>
             </button>
 
-            {/* DROPDOWN-MENY */}
             {menuOpen && (
               <>
                 <div
@@ -200,19 +181,17 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
                   />
 
                   <div className="py-3">
-                    {/* SEKSJONSVIS RENDERING */}
                     {navSections.map((section, sectionIdx) => (
                       <div key={section.title} className="mb-3">
-                        {/* HEADER */}
                         <div className="px-4 pb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
                           {section.title}
                         </div>
 
-                        {/* LINKS */}
                         {section.items.map((link) => (
                           <NavLink
                             key={link.path}
                             to={link.path}
+                            end={link.path === '/insurance'} // ✅ FIX
                             onClick={() => setMenuOpen(false)}
                             className={({ isActive }) =>
                               [
@@ -228,7 +207,6 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
                           </NavLink>
                         ))}
 
-                        {/* Separator */}
                         {sectionIdx < navSections.length - 1 && (
                           <div className="my-2 mx-4 border-t border-slate-200" />
                         )}
@@ -242,7 +220,6 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
         </nav>
       </header>
 
-      {/* CONTENT */}
       <main className="flex-grow">
         <Suspense
           fallback={

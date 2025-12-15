@@ -7,7 +7,7 @@ export default function ProfilePage() {
   if (!user) {
     return (
       <div className="max-w-xl mx-auto p-6">
-        <h1 className="text-2xl font-semibold">Ikke pålogget</h1>
+        <h1 className="text-2xl font-semibold">...</h1>
         <p className="mt-2 text-slate-600">Du må logge inn for å se denne siden.</p>
       </div>
     );

@@ -132,4 +132,10 @@ class FullFlowIntegrationTest {
                 .andExpect(jsonPath("$.persona").value("DEFAULT"))
                 .andExpect(jsonPath("$.phase").value("PREPARE_CHANGE"));
     }
+
+    @Test
+    void getPlan_withoutAuth_shouldReturnNoContent() throws Exception {
+        mockMvc.perform(get("/api/plan/me"))
+                .andExpect(status().isNoContent());
+    }
 }

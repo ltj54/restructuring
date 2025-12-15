@@ -30,7 +30,7 @@ public class CoverageLossAnalysisService {
             return new CoverageLossAnalysisResponse(List.of(
                     new CoverageLossAnalysisResponse.Loss(
                             "Forsikringer ved jobbslutt",
-                            "Ingen data registrert. Legg inn hurtigregistrering for å se hva som kan falle bort.",
+                            "Ingen data registrert. Legg inn Forsikring (kort) for å se hva som kan falle bort.",
                             CoverageGapAnalysisResponse.Severity.MEDIUM
                     )
             ));

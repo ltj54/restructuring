@@ -132,7 +132,6 @@ export default function WizardPage(): React.ReactElement {
   return (
     <PageLayout
       title="Veiviser"
-      subtitle="Velg rolle - vi bygger planen din."
       maxWidthClassName="max-w-5xl"
       actions={
         <Button

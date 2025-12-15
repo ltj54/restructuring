@@ -5,7 +5,7 @@ import Button from '@/components/Button';
 import { InsuranceSource, InsuranceType, saveInsuranceSnapshot } from '@/api/insuranceApi';
 
 /**
- * Hurtigregistrering av forsikringer i omstilling
+ * Forsikring (kort) av forsikringer i omstilling
  * Mål: maks 60 sek innsats, lav friksjon
  */
 
@@ -93,10 +93,9 @@ export default function QuickInsuranceRegistration({ onSubmit }: QuickInsuranceR
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Hurtigregistrering</h1>
+        <h1 className="text-3xl font-bold mb-2">Forsikring (kort)</h1>
         <p className="text-slate-600 max-w-2xl">
-          Registrer raskt hvilke forsikringer du kan miste når du slutter i jobben. Tar under ett
-          minutt.
+          Registrer raskt hvilke forsikringer du kan miste når du slutter i jobben.
         </p>
       </div>
 

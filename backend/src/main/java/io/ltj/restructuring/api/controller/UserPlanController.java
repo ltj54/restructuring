@@ -30,7 +30,7 @@ public class UserPlanController {
     @GetMapping("/me")
     public ResponseEntity<UserPlanDto> getMyPlan(@AuthenticationPrincipal JwtUserDetails principal) {
         if (principal == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Ingen aktiv bruker.");
+            return ResponseEntity.noContent().build();
         }
 
         Optional<UserPlanDto> result = userPlanApplicationService.getPlanForUser(principal.getId());

@@ -56,7 +56,7 @@ export async function analyzeCoverageLoss(): Promise<CoverageLossAnalysisRespons
 }
 
 /* ============================================================
-   SNAPSHOT (hurtigregistrering)
+   SNAPSHOT (forsikring (kort))
    ============================================================ */
 
 export type InsuranceSource = 'EMPLOYER' | 'PRIVATE' | 'UNKNOWN';

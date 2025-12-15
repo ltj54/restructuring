@@ -56,6 +56,8 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/plan/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/journal/**").permitAll()
 
                         // OPTIONS always open
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
