@@ -13,11 +13,13 @@ public class UserPrincipal implements UserDetails {
     private final Long id;
     private final String email;
     private final String password;
+    private final String role;
 
     public UserPrincipal(UserEntity user) {
         this.id = user.getId();
         this.email = user.getEmail();
         this.password = user.getPassword();
+        this.role = user.getRole() == null ? "USER" : user.getRole().toUpperCase();
     }
 
     public Long getId() {
@@ -26,7 +28,9 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        String normalized = role != null ? role.toUpperCase() : "USER";
+        String authority = normalized.startsWith("ROLE_") ? normalized : "ROLE_" + normalized;
+        return List.of(new SimpleGrantedAuthority(authority));
     }
 
     @Override
