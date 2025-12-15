@@ -26,10 +26,9 @@ export default function JournalPage(): React.ReactElement {
   useEffect(() => {
     async function load() {
       try {
+        const token = localStorage.getItem('token');
         const res = await fetch(`${API_BASE_URL}/journal/all`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         });
         if (!res.ok) {
           const message =

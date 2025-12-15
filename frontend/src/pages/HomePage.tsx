@@ -38,10 +38,6 @@ export default function HomePage(): React.ReactElement {
             transition={{ duration: 0.35 }}
             className="space-y-5"
           >
-            <p className="text-sm font-semibold uppercase tracking-[0.15em] text-emerald-700">
-              Omstilling gjort enkelt
-            </p>
-
             <h1 className="text-3xl md:text-4xl font-semibold text-slate-900 leading-tight">
               Én kort veiviser som forteller deg hva du skal gjøre nå
             </h1>
@@ -72,7 +68,6 @@ export default function HomePage(): React.ReactElement {
             </div>
 
             <div className="text-sm text-slate-600 space-y-1">
-              <p>• Ingen innlogging nødvendig for å teste.</p>
               <p>• Tar 2–3 minutter. Du kan hoppe over spørsmål.</p>
             </div>
           </motion.div>
@@ -83,10 +78,6 @@ export default function HomePage(): React.ReactElement {
             transition={{ duration: 0.4, delay: 0.05 }}
           >
             <Card className="bg-white text-slate-900 shadow-xl border-slate-100">
-              <p className="text-xs uppercase tracking-[0.2em] text-emerald-600 font-semibold">
-                Slik fungerer det
-              </p>
-
               <h2 className="text-2xl font-semibold text-slate-900 mt-2">
                 På plass på under 5 min
               </h2>

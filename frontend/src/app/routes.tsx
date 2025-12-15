@@ -28,7 +28,7 @@ const mainNavLinks: MainNavLink[] = [
   { path: '/', label: 'Hjem' },
   { path: '/wizard', label: 'Veiviser' },
   { path: '/insurance', label: 'Forsikring' },
-  { path: '/insurance/quick', label: 'Hurtigregistrering' },
+  { path: '/insurance/quick', label: 'Forsikring (kort)' },
   { path: '/plan', label: 'Plan' },
   { path: '/journal', label: 'Journal' },
   { path: '/resources', label: 'Ressurser' },
@@ -56,6 +56,8 @@ export const appRoutes: RouteObject[] = [
       { path: 'wizard', element: <WizardPage /> },
       { path: 'insurance', element: <InsurancePage /> },
       { path: 'insurance/quick', element: <QuickInsuranceRegistrationPage /> },
+      { path: 'plan', element: <PlanPage /> },
+      { path: 'journal', element: <JournalPage /> },
       { path: 'resources', element: <ResourcesPage /> },
       { path: 'systeminfo', element: <SystemInfoPage /> },
       { path: 'last-ned', element: <DownloadAppPage /> },
@@ -74,8 +76,6 @@ export const appRoutes: RouteObject[] = [
       {
         element: <ProtectedLayout />,
         children: [
-          { path: 'plan', element: <PlanPage /> },
-          { path: 'journal', element: <JournalPage /> },
           { path: 'me', element: <MePage /> },
         ],
       },

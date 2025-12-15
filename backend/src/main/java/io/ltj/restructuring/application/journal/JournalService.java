@@ -23,6 +23,9 @@ public class JournalService {
     }
 
     public java.util.List<JournalEntry> getAll(Long userId) {
+        if (userId == null) {
+            return java.util.List.of();
+        }
         return repository.findByUserIdOrderByCreatedAtDesc(userId);
     }
 }
