@@ -8,6 +8,7 @@ type ButtonProps = {
   disabled?: boolean;
   className?: string;
   type?: 'button' | 'submit' | 'reset';
+  variant?: 'primary' | 'secondary' | 'ghost';
 };
 
 export default function Button({
@@ -17,13 +18,23 @@ export default function Button({
   disabled = false,
   className = '',
   type = 'button',
+  variant = 'primary',
 }: ButtonProps) {
+  const variantClasses: Record<typeof variant, string> = {
+    primary:
+      'bg-gradient-to-r from-emerald-300 via-teal-200 to-sky-300 text-slate-900 ' +
+      'border border-transparent shadow-md hover:brightness-[1.02]',
+    secondary:
+      'bg-white text-slate-800 border border-slate-300 hover:border-emerald-300 hover:bg-emerald-50',
+    ghost:
+      'bg-transparent text-slate-800 border border-transparent hover:border-emerald-200 hover:bg-emerald-50',
+  };
+
   const base =
-    'inline-flex items-center justify-center rounded-xl ' +
-    'border border-slate-300 bg-white text-slate-800 ' +
-    'px-4 py-2 text-sm ' +
-    'hover:bg-slate-50 transition ' +
-    'disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed';
+    'inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold ' +
+    'transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/80 ' +
+    'disabled:opacity-50 disabled:cursor-not-allowed ' +
+    variantClasses[variant];
 
   if (to) {
     return (

@@ -13,10 +13,6 @@ interface MainLayoutProps {
   navLinks: MainNavLink[];
 }
 
-/* -------------------------------------------------------------
-   SEKSJONERING + SORTERING
-------------------------------------------------------------- */
-
 interface NavSection {
   title: string;
   items: MainNavLink[];
@@ -57,10 +53,6 @@ function useNavSections(navLinks: MainNavLink[], isAuthenticated: boolean): NavS
 
   return sections;
 }
-
-/* -------------------------------------------------------------
-   MAINLAYOUT KOMPONENTEN
-------------------------------------------------------------- */
 
 export default function MainLayout({ navLinks }: MainLayoutProps) {
   const location = useLocation();
@@ -115,31 +107,35 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-brand-soft via-white to-slate-50 text-slate-900 flex flex-col">
-      <header className="w-full sticky top-0 z-40 backdrop-blur-xl bg-white/95 border-b border-slate-200 shadow-sm">
-        <nav className="relative max-w-5xl mx-auto flex items-center justify-between px-4 py-3 text-slate-900">
+    <div className="min-h-screen text-slate-900 flex flex-col">
+      <header className="w-full sticky top-0 z-40 backdrop-blur-lg bg-white/90 border-b border-slate-200 shadow-sm">
+        <nav className="relative max-w-5xl mx-auto flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-slate-900 text-white flex items-center justify-center rounded-md font-bold">
+            <div className="w-10 h-10 bg-gradient-to-br from-emerald-300 to-sky-300 text-slate-900 flex items-center justify-center rounded-xl font-bold shadow">
               {isAuthenticated ? initials : '--'}
             </div>
 
             <div className="flex flex-col">
-              <span className="font-medium truncate max-w-[160px]">{displayName}</span>
-              <span className="text-xs text-slate-600">{isAuthenticated ? 'Pålogget' : '...'}</span>
+              <span className="font-medium truncate max-w-[160px] text-slate-900">
+                {displayName}
+              </span>
+              <span className="text-xs text-slate-600">
+                {isAuthenticated ? 'Pålogget' : 'Utforsk fritt'}
+              </span>
             </div>
 
             <div className="hidden sm:flex flex-col pl-4 border-l border-slate-200 ml-2">
-              <span className="text-[13px] uppercase tracking-[0.18em] text-emerald-800">
-                Omstillingsveiviser
+              <span className="text-[11px] uppercase tracking-[0.18em] text-emerald-700">
+                Omstilling
               </span>
             </div>
           </div>
 
-          <div className="relative flex items-center gap-4">
+          <div className="relative flex items-center gap-3">
             {isAuthenticated && (
               <button
                 onClick={handleLogout}
-                className="text-sm text-red-700 hover:text-red-800 font-medium"
+                className="text-sm text-emerald-700 hover:text-emerald-800 font-semibold"
               >
                 Logg ut
               </button>
@@ -148,11 +144,11 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
             <button
               ref={menuButtonRef}
               onClick={() => setMenuOpen((prev) => !prev)}
-              className="flex items-center gap-1 hover:text-emerald-800 transition text-slate-900"
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white text-slate-800 hover:bg-emerald-50 transition border border-slate-200"
               aria-expanded={menuOpen}
               aria-label="Åpne meny"
             >
-              <span className="text-lg">☰</span>
+              <span className="text-base">☰</span>
               <span className="text-sm">Meny</span>
             </button>
 
@@ -166,24 +162,16 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
                 <div
                   ref={menuPanelRef}
                   className="
-                    absolute z-50 rounded-xl shadow-xl border border-slate-200
-                    bg-white
-                    right-3 left-auto top-9 w-[75vw]
-                    sm:right-0 sm:left-auto sm:top-10 sm:w-64
+                    absolute z-50 rounded-2xl shadow-2xl border border-slate-200
+                    menu-panel
+                    right-0 top-12 w-[76vw]
+                    sm:w-72
                   "
                 >
-                  <div
-                    className="
-                      absolute w-4 h-4 rotate-45 border-l border-t
-                      bg-white border-slate-200
-                      -top-2 right-6
-                    "
-                  />
-
-                  <div className="py-3">
+                  <div className="py-4">
                     {navSections.map((section, sectionIdx) => (
-                      <div key={section.title} className="mb-3">
-                        <div className="px-4 pb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                      <div key={section.title} className="mb-4">
+                        <div className="px-4 pb-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
                           {section.title}
                         </div>
 
@@ -191,14 +179,14 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
                           <NavLink
                             key={link.path}
                             to={link.path}
-                            end={link.path === '/insurance'} // ✅ FIX
+                            end={link.path === '/insurance'}
                             onClick={() => setMenuOpen(false)}
                             className={({ isActive }) =>
                               [
                                 'flex items-center gap-2 px-4 py-2 text-sm transition rounded-lg',
-                                'hover:bg-slate-100',
+                                'hover:bg-emerald-50',
                                 isActive
-                                  ? 'font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200'
+                                  ? 'font-semibold text-emerald-900 bg-emerald-50 border border-emerald-200'
                                   : 'text-slate-800',
                               ].join(' ')
                             }
@@ -208,7 +196,7 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
                         ))}
 
                         {sectionIdx < navSections.length - 1 && (
-                          <div className="my-2 mx-4 border-t border-slate-200" />
+                          <div className="my-3 mx-4 border-t border-slate-200" />
                         )}
                       </div>
                     ))}

@@ -6,10 +6,6 @@ import PageLayout from '@/components/PageLayout';
 import { useAuth } from '@/hooks/useAuth';
 import { fetchJson } from '@/utils/api';
 
-// ------------------------------------------------------------
-// NYE PERSONAS (kort tekst – variant A)
-// ------------------------------------------------------------
-
 type PersonaKey =
   | 'it'
   | 'industri'
@@ -33,7 +29,6 @@ const personaLabels: Record<PersonaKey, string> = {
   annet: 'Annet',
 };
 
-// Ekstremt kort beskrivelse – A-varianten
 const personaShort: Record<PersonaKey, string> = {
   it: 'Outsourcing og oppdatering av kompetanse.',
   industri: 'Nedbemanning og faglig viderevei.',
@@ -46,43 +41,47 @@ const personaShort: Record<PersonaKey, string> = {
   annet: 'Generelle råd om avtaler og CV.',
 };
 
+const phaseOptions = ['For omstilling', 'Under omstilling', 'Etter omstilling'];
+
+const needOptions = [
+  'Få oversikt over rettigheter og avtaler',
+  'Forstå hva omstillingen betyr for lønn og økonomi',
+  'Planlegge neste karrieresteg',
+  'Snakke med noen om situasjonen',
+  'Få kontroll på forsikringer og inntektssikring',
+];
+
 type UserPlanResponse = {
   persona: string | null;
   phase: string | null;
   needs: string[] | null;
 };
 
-// ------------------------------------------------------------
-// KOMPONENT
-// ------------------------------------------------------------
-
 export default function WizardPage(): React.ReactElement {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
 
   const [persona, setPersona] = useState<PersonaKey | null>(null);
-  const [phase, setPhase] = useState<string>('Før omstilling');
+  const [phase, setPhase] = useState<string>(phaseOptions[0]);
   const [needs, setNeeds] = useState<string[]>([]);
   const [status, setStatus] = useState<string | null>(null);
 
-  // Last fra localStorage
   useEffect(() => {
     const stored = localStorage.getItem('myPlan');
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored) as UserPlanResponse;
+    if (!stored) return;
 
-        if (parsed.persona) {
-          const key = (Object.entries(personaLabels).find(
-            ([, label]) => label === parsed.persona
-          ) ?? [null])[0] as PersonaKey | null;
-          setPersona(key);
-        }
-        if (parsed.phase) setPhase(parsed.phase);
-        if (parsed.needs) setNeeds(parsed.needs);
-      } catch {
-        /* ignorer */
+    try {
+      const parsed = JSON.parse(stored) as UserPlanResponse;
+      if (parsed.persona) {
+        const key = (Object.entries(personaLabels).find(
+          ([, label]) => label === parsed.persona
+        ) ?? [null])[0] as PersonaKey | null;
+        setPersona(key);
       }
+      if (parsed.phase) setPhase(parsed.phase);
+      if (parsed.needs) setNeeds(parsed.needs);
+    } catch {
+      /* ignore */
     }
   }, []);
 
@@ -90,6 +89,9 @@ export default function WizardPage(): React.ReactElement {
     () => (persona ? personaLabels[persona] : 'Ikke valgt'),
     [persona]
   );
+
+  const toggleNeed = (need: string) =>
+    setNeeds((list) => (list.includes(need) ? list.filter((n) => n !== need) : [...list, need]));
 
   const handleSave = async () => {
     setStatus(null);
@@ -132,21 +134,16 @@ export default function WizardPage(): React.ReactElement {
   return (
     <PageLayout
       title="Veiviser"
+      subtitle="Tre raske valg. Ferdig plan og journal starter på 3 minutter."
       maxWidthClassName="max-w-5xl"
       actions={
-        <Button
-          to="/plan"
-          className="bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50 font-semibold"
-        >
+        <Button to="/plan" variant="secondary">
           Gå til plan
         </Button>
       }
     >
       <div className="space-y-6">
-        {/* ------------------------------------------------------------
-            PERSONA
-        ------------------------------------------------------------ */}
-        <Card title="Velg situasjonen din">
+        <Card title="1. Velg situasjonen din">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             {(Object.keys(personaLabels) as PersonaKey[]).map((key) => {
               const isSelected = persona === key;
@@ -157,8 +154,8 @@ export default function WizardPage(): React.ReactElement {
                   onClick={() => setPersona(key)}
                   className={`rounded-xl border px-4 py-4 text-left transition ${
                     isSelected
-                      ? 'border-slate-900 bg-slate-900 text-white'
-                      : 'border-slate-200 bg-white hover:border-slate-400'
+                      ? 'border-emerald-400 bg-emerald-50 text-emerald-900 shadow-sm'
+                      : 'border-slate-200 bg-white hover:border-emerald-200'
                   }`}
                 >
                   <div className="font-semibold text-sm">{personaLabels[key]}</div>
@@ -168,19 +165,69 @@ export default function WizardPage(): React.ReactElement {
             })}
           </div>
         </Card>
-        {/* ------------------------------------------------------------
-            OPPSUMMERING
-        ------------------------------------------------------------ */}
+
+        <Card title="2. Hvor er du i prosessen?">
+          <div className="flex flex-wrap gap-3">
+            {phaseOptions.map((option) => {
+              const active = option === phase;
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => setPhase(option)}
+                  className={`rounded-full px-4 py-2 text-sm border transition ${
+                    active
+                      ? 'bg-emerald-600 text-white border-emerald-600'
+                      : 'bg-white border-slate-200 text-slate-800 hover:border-emerald-200'
+                  }`}
+                >
+                  {option}
+                </button>
+              );
+            })}
+          </div>
+        </Card>
+
+        <Card title="3. Hva trenger du mest akkurat nå?">
+          <div className="grid md:grid-cols-2 gap-3">
+            {needOptions.map((need) => {
+              const active = needs.includes(need);
+              return (
+                <button
+                  key={need}
+                  type="button"
+                  onClick={() => toggleNeed(need)}
+                  className={`rounded-xl border px-4 py-3 text-left text-sm transition ${
+                    active
+                      ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                      : 'bg-white border-slate-200 text-slate-800 hover:border-emerald-200'
+                  }`}
+                >
+                  {need}
+                </button>
+              );
+            })}
+          </div>
+        </Card>
+
         <Card title="Oppsummering">
-          <p className="text-sm text-slate-700 mb-3">
-            <strong>Rolle:</strong> {personaDisplay}
-          </p>
+          <div className="space-y-2 text-sm text-neutral-100">
+            <p>
+              <strong>Rolle:</strong> {personaDisplay}
+            </p>
+            <p>
+              <strong>Fase:</strong> {phase}
+            </p>
+            <p>
+              <strong>Behov:</strong>{' '}
+              {needs.length > 0 ? needs.join(' • ') : 'Ingen valgt ennå. Du kan hoppe over.'}
+            </p>
+            {status && <p className="text-emerald-200">{status}</p>}
+          </div>
 
-          {status && <p className="text-sm text-slate-600 mb-3">{status}</p>}
-
-          <div className="flex gap-3 flex-wrap">
+          <div className="flex gap-3 flex-wrap mt-4">
             <Button onClick={handleSave}>Lagre og gå til plan</Button>
-            <Button to="/" className="border-slate-200 text-slate-700 hover:bg-slate-50">
+            <Button to="/" variant="secondary">
               Tilbake til start
             </Button>
           </div>

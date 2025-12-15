@@ -11,24 +11,20 @@ export default function Card({ title, actions, className = '', children }: CardP
   return (
     <section
       className={[
-        'bg-white rounded-3xl text-slate-900',
-        'border border-slate-200 shadow-sm p-6 md:p-8',
+        'surface-card text-slate-900',
+        'rounded-3xl p-6 md:p-7 shadow-lg shadow-slate-200/40 border border-slate-200',
         className,
       ]
         .filter(Boolean)
         .join(' ')}
     >
       {(title || actions) && (
-        <header className="mb-4 flex items-start justify-between gap-3">
-          {title && (
-            <h1 className="text-xl md:text-2xl font-semibold text-slate-900 dark:text-slate-50">
-              {title}
-            </h1>
-          )}
+        <header className="mb-5 flex items-start justify-between gap-3">
+          {title && <h1 className="text-xl md:text-2xl font-semibold text-slate-900">{title}</h1>}
           {actions && <div className="flex items-center gap-2">{actions}</div>}
         </header>
       )}
-      {children}
+      <div className="text-sm md:text-base text-slate-800">{children}</div>
     </section>
   );
 }
