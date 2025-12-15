@@ -2,11 +2,7 @@ package io.ltj.restructuring.application.system;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -85,7 +81,7 @@ public class SystemInfoAdminController {
             long total = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM users", Long.class);
 
             List<Map<String, Object>> users = jdbcTemplate.queryForList(
-                    "SELECT id, email, first_name, last_name, ssn " +
+                    "SELECT id, email, first_name, last_name, ssn, role " +
                             "FROM users " +
                             "ORDER BY id " +
                             "LIMIT ? OFFSET ?",

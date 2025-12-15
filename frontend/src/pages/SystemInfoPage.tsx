@@ -545,7 +545,7 @@ export default function SystemInfoPage(): React.ReactElement {
             <div className="space-y-3 text-sm">
               <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                 <div className="text-slate-600">
-                  <p>Lister id, email, first_name, last_name, ssn</p>
+                  <p>Lister id, email, first_name, last_name, ssn, role</p>
                   <p className="text-xs text-slate-500">
                     Viser {users.length > 0 ? `${usersOffset + 1}-${usersOffset + users.length}` : '-'}
                     {typeof usersTotal === 'number' ? ` av ${usersTotal}` : ''}
@@ -591,6 +591,7 @@ export default function SystemInfoPage(): React.ReactElement {
                       <th className="px-3 py-2">First name</th>
                       <th className="px-3 py-2">Last name</th>
                       <th className="px-3 py-2">SSN</th>
+                      <th className="px-3 py-2">Role</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -614,6 +615,7 @@ export default function SystemInfoPage(): React.ReactElement {
                           <td className="px-3 py-2">{u.first_name ?? '-'}</td>
                           <td className="px-3 py-2">{u.last_name ?? '-'}</td>
                           <td className="px-3 py-2">{u.ssn ?? '-'}</td>
+                          <td className="px-3 py-2">{u.role ?? '-'}</td>
                         </tr>
                       ))
                     )}
