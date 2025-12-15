@@ -71,7 +71,7 @@ public class AuthServiceImpl implements AuthService {
         UserEntity user = userRepository.findByEmail(principal.getUsername())
                 .orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
 
-        String token = jwtUtil.generateToken(user.getId(), user.getEmail());
+        String token = jwtUtil.generateToken(user.getId(), user.getEmail(), user.getRole());
         long expiresInSeconds = 60L * 60L * 24L;
 
         return new LoginResponseDto(
@@ -105,6 +105,7 @@ public class AuthServiceImpl implements AuthService {
         user.setPassword(passwordEncoder.encode(request.password()));
         user.setFirstName(request.firstName());
         user.setLastName(request.lastName());
+        user.setRole("USER");
 
         UserEntity saved = userRepository.save(user);
 

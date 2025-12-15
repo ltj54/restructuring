@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -22,12 +23,16 @@ public class JwtUtil {
      *   - sub (email)
      *   - userId claim (Long)
      */
-    public String generateToken(Long userId, String email) {
+    public String generateToken(Long userId, String email, String role) {
         long expirationMs = 1000 * 60 * 60 * 24; // 24h
+        String normalizedRole = role == null ? "USER" : role.toUpperCase();
 
         return Jwts.builder()
                 .subject(email)
-                .claims(Map.of("userId", userId))
+                .claims(Map.of(
+                        "userId", userId,
+                        "roles", List.of(normalizedRole)
+                ))
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expirationMs))
                 .signWith(secretKey, Jwts.SIG.HS256)

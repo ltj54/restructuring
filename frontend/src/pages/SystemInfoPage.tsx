@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import Card from '@/components/Card';
 import PageLayout from '@/components/PageLayout';
 import { API_BASE_URL } from '@/utils/config';
+import { useAuth } from '@/hooks/useAuth';
 
 type Health = 'ukjent' | 'ok' | 'feil';
 
@@ -35,6 +36,28 @@ type UserRow = {
 };
 
 const USERS_PAGE_SIZE = 20;
+
+function isAdminFromToken(token: string | null): boolean {
+  if (!token) return false;
+  try {
+    const parts = token.split('.');
+    if (parts.length < 2) return false;
+    const payload = JSON.parse(atob(parts[1]));
+    const roles: unknown =
+      (payload?.roles as unknown) ?? (payload?.role as unknown) ?? (payload?.authorities as unknown);
+
+    if (Array.isArray(roles)) {
+      return roles.some((r) => String(r).toUpperCase() === 'ADMIN');
+    }
+
+    if (typeof roles === 'string') {
+      return roles.toUpperCase() === 'ADMIN';
+    }
+  } catch {
+    // ignore decode errors
+  }
+  return false;
+}
 
 // ----------------------------------------------------
 //  Small UI helpers
@@ -141,6 +164,9 @@ function HistoryList({ history }: { history: HistoryEntry[] }) {
 // ----------------------------------------------------
 
 export default function SystemInfoPage(): React.ReactElement {
+  const { token } = useAuth();
+  const isAdmin = useMemo(() => isAdminFromToken(token), [token]);
+
   const [status, setStatus] = useState<Health>('ukjent');
   const [httpCode, setHttpCode] = useState<number | null>(null);
   const [message, setMessage] = useState<string>('');
@@ -372,10 +398,10 @@ export default function SystemInfoPage(): React.ReactElement {
 
   // Hent brukere én gang når backend er ok
   useEffect(() => {
-    if (status === 'ok') {
+    if (status === 'ok' && isAdmin) {
       fetchUsers();
     }
-  }, [status, fetchUsers]);
+  }, [status, fetchUsers, isAdmin]);
 
   const loading = status !== 'ok';
 
@@ -510,144 +536,148 @@ export default function SystemInfoPage(): React.ReactElement {
         )}
       </Card>
 
-      {/* --------------------------------------- */}
-      {/* USERS TABLE */}
-      {/* --------------------------------------- */}
-      <Card title="Brukere (get_users)" className="mt-6">
-        <div className="space-y-3 text-sm">
-          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-            <div className="text-slate-600">
-              <p>Lister id, email, first_name, last_name, ssn</p>
-              <p className="text-xs text-slate-500">
-                Viser {users.length > 0 ? `${usersOffset + 1}-${usersOffset + users.length}` : '-'}
-                {typeof usersTotal === 'number' ? ` av ${usersTotal}` : ''}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleUsersPrev}
-                disabled={usersLoading || usersOffset === 0}
-                className="inline-flex items-center rounded border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100"
-              >
-                Forrige
-              </button>
-              <button
-                onClick={handleUsersNext}
-                disabled={usersLoading || !usersHasMore}
-                className="inline-flex items-center rounded border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100"
-              >
-                Neste
-              </button>
-              <button
-                onClick={fetchUsers}
-                disabled={usersLoading}
-                className="inline-flex items-center rounded border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100"
-              >
-                {usersLoading ? 'Oppdaterer...' : 'Oppdater'}
-              </button>
-            </div>
-          </div>
+      {isAdmin && (
+        <>
+          {/* --------------------------------------- */}
+          {/* USERS TABLE */}
+          {/* --------------------------------------- */}
+          <Card title="Brukere (get_users)" className="mt-6">
+            <div className="space-y-3 text-sm">
+              <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <div className="text-slate-600">
+                  <p>Lister id, email, first_name, last_name, ssn</p>
+                  <p className="text-xs text-slate-500">
+                    Viser {users.length > 0 ? `${usersOffset + 1}-${usersOffset + users.length}` : '-'}
+                    {typeof usersTotal === 'number' ? ` av ${usersTotal}` : ''}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleUsersPrev}
+                    disabled={usersLoading || usersOffset === 0}
+                    className="inline-flex items-center rounded border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100"
+                  >
+                    Forrige
+                  </button>
+                  <button
+                    onClick={handleUsersNext}
+                    disabled={usersLoading || !usersHasMore}
+                    className="inline-flex items-center rounded border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100"
+                  >
+                    Neste
+                  </button>
+                  <button
+                    onClick={fetchUsers}
+                    disabled={usersLoading}
+                    className="inline-flex items-center rounded border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100"
+                  >
+                    {usersLoading ? 'Oppdaterer...' : 'Oppdater'}
+                  </button>
+                </div>
+              </div>
 
-          {usersError && (
-            <div className="rounded border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
-              {usersError}
-            </div>
-          )}
+              {usersError && (
+                <div className="rounded border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+                  {usersError}
+                </div>
+              )}
 
-          <div className="overflow-auto rounded border border-slate-200 bg-white">
-            <table className="min-w-full text-xs text-slate-800">
-              <thead className="bg-slate-50 text-left font-semibold text-slate-600">
-                <tr>
-                  <th className="px-3 py-2">ID</th>
-                  <th className="px-3 py-2">Email</th>
-                  <th className="px-3 py-2">First name</th>
-                  <th className="px-3 py-2">Last name</th>
-                  <th className="px-3 py-2">SSN</th>
-                </tr>
-              </thead>
-              <tbody>
-                {usersLoading ? (
-                  <tr>
-                    <td className="px-3 py-3 text-center text-slate-500" colSpan={5}>
-                      Laster ...
-                    </td>
-                  </tr>
-                ) : users.length === 0 ? (
-                  <tr>
-                    <td className="px-3 py-3 text-center text-slate-500" colSpan={5}>
-                      Ingen brukere funnet.
-                    </td>
-                  </tr>
-                ) : (
-                  users.map((u) => (
-                    <tr key={u.id} className="border-t border-slate-100">
-                      <td className="px-3 py-2 font-mono text-[11px] text-slate-700">{u.id}</td>
-                      <td className="px-3 py-2">{u.email}</td>
-                      <td className="px-3 py-2">{u.first_name ?? '-'}</td>
-                      <td className="px-3 py-2">{u.last_name ?? '-'}</td>
-                      <td className="px-3 py-2">{u.ssn ?? '-'}</td>
+              <div className="overflow-auto rounded border border-slate-200 bg-white">
+                <table className="min-w-full text-xs text-slate-800">
+                  <thead className="bg-slate-50 text-left font-semibold text-slate-600">
+                    <tr>
+                      <th className="px-3 py-2">ID</th>
+                      <th className="px-3 py-2">Email</th>
+                      <th className="px-3 py-2">First name</th>
+                      <th className="px-3 py-2">Last name</th>
+                      <th className="px-3 py-2">SSN</th>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </Card>
-
-      {/* --------------------------------------- */}
-      {/* USER PROFILE */}
-      {/* --------------------------------------- */}
-      <Card title="Brukerprofil (get_user_profile)" className="mt-6">
-        <div className="space-y-4 text-sm">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
-            <div className="flex flex-1 items-center gap-2">
-              <label htmlFor="userId" className="text-xs text-slate-600">
-                Bruker-ID
-              </label>
-              <input
-                id="userId"
-                type="number"
-                value={userIdInput}
-                onChange={(e) => setUserIdInput(e.target.value)}
-                className="w-32 rounded border border-slate-300 bg-white px-2 py-1 text-sm focus:border-blue-400 focus:outline-none"
-                min={0}
-              />
+                  </thead>
+                  <tbody>
+                    {usersLoading ? (
+                      <tr>
+                        <td className="px-3 py-3 text-center text-slate-500" colSpan={5}>
+                          Laster ...
+                        </td>
+                      </tr>
+                    ) : users.length === 0 ? (
+                      <tr>
+                        <td className="px-3 py-3 text-center text-slate-500" colSpan={5}>
+                          Ingen brukere funnet.
+                        </td>
+                      </tr>
+                    ) : (
+                      users.map((u) => (
+                        <tr key={u.id} className="border-t border-slate-100">
+                          <td className="px-3 py-2 font-mono text-[11px] text-slate-700">{u.id}</td>
+                          <td className="px-3 py-2">{u.email}</td>
+                          <td className="px-3 py-2">{u.first_name ?? '-'}</td>
+                          <td className="px-3 py-2">{u.last_name ?? '-'}</td>
+                          <td className="px-3 py-2">{u.ssn ?? '-'}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
-            <button
-              onClick={fetchUserProfile}
-              disabled={userProfileLoading}
-              className="inline-flex items-center justify-center rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
-            >
-              {userProfileLoading ? 'Henter...' : 'Hent profil'}
-            </button>
-          </div>
+          </Card>
 
-          {userProfileError && (
-            <div className="rounded border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
-              {userProfileError}
-            </div>
-          )}
+          {/* --------------------------------------- */}
+          {/* USER PROFILE */}
+          {/* --------------------------------------- */}
+          <Card title="Brukerprofil (get_user_profile)" className="mt-6">
+            <div className="space-y-4 text-sm">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
+                <div className="flex flex-1 items-center gap-2">
+                  <label htmlFor="userId" className="text-xs text-slate-600">
+                    Bruker-ID
+                  </label>
+                  <input
+                    id="userId"
+                    type="number"
+                    value={userIdInput}
+                    onChange={(e) => setUserIdInput(e.target.value)}
+                    className="w-32 rounded border border-slate-300 bg-white px-2 py-1 text-sm focus:border-blue-400 focus:outline-none"
+                    min={0}
+                  />
+                </div>
+                <button
+                  onClick={fetchUserProfile}
+                  disabled={userProfileLoading}
+                  className="inline-flex items-center justify-center rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+                >
+                  {userProfileLoading ? 'Henter...' : 'Hent profil'}
+                </button>
+              </div>
 
-          {userProfileRaw && !userProfileError && (
-            <div className="rounded border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
-              <p className="mb-1 font-semibold text-slate-700">Rådata</p>
-              <pre className="overflow-auto whitespace-pre-wrap text-[11px] leading-snug">
-                {userProfileRaw}
-              </pre>
-            </div>
-          )}
+              {userProfileError && (
+                <div className="rounded border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+                  {userProfileError}
+                </div>
+              )}
 
-          {userProfileParsed && typeof userProfileParsed === 'object' && (
-            <div className="rounded border border-slate-200 bg-white p-3 text-xs text-slate-700">
-              <p className="mb-2 font-semibold text-slate-700">Parset JSON</p>
-              <pre className="overflow-auto whitespace-pre-wrap text-[11px] leading-snug">
-                {JSON.stringify(userProfileParsed, null, 2)}
-              </pre>
+              {userProfileRaw && !userProfileError && (
+                <div className="rounded border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+                  <p className="mb-1 font-semibold text-slate-700">Rådata</p>
+                  <pre className="overflow-auto whitespace-pre-wrap text-[11px] leading-snug">
+                    {userProfileRaw}
+                  </pre>
+                </div>
+              )}
+
+              {userProfileParsed && typeof userProfileParsed === 'object' && (
+                <div className="rounded border border-slate-200 bg-white p-3 text-xs text-slate-700">
+                  <p className="mb-2 font-semibold text-slate-700">Parset JSON</p>
+                  <pre className="overflow-auto whitespace-pre-wrap text-[11px] leading-snug">
+                    {JSON.stringify(userProfileParsed, null, 2)}
+                  </pre>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </Card>
+          </Card>
+        </>
+      )}
     </PageLayout>
   );
 }

@@ -6,7 +6,8 @@ CREATE TABLE IF NOT EXISTS users (
     last_name VARCHAR(100),
     ssn VARCHAR(11),
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    role varchar(30) not null default 'USER'
 );
 
 CREATE TABLE IF NOT EXISTS user_plans (

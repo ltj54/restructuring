@@ -4,16 +4,20 @@ spring:
     username: sa
     password:
     driver-class-name: org.h2.Driver
+
   jpa:
     hibernate:
       ddl-auto: none
     open-in-view: false
-    defer-datasource-initialization: true
+
+  # Viktig: Bruk schema.sql i test -> deterministisk og enkelt
   sql:
     init:
       mode: always
       schema-locations: classpath:schema.sql
       data-locations: classpath:data-test.sql
+
+  # Viktig: Slå av Flyway i test for å unngå sirkulær flyway<->JPA
   flyway:
     enabled: false
 

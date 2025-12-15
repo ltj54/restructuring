@@ -28,6 +28,9 @@ public class UserEntity {
     @Column(length = 20, nullable = true)
     private String ssn;
 
+    @Column(length = 30, nullable = false)
+    private String role = "USER";
+
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -48,6 +51,9 @@ public class UserEntity {
         Instant now = Instant.now();
         this.createdAt = now;
         this.updatedAt = now;
+        if (this.role == null || this.role.isBlank()) {
+            this.role = "USER";
+        }
     }
 
     @PreUpdate
@@ -97,6 +103,14 @@ public class UserEntity {
 
     public void setSsn(String ssn) {
         this.ssn = ssn;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role == null ? "USER" : role.toUpperCase();
     }
 
     public Instant getCreatedAt() {
