@@ -1,5 +1,8 @@
 package io.ltj.restructuring.application.system;
 
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
@@ -13,9 +16,14 @@ import java.util.Map;
 public class SystemInfoAdminController {
 
     private final JdbcTemplate jdbcTemplate;
+    private final UserProfilePdfService userProfilePdfService;
 
-    public SystemInfoAdminController(JdbcTemplate jdbcTemplate) {
+    public SystemInfoAdminController(
+            JdbcTemplate jdbcTemplate,
+            UserProfilePdfService userProfilePdfService
+    ) {
         this.jdbcTemplate = jdbcTemplate;
+        this.userProfilePdfService = userProfilePdfService;
     }
 
     /**
@@ -63,6 +71,15 @@ public class SystemInfoAdminController {
         String sql = "SELECT get_user_profile(?)";
         String json = jdbcTemplate.queryForObject(sql, String.class, userId);
         return ResponseEntity.ok(json);
+    }
+
+    @GetMapping("/user-profile/{userId}/pdf")
+    public ResponseEntity<ByteArrayResource> getUserProfilePdf(@PathVariable long userId) {
+        GeneratedPdf pdf = userProfilePdfService.generateUserProfilePdf(userId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + pdf.fileName())
+                .body(new ByteArrayResource(pdf.content()));
     }
 
     /**
