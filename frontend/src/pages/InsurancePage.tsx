@@ -1,259 +1,226 @@
-import React, { useEffect, useState } from 'react';
-import {
-  analyzeCoverageGaps,
-  analyzeCoverageLoss,
-  CoverageGapAnalysisRequest,
-  CoverageGapAnalysisResponse,
-  CoverageLossAnalysisResponse,
-  getInsuranceProducts,
-  getMyInsurances,
-  InsuranceProductDto,
-  UserInsuranceResponse,
-} from '@/api/insuranceApi';
-import RegisterInsuranceForm from '@/components/insurance/RegisterInsuranceForm';
+import React, { useMemo, useState } from 'react';
+import { InsuranceSource, InsuranceType, saveInsuranceSnapshot } from '@/api/insuranceApi';
+import { useInsurance } from '@/hooks/useInsurance';
 
-type TabKey = 'loss' | 'gaps' | 'catalog';
+type StatusVariant = 'info' | 'success' | 'error';
 
-const severityLabel: Record<string, string> = {
-  CRITICAL: 'Kritisk',
-  HIGH: 'Høy',
-  MEDIUM: 'Moderat',
-  LOW: 'Lav',
-};
-
-const severityColorClass: Record<string, string> = {
-  CRITICAL: 'bg-red-100 text-red-800 border-red-300',
-  HIGH: 'bg-orange-100 text-orange-800 border-orange-300',
-  MEDIUM: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-  LOW: 'bg-emerald-100 text-emerald-800 border-emerald-300',
-};
+const INSURANCE_OPTIONS: { type: InsuranceType; label: string; hint: string }[] = [
+  { type: 'TREATMENT', label: 'Behandlingsforsikring', hint: 'Privat behandling uten ventetid' },
+  { type: 'INCOME', label: 'Inntektsforsikring', hint: 'Ekstra inntekt hvis du mister jobben' },
+  { type: 'DISABILITY', label: 'Uføreforsikring', hint: 'Økonomisk trygghet ved sykdom' },
+  { type: 'LIFE', label: 'Livsforsikring', hint: 'Utbetaling til etterlatte' },
+  { type: 'PENSION', label: 'Pensjon', hint: 'Tjenestepensjon du vil videreføre' },
+  { type: 'UNKNOWN', label: 'Usikker / vet ikke', hint: 'Helt greit - vi hjelper deg uansett' },
+];
 
 export default function InsurancePage() {
-  const [activeTab, setActiveTab] = useState<TabKey>('loss');
+  const [source, setSource] = useState<InsuranceSource | null>('EMPLOYER');
+  const [types, setTypes] = useState<Set<InsuranceType>>(new Set(['TREATMENT', 'DISABILITY']));
+  const [status, setStatus] = useState<{ variant: StatusVariant; message: string } | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const { isSending, sendInsurance } = useInsurance();
 
-  // -------- KATALOG --------
-  const [products, setProducts] = useState<InsuranceProductDto[]>([]);
-  const [loadingProducts, setLoadingProducts] = useState(false);
-  const [productsError, setProductsError] = useState<string | null>(null);
+  const toggleType = (type: InsuranceType) => {
+    setTypes((prev) => {
+      const next = new Set(prev);
+      if (next.has(type)) {
+        next.delete(type);
+      } else {
+        next.add(type);
+      }
+      return next;
+    });
+  };
 
-  // -------- MINE FORSIKRINGER --------
-  const [myInsurances, setMyInsurances] = useState<UserInsuranceResponse[]>([]);
-  const [loadingMyInsurances, setLoadingMyInsurances] = useState(false);
+  const inquiryText = useMemo(() => {
+    const chosen = Array.from(types);
+    const products =
+      chosen.length === 0
+        ? 'Jeg er usikker på hvilke produkter jeg trenger.'
+        : `Jeg ønsker tilbud/råd på: ${chosen.map((t) => labelForType(t)).join(', ')}.`;
 
-  // -------- LOSS --------
-  const [lossResult, setLossResult] = useState<CoverageLossAnalysisResponse | null>(null);
-  const [lossLoading, setLossLoading] = useState(false);
+    const sourceText =
+      source === 'EMPLOYER'
+        ? 'Jeg mister dagens dekninger via arbeidsgiver.'
+        : source === 'PRIVATE'
+          ? 'Jeg har kun private forsikringer i dag.'
+          : 'Jeg er usikker på hvilke dekninger jeg har.';
 
-  // -------- GAP --------
-  const [gapForm] = useState<CoverageGapAnalysisRequest>({
-    age: 45,
-    hasChildren: true,
-    hasMortgage: true,
-    bufferMonths: 1,
-    hasPrivateHealth: false,
-    hasPrivateDisability: false,
-    hasCriticalIllness: false,
-    hasTravel: true,
-    hasChildInsurance: false,
-  });
-  const [gapResult, setGapResult] = useState<CoverageGapAnalysisResponse | null>(null);
-  const [gapLoading, setGapLoading] = useState(false);
+    return ['Hei Gjensidige,', sourceText, products, 'Kan dere kontakte meg for et tilbud?'].join(
+      '\n'
+    );
+  }, [source, types]);
 
-  // -------- INIT --------
-  useEffect(() => {
-    setLoadingProducts(true);
-    setProductsError(null);
-    getInsuranceProducts()
-      .then(setProducts)
-      .catch(() => setProductsError('Kunne ikke laste forsikringskatalogen.'))
-      .finally(() => setLoadingProducts(false));
-  }, []);
+  const handleSend = async () => {
+    if (!source) {
+      setStatus({ variant: 'error', message: 'Velg hvor forsikringen din kommer fra.' });
+      return;
+    }
 
-  useEffect(() => {
-    if (activeTab !== 'loss') return;
+    setStatus(null);
+    setIsSaving(true);
 
-    setLoadingMyInsurances(true);
-    getMyInsurances()
-      .then(setMyInsurances)
-      .finally(() => setLoadingMyInsurances(false));
-  }, [activeTab]);
-
-  // -------- HANDLERS --------
-  const runLossAnalysis = async () => {
-    setLossLoading(true);
     try {
-      const result = await analyzeCoverageLoss();
-      setLossResult(result);
+      await saveInsuranceSnapshot({
+        source,
+        types: Array.from(types),
+        uncertain: source === 'UNKNOWN' || types.has('UNKNOWN'),
+      });
+
+      const message = await sendInsurance().catch((err: unknown) => {
+        // Hvis nedlasting feiler (f.eks. ikke innlogget), la brukeren fortsette med manuell kontakt
+        console.warn('Kunne ikke generere forespørsel', err);
+        return 'Valgene er lagret. Du kan kontakte Gjensidige direkte med teksten under.';
+      });
+
+      setStatus({ variant: 'success', message });
+    } catch {
+      setStatus({
+        variant: 'error',
+        message: 'Kunne ikke lagre forespørsel. Prøv igjen eller kontakt Gjensidige direkte.',
+      });
     } finally {
-      setLossLoading(false);
+      setIsSaving(false);
     }
   };
 
-  const runGapAnalysis = async () => {
-    setGapLoading(true);
-    try {
-      const result = await analyzeCoverageGaps(gapForm);
-      setGapResult(result);
-    } finally {
-      setGapLoading(false);
-    }
-  };
-
-  // -------- UI --------
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
-      <h1 className="mb-6 text-3xl font-bold">Forsikring i omstilling</h1>
+    <div className="mx-auto max-w-4xl px-4 py-8 space-y-8">
+      <header className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Gjensidige</p>
+        <h1 className="text-3xl font-bold">Få tilbud på forsikring</h1>
+        <p className="text-slate-600 max-w-2xl">
+          En konsentrert forespørsel for omstilling: velg hva du trenger, så hjelper vi deg videre
+          med Gjensidige. Du kan sende en forespørsel direkte eller kopiere teksten under og
+          kontakte dem selv.
+        </p>
+      </header>
 
-      <div className="mb-6 flex gap-4 border-b">
-        <TabButton tab="loss" activeTab={activeTab} onClick={setActiveTab}>
-          Hva mister jeg?
-        </TabButton>
-        <TabButton tab="gaps" activeTab={activeTab} onClick={setActiveTab}>
-          Behovsanalyse
-        </TabButton>
-        <TabButton tab="catalog" activeTab={activeTab} onClick={setActiveTab}>
-          Produktkatalog
-        </TabButton>
-      </div>
+      <section className="grid gap-6 md:grid-cols-2">
+        <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-5 shadow-sm">
+          <h2 className="text-lg font-semibold mb-3">Hva gjelder deg?</h2>
 
-      {/* ================= LOSS ================= */}
-      {activeTab === 'loss' && (
-        <section className="space-y-6">
-          <RegisterInsuranceForm
-            onSaved={() => {
-              runLossAnalysis();
-              getMyInsurances().then(setMyInsurances);
-            }}
-          />
+          <div className="space-y-3">
+            <div>
+              <p className="text-sm font-medium mb-2">Hvor kommer forsikringene dine fra?</p>
+              <div className="space-y-2">
+                <Radio
+                  label="Via arbeidsgiver (slutter snart)"
+                  checked={source === 'EMPLOYER'}
+                  onChange={() => setSource('EMPLOYER')}
+                />
+                <Radio
+                  label="KUN privat"
+                  checked={source === 'PRIVATE'}
+                  onChange={() => setSource('PRIVATE')}
+                />
+                <Radio
+                  label="Usikker"
+                  checked={source === 'UNKNOWN'}
+                  onChange={() => setSource('UNKNOWN')}
+                />
+              </div>
+            </div>
 
-          <div>
-            <h2 className="mb-2 text-xl font-semibold">Mine forsikringer</h2>
-
-            {loadingMyInsurances && <p className="text-slate-500">Laster forsikringer…</p>}
-
-            {!loadingMyInsurances && myInsurances.length === 0 && (
-              <p className="text-slate-600">Du har ikke registrert noen forsikringer ennå.</p>
-            )}
-
-            <ul className="space-y-2">
-              {myInsurances.map((i) => (
-                <li key={i.id} className="rounded border bg-white p-3">
-                  <div className="flex justify-between gap-4">
-                    <div>
-                      <strong>{i.productName || 'Ukjent produkt'}</strong>
-                      <div className="text-sm text-slate-600">{i.providerName}</div>
-                    </div>
-                    <span className="rounded bg-slate-100 px-2 py-1 text-xs">{i.source}</span>
-                  </div>
-
-                  {i.notes && <div className="mt-1 text-xs text-slate-600">{i.notes}</div>}
-                </li>
-              ))}
-            </ul>
+            <div>
+              <p className="text-sm font-medium mb-2">Hva ønsker du tilbud på?</p>
+              <div className="space-y-2">
+                {INSURANCE_OPTIONS.map((opt) => (
+                  <label key={opt.type} className="flex items-start gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={types.has(opt.type)}
+                      onChange={() => toggleType(opt.type)}
+                    />
+                    <span>
+                      <span className="font-medium">{opt.label}</span>
+                      <div className="text-xs text-slate-600">{opt.hint}</div>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
           </div>
 
-          <button
-            onClick={runLossAnalysis}
-            disabled={lossLoading}
-            className="rounded bg-slate-900 px-4 py-2 text-white"
-          >
-            {lossLoading ? 'Analyserer…' : 'Analyser hva jeg mister'}
-          </button>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <button
+              onClick={handleSend}
+              disabled={isSaving || isSending}
+              className="rounded-lg bg-emerald-700 px-4 py-2 text-white shadow hover:bg-emerald-800 disabled:opacity-60"
+            >
+              {isSaving || isSending ? 'Sender forespørsel...' : 'Send forespørsel til Gjensidige'}
+            </button>
+            <a
+              href="https://www.gjensidige.no/privat/kundeservice/kontakt-oss"
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-lg border border-emerald-200 px-4 py-2 text-emerald-800 hover:bg-white"
+            >
+              Kontakt Gjensidige nå
+            </a>
+          </div>
 
-          {lossResult && (
-            <ul className="space-y-2">
-              {lossResult.losses.map((l, i) => (
-                <li key={i} className={`rounded border p-2 ${severityColorClass[l.severity]}`}>
-                  <strong>{l.area}</strong> – {l.description}
-                </li>
-              ))}
-            </ul>
+          {status && (
+            <p
+              className={`mt-4 text-sm ${
+                status.variant === 'success'
+                  ? 'text-emerald-800'
+                  : status.variant === 'error'
+                    ? 'text-red-700'
+                    : 'text-slate-700'
+              }`}
+            >
+              {status.message}
+            </p>
           )}
-        </section>
-      )}
+        </div>
 
-      {/* ================= GAP ================= */}
-      {activeTab === 'gaps' && (
-        <section className="space-y-4">
-          <button
-            onClick={runGapAnalysis}
-            disabled={gapLoading}
-            className="rounded bg-slate-900 px-4 py-2 text-white"
-          >
-            {gapLoading ? 'Analyserer…' : 'Analyser hull'}
-          </button>
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold mb-2">Tekst du kan sende</h2>
+            <p className="text-sm text-slate-600 mb-3">
+              Kopier teksten under og send via telefon, chat eller e-post til Gjensidige.
+            </p>
+            <textarea
+              readOnly
+              value={inquiryText}
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-800"
+              rows={8}
+            />
+          </div>
 
-          {gapResult && (
-            <ul className="space-y-4">
-              {gapResult.gaps.map((g, i) => (
-                <li key={i} className={`rounded border p-3 ${severityColorClass[g.severity]}`}>
-                  <div className="flex justify-between">
-                    <strong>{g.area}</strong>
-                    <span className="text-xs font-semibold uppercase">
-                      {severityLabel[g.severity]}
-                    </span>
-                  </div>
-
-                  <p className="mt-1 text-sm">{g.recommendedAction}</p>
-
-                  {g.recommendedProducts?.length > 0 && (
-                    <div className="mt-3 rounded bg-white/60 p-3">
-                      <div className="mb-1 text-xs font-semibold text-slate-600">
-                        Anbefalte produkter
-                      </div>
-                      <ul className="space-y-1 text-sm">
-                        {g.recommendedProducts.map((p) => (
-                          <li key={p.id}>
-                            {p.name} <span className="text-slate-500">({p.provider})</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </li>
-              ))}
+          <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 space-y-3">
+            <h3 className="text-sm font-semibold text-slate-800">Hurtigvalg</h3>
+            <ul className="text-sm text-slate-700 space-y-1">
+              <li>- Telefon: 915 03 100</li>
+              <li>- Chat / skjema: gjensidige.no - Kundeservice - Kontakt oss (lenke over)</li>
+              <li>- Åpningstider varierer - legg igjen nummer, så ringer de deg opp.</li>
             </ul>
-          )}
-        </section>
-      )}
-
-      {/* ================= CATALOG ================= */}
-      {activeTab === 'catalog' && (
-        <section>
-          {loadingProducts && <p>Laster…</p>}
-          {productsError && <p className="text-red-600">{productsError}</p>}
-
-          {products.map((p) => (
-            <div key={p.id} className="mb-2 border-b pb-2">
-              <strong>{p.name}</strong> ({p.providerName})
-            </div>
-          ))}
-        </section>
-      )}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
 
-/* ---------- helpers ---------- */
-
-function TabButton({
-  tab,
-  activeTab,
-  onClick,
-  children,
+function Radio({
+  label,
+  checked,
+  onChange,
 }: {
-  tab: TabKey;
-  activeTab: TabKey;
-  onClick: (t: TabKey) => void;
-  children: React.ReactNode;
+  label: string;
+  checked: boolean;
+  onChange: () => void;
 }) {
-  const active = tab === activeTab;
   return (
-    <button
-      onClick={() => onClick(tab)}
-      className={`pb-2 ${active ? 'border-b-2 font-semibold' : 'text-slate-500'}`}
-    >
-      {children}
-    </button>
+    <label className="flex items-center gap-2 cursor-pointer">
+      <input type="radio" checked={checked} onChange={onChange} />
+      <span className="text-sm text-slate-800">{label}</span>
+    </label>
   );
+}
+
+function labelForType(type: InsuranceType): string {
+  const item = INSURANCE_OPTIONS.find((opt) => opt.type === type);
+  return item?.label ?? type;
 }
