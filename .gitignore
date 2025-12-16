@@ -51,6 +51,7 @@ restructuring-frontend/.env.*
 *.env.local
 !example.env
 not/
+backend/src/main/resources/application-dev.yml
 
 ###############################################
 # 📦 Logs (backend & frontend)
