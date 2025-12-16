@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import Card from '@/components/Card';
 import PageLayout from '@/components/PageLayout';
 import AddToJournalModal from '@/components/AddToJournalModal';
+import Button from '@/components/Button';
 
 export default function ResourcesPage(): React.ReactElement {
   // ------------------------------
@@ -77,6 +78,11 @@ Dagpenge-beregning:
       title="Ressurser"
       subtitle="Verktøy, kalkyler og sjekklister du kan bruke mens du jobber med omstilling og planlegging."
       maxWidthClassName="max-w-4xl"
+      actions={
+        <Button to="/journal" variant="secondary">
+          Gå til journal
+        </Button>
+      }
     >
       <div className="space-y-6">
         {/* =======================================

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import PageLayout from '@/components/PageLayout';
 import Card from '@/components/Card';
+import Button from '@/components/Button';
 import { API_BASE_URL } from '@/utils/config';
 
 type JournalEntry = {
@@ -67,6 +68,11 @@ export default function JournalPage(): React.ReactElement {
       title="Journal"
       subtitle="Samle oppdateringer og refleksjoner fra omstillingsreisen."
       maxWidthClassName="max-w-4xl"
+      actions={
+        <Button to="/insurance" variant="secondary">
+          Gå til forsikring
+        </Button>
+      }
     >
       {loading && <div>Laster...</div>}
 

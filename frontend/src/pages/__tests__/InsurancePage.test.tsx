@@ -11,20 +11,18 @@ const renderPage = () =>
   );
 
 describe('InsurancePage', () => {
-  it('renders navigation tabs and heading', () => {
+  it('renders Gjensidige-focused headline and actions', () => {
     const html = renderPage();
 
-    expect(html).toContain('Forsikring i omstilling');
-    expect(html).toContain('Hva mister jeg?');
-    expect(html).toContain('Behovsanalyse');
-    expect(html).toContain('Produktkatalog');
+    expect(html).toContain('Fa tilbud pa forsikring');
+    expect(html).toContain('Send foresporsel til Gjensidige');
+    expect(html).toContain('Tekst du kan sende');
   });
 
-  it('shows registration form and loss analysis action', () => {
+  it('shows source and product choices', () => {
     const html = renderPage();
 
-    expect(html).toContain('Registrer forsikring');
-    expect(html).toContain('Mine forsikringer');
-    expect(html).toContain('Analyser hva jeg mister');
+    expect(html).toContain('Hvor kommer forsikringene dine fra?');
+    expect(html).toContain('Hva onsker du tilbud pa?');
   });
 });
