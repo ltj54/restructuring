@@ -1,0 +1,25 @@
+# Maven build output
+target/
+*.class
+*.jar
+
+# IDE/editor artifacts
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+
+# Temporary and logs
+logs/
+*.log
+*.tmp
+*.swp
+.DS_Store
+Thumbs.db
+
+# Local environment secrets
+.env
+.env.*
+src/main/resources/application-dev.yml
