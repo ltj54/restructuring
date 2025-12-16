@@ -1,0 +1,12 @@
+{
+  // Bruk prosjektets egen TypeScript-versjon (matcher React 19-typene)
+  "typescript.tsdk": "frontend/node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": false,
+
+  // ESLint + TS IntelliSense i både frontend og backend
+  "eslint.workingDirectories": [
+    { "directory": "frontend", "changeProcessCWD": true },
+    { "directory": "backend", "changeProcessCWD": true }
+  ],
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"]
+}
