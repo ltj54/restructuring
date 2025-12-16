@@ -46,12 +46,9 @@ export default function InsurancePage() {
           ? 'Jeg har kun private forsikringer i dag.'
           : 'Jeg er usikker på hvilke dekninger jeg har.';
 
-    return [
-      'Hei Gjensidige,',
-      sourceText,
-      products,
-      'Kan dere kontakte meg for et tilbud?',
-    ].join('\n');
+    return ['Hei Gjensidige,', sourceText, products, 'Kan dere kontakte meg for et tilbud?'].join(
+      '\n'
+    );
   }, [source, types]);
 
   const handleSend = async () => {
@@ -77,7 +74,7 @@ export default function InsurancePage() {
       });
 
       setStatus({ variant: 'success', message });
-    } catch (err) {
+    } catch {
       setStatus({
         variant: 'error',
         message: 'Kunne ikke lagre forespørsel. Prøv igjen eller kontakt Gjensidige direkte.',
@@ -90,9 +87,7 @@ export default function InsurancePage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 space-y-8">
       <header className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
-          Gjensidige
-        </p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Gjensidige</p>
         <h1 className="text-3xl font-bold">Få tilbud på forsikring</h1>
         <p className="text-slate-600 max-w-2xl">
           En konsentrert forespørsel for omstilling: velg hva du trenger, så hjelper vi deg videre
