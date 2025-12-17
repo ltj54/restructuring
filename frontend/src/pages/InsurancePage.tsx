@@ -180,7 +180,8 @@ export default function InsurancePage() {
   };
 
   const contactBusy = isProfileLoading || isProfileSaving;
-  const sendBusy = isSaving || isSending || contactBusy;
+  const sendBusy = isSaving || isSending;
+  const sendDisabled = sendBusy || contactBusy;
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 space-y-8">
@@ -312,7 +313,7 @@ export default function InsurancePage() {
           <div className="mt-4 flex flex-wrap gap-3">
             <button
               onClick={handleSend}
-              disabled={sendBusy}
+              disabled={sendDisabled}
               className="rounded-lg bg-emerald-700 px-4 py-2 text-white shadow hover:bg-emerald-800 disabled:opacity-60"
             >
               {sendBusy ? 'Sender forespørsel...' : 'Send forespørsel til Gjensidige'}
