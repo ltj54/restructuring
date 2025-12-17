@@ -306,7 +306,7 @@ spring:
 # 4. schema.sql
 # ------------------------------------------------------------
 Write-Template -Path "$resources\schema.sql" -Label "schema.sql" -Content @'
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE IF NOT EXISTS res_users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
@@ -317,9 +317,9 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS user_plans (
+CREATE TABLE IF NOT EXISTS res_user_plans (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES res_users(id) ON DELETE CASCADE,
     phase VARCHAR(50),
     persona VARCHAR(255),
     needs TEXT,
@@ -328,9 +328,9 @@ CREATE TABLE IF NOT EXISTS user_plans (
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS insurance_request (
+CREATE TABLE IF NOT EXISTS res_insurance_request (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES res_users(id) ON DELETE CASCADE,
     xml_content TEXT NOT NULL,
     status VARCHAR(50),
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
@@ -342,7 +342,7 @@ CREATE TABLE IF NOT EXISTS insurance_request (
 # ------------------------------------------------------------
 Write-Template -Path "$resources\data-test.sql" -Label "data-test.sql" -Content @'
 WITH upsert_user AS (
-  INSERT INTO users (email, password, first_name, last_name, ssn)
+  INSERT INTO res_users (email, password, first_name, last_name, ssn)
   VALUES (
     'test@example.com',
     '$2a$10$abcdefghijklmnopqrstuv',
@@ -355,20 +355,20 @@ WITH upsert_user AS (
 ), resolved_user AS (
   SELECT id FROM upsert_user
   UNION ALL
-  SELECT id FROM users WHERE email = 'test@example.com'
+  SELECT id FROM res_users WHERE email = 'test@example.com'
 )
-INSERT INTO user_plans (user_id, phase, persona, needs, diary)
+INSERT INTO res_user_plans (user_id, phase, persona, needs, diary)
 SELECT id, 'INTRO', 'Testpersona', 'need1,need2', 'Standard testplan diary'
 FROM resolved_user ru
 WHERE NOT EXISTS (
-  SELECT 1 FROM user_plans WHERE user_id = ru.id
+  SELECT 1 FROM res_user_plans WHERE user_id = ru.id
 );
 
-INSERT INTO insurance_request (user_id, xml_content, status)
+INSERT INTO res_insurance_request (user_id, xml_content, status)
 SELECT id, '<InsuranceRequest><UserId>1</UserId><Test>OK</Test></InsuranceRequest>', 'SENT'
 FROM resolved_user ru
 WHERE NOT EXISTS (
-  SELECT 1 FROM insurance_request WHERE user_id = ru.id
+  SELECT 1 FROM res_insurance_request WHERE user_id = ru.id
 );
 '@
 

@@ -6,7 +6,7 @@ import java.time.OffsetDateTime;
 import java.util.Set;
 
 @Entity
-@Table(name = "insurance_snapshot")
+@Table(name = "res_insurance_snapshot")
 public class InsuranceSnapshotEntity {
 
     @Id
@@ -22,7 +22,7 @@ public class InsuranceSnapshotEntity {
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
-            name = "insurance_snapshot_types",
+            name = "res_insurance_snapshot_types",
             joinColumns = @JoinColumn(name = "snapshot_id")
     )
     @Enumerated(EnumType.STRING)

@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "insurance_product")
+@Table(name = "res_insurance_product")
 public class InsuranceProduct {
 
     @Id
@@ -28,7 +28,7 @@ public class InsuranceProduct {
 
     @ManyToMany
     @JoinTable(
-            name = "insurance_product_category",
+            name = "res_insurance_product_category",
             joinColumns = @JoinColumn(name = "product_id"),
             inverseJoinColumns = @JoinColumn(name = "category_id")
     )

@@ -10,11 +10,11 @@ BEGIN
         SELECT 1
         FROM information_schema.tables
         WHERE table_schema = 'public'
-          AND table_name = 'user_plans'
+          AND table_name = 'res_user_plans'
     ) THEN
-        CREATE TABLE user_plans (
+        CREATE TABLE res_user_plans (
             id SERIAL PRIMARY KEY,
-            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            user_id INTEGER NOT NULL REFERENCES res_users(id) ON DELETE CASCADE,
             phase VARCHAR(50),
             persona VARCHAR(255),
             needs TEXT,
@@ -23,7 +23,7 @@ BEGIN
             updated_at TIMESTAMP NOT NULL DEFAULT NOW()
         );
         CREATE UNIQUE INDEX IF NOT EXISTS ux_user_plans_user_id
-            ON user_plans (user_id);
+            ON res_user_plans (user_id);
         RETURN;
     END IF;
 
@@ -32,12 +32,12 @@ BEGIN
     INTO diary_type
     FROM information_schema.columns
     WHERE table_schema = 'public'
-      AND table_name = 'user_plans'
+      AND table_name = 'res_user_plans'
       AND column_name = 'diary';
 
     -- If missing, add it
     IF diary_type IS NULL THEN
-        ALTER TABLE user_plans ADD COLUMN diary TEXT;
+        ALTER TABLE res_user_plans ADD COLUMN diary TEXT;
         RETURN;
     END IF;
 
@@ -50,7 +50,7 @@ BEGIN
     -- SAFE MIGRATION:
     -- Convert any possible legacy/non-text type to TEXT using ::text
     -------------------------------------------------------------------
-    ALTER TABLE user_plans
+    ALTER TABLE res_user_plans
         ALTER COLUMN diary TYPE TEXT
         USING (
             CASE
@@ -60,3 +60,4 @@ BEGIN
         );
 
 END $$;
+

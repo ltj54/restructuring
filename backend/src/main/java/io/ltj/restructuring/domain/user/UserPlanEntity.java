@@ -6,7 +6,7 @@ import org.hibernate.type.SqlTypes;
 import java.time.Instant;
 
 @Entity
-@Table(name = "user_plans", indexes = {
+@Table(name = "res_user_plans", indexes = {
         @Index(name = "ux_user_plans_user_id", columnList = "user_id", unique = true)
 })
 public class UserPlanEntity {

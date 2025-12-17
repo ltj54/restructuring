@@ -3,7 +3,7 @@ package io.ltj.restructuring.domain.insurance;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "insurance_provider")
+@Table(name = "res_insurance_provider")
 public class InsuranceProvider {
 
     @Id

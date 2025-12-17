@@ -1,4 +1,4 @@
--- Adds automatic update of updated_at column on user_plans updates
+-- Adds automatic update of updated_at column on res_user_plans updates
 
 -- Create function only if not exists
 DO $$
@@ -27,8 +27,9 @@ BEGIN
         WHERE tgname = 'trg_set_updated_at_user_plans'
     ) THEN
         CREATE TRIGGER trg_set_updated_at_user_plans
-        BEFORE UPDATE ON user_plans
+        BEFORE UPDATE ON res_user_plans
         FOR EACH ROW
         EXECUTE FUNCTION set_updated_at();
     END IF;
 END $$;
+
