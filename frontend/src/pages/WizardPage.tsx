@@ -38,18 +38,18 @@ const personaShort: Record<PersonaKey, string> = {
   butikk: 'Arbeidstid, kontrakt og videre karriere.',
   kontor: 'Digitalisering og nye roller.',
   transport: 'Sertifikater, skift og rettigheter.',
-  salg: 'Kundeansvar, m†l og videre muligheter.',
-  annet: 'Generelle r†d om avtaler og CV.',
+  salg: 'Kundeansvar, mål og videre muligheter.',
+  annet: 'Generelle råd om avtaler og CV.',
 };
 
 const phaseOptions = ['For omstilling', 'Under omstilling', 'Etter omstilling'];
 
 const needOptions = [
-  'F† oversikt over rettigheter og avtaler',
-  'Forst† hva omstillingen betyr for lonn og okonomi',
+  'Få oversikt over rettigheter og avtaler',
+  'Forstå hva omstillingen betyr for lonn og okonomi',
   'Planlegge neste karrieresteg',
   'Snakke med noen om situasjonen',
-  'F† kontroll p† forsikringer og inntektssikring',
+  'Få kontroll på forsikringer og inntektssikring',
 ];
 
 type UserPlanResponse = {
@@ -106,7 +106,7 @@ export default function WizardPage(): React.ReactElement {
     setStatus(null);
 
     if (!persona) {
-      setStatus('Velg en rolle/persona for † fortsette.');
+      setStatus('Velg en rolle/persona for å fortsette.');
       return;
     }
 
@@ -129,13 +129,13 @@ export default function WizardPage(): React.ReactElement {
           },
         });
         localStorage.removeItem(DRAFT_KEYS.planPending);
-        setStatus('Planen er lagret p† brukeren din.');
+        setStatus('Planen er lagret på brukeren din.');
       } catch {
         setStatus('Kunne ikke lagre hos serveren, men planen er lagret lokalt.');
       }
     } else {
       markPlanPendingSync();
-      setStatus('Planen er lagret lokalt og flyttes til brukeren din n†r du logger inn.');
+      setStatus('Planen er lagret lokalt og flyttes til brukeren din når du logger inn.');
     }
 
     navigate(`/plan?phase=${encodeURIComponent(plan.phase ?? '')}`);
@@ -144,11 +144,11 @@ export default function WizardPage(): React.ReactElement {
   return (
     <PageLayout
       title="Veiviser"
-      subtitle="Tre raske valg. Ferdig plan og journal starter p† 3 minutter."
+      subtitle="Tre raske valg. Ferdig plan og journal starter på 3 minutter."
       maxWidthClassName="max-w-5xl"
       actions={
         <Button to="/plan" variant="secondary">
-          G† til plan
+          Gå til plan
         </Button>
       }
     >
@@ -198,7 +198,7 @@ export default function WizardPage(): React.ReactElement {
           </div>
         </Card>
 
-        <Card title="3. Hva trenger du mest akkurat n†?">
+        <Card title="3. Hva trenger du mest akkurat nå?">
           <div className="grid md:grid-cols-2 gap-3">
             {needOptions.map((need) => {
               const active = needs.includes(need);
@@ -230,13 +230,13 @@ export default function WizardPage(): React.ReactElement {
             </p>
             <p>
               <strong>Behov:</strong>{' '}
-              {needs.length > 0 ? needs.join('  ') : 'Ingen valgt enn†. Du kan hoppe over.'}
+              {needs.length > 0 ? needs.join('  ') : 'Ingen valgt ennå. Du kan hoppe over.'}
             </p>
             {status && <p className="text-emerald-200">{status}</p>}
           </div>
 
           <div className="flex gap-3 flex-wrap mt-4">
-            <Button onClick={handleSave}>Lagre og g† til plan</Button>
+            <Button onClick={handleSave}>Lagre og gå til plan</Button>
             <Button to="/" variant="secondary">
               Tilbake til start
             </Button>
