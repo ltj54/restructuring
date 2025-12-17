@@ -72,8 +72,9 @@ export default function WizardPage(): React.ReactElement {
     if (!stored) return;
 
     if (stored.persona) {
-      const key = (Object.entries(personaLabels).find(([_, label]) => label === stored.persona) ??
-        [null])[0] as PersonaKey | null;
+      const key = (Object.entries(personaLabels).find(([_, label]) => label === stored.persona) ?? [
+        null,
+      ])[0] as PersonaKey | null;
       setPersona(key);
     }
     if (stored.phase) setPhase(stored.phase);

@@ -119,7 +119,7 @@ export default function InsurancePage() {
     try {
       await saveProfile(contact);
       setContactMessage({ variant: 'success', message: 'Kontaktinfo lagret.' });
-    } catch (err) {
+    } catch {
       setContactMessage({
         variant: 'error',
         message: 'Kunne ikke lagre kontaktinfo. Prøv igjen.',
@@ -143,7 +143,7 @@ export default function InsurancePage() {
 
     try {
       await saveProfile(contact);
-    } catch (err) {
+    } catch {
       setStatus({
         variant: 'error',
         message: 'Kunne ikke lagre kontaktinfo. Prøv igjen.',
@@ -189,8 +189,8 @@ export default function InsurancePage() {
         <h1 className="text-3xl font-bold">Få tilbud på forsikring</h1>
         <p className="text-slate-600 max-w-2xl">
           En konsentrert forespørsel for omstilling: velg hva du trenger, så hjelper vi deg videre
-          med Gjensidige. Du kan sende en forespørsel direkte eller kopiere teksten under og kontakte
-          dem selv.
+          med Gjensidige. Du kan sende en forespørsel direkte eller kopiere teksten under og
+          kontakte dem selv.
         </p>
       </header>
 
@@ -423,9 +423,6 @@ function isContactValid(contact: ContactForm): boolean {
   const ssnOk = /^\d{11}$/.test(contact.ssn.trim());
   const phoneOk = /^[+]?\d{8,15}$/.test(contact.phone.trim());
   return (
-    contact.firstName.trim().length > 0 &&
-    contact.lastName.trim().length > 0 &&
-    ssnOk &&
-    phoneOk
+    contact.firstName.trim().length > 0 && contact.lastName.trim().length > 0 && ssnOk && phoneOk
   );
 }

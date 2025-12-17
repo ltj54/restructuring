@@ -98,8 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Sync locally saved data (plan/insurance) after login
   useEffect(() => {
     if (!token) return;
-    syncAnonymousDrafts()
-      .catch((err) => console.warn('Kunne ikke synke lokale data', err));
+    syncAnonymousDrafts().catch((err) => console.warn('Kunne ikke synke lokale data', err));
   }, [token]);
 
   /* =========================

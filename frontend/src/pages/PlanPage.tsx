@@ -207,7 +207,14 @@ export default function PlanPage(): React.ReactElement {
     if (!isAuthenticated) {
       markPlanPendingSync();
     }
-  }, [plan?.persona, selectedPhase, selectedNeeds, isAuthenticated]);
+  }, [
+    plan?.persona,
+    selectedPhase,
+    selectedNeeds,
+    isAuthenticated,
+    hasExistingDraft,
+    initialPhase,
+  ]);
 
   /* -----------------------------------------------------------
      HANDLERE
