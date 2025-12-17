@@ -2,6 +2,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ApiError, configureApiClient, fetchJson, isApiError } from '@/utils/api';
+import { syncAnonymousDrafts } from '@/utils/draftSync';
 
 /* =========================
    TYPER
@@ -93,6 +94,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       onUnauthorized: handleUnauthorized,
     });
   }, [token, handleUnauthorized]);
+
+  // Sync locally saved data (plan/insurance) after login
+  useEffect(() => {
+    if (!token) return;
+    syncAnonymousDrafts()
+      .catch((err) => console.warn('Kunne ikke synke lokale data', err));
+  }, [token]);
 
   /* =========================
      LOAD USER

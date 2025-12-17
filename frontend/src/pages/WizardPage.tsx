@@ -5,6 +5,7 @@ import Button from '@/components/Button';
 import PageLayout from '@/components/PageLayout';
 import { useAuth } from '@/hooks/useAuth';
 import { fetchJson } from '@/utils/api';
+import { DRAFT_KEYS, markPlanPendingSync, readPlanDraft, writePlanDraft } from '@/utils/draftSync';
 
 type PersonaKey =
   | 'it'
@@ -37,18 +38,18 @@ const personaShort: Record<PersonaKey, string> = {
   butikk: 'Arbeidstid, kontrakt og videre karriere.',
   kontor: 'Digitalisering og nye roller.',
   transport: 'Sertifikater, skift og rettigheter.',
-  salg: 'Kundeansvar, mål og videre muligheter.',
-  annet: 'Generelle råd om avtaler og CV.',
+  salg: 'Kundeansvar, m†l og videre muligheter.',
+  annet: 'Generelle r†d om avtaler og CV.',
 };
 
 const phaseOptions = ['For omstilling', 'Under omstilling', 'Etter omstilling'];
 
 const needOptions = [
-  'Få oversikt over rettigheter og avtaler',
-  'Forstå hva omstillingen betyr for lønn og økonomi',
+  'F† oversikt over rettigheter og avtaler',
+  'Forst† hva omstillingen betyr for lonn og okonomi',
   'Planlegge neste karrieresteg',
   'Snakke med noen om situasjonen',
-  'Få kontroll på forsikringer og inntektssikring',
+  'F† kontroll p† forsikringer og inntektssikring',
 ];
 
 type UserPlanResponse = {
@@ -67,23 +68,30 @@ export default function WizardPage(): React.ReactElement {
   const [status, setStatus] = useState<string | null>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem('myPlan');
+    const stored = readPlanDraft();
     if (!stored) return;
 
-    try {
-      const parsed = JSON.parse(stored) as UserPlanResponse;
-      if (parsed.persona) {
-        const key = (Object.entries(personaLabels).find(
-          ([, label]) => label === parsed.persona
-        ) ?? [null])[0] as PersonaKey | null;
-        setPersona(key);
-      }
-      if (parsed.phase) setPhase(parsed.phase);
-      if (parsed.needs) setNeeds(parsed.needs);
-    } catch {
-      /* ignore */
+    if (stored.persona) {
+      const key = (Object.entries(personaLabels).find(([_, label]) => label === stored.persona) ??
+        [null])[0] as PersonaKey | null;
+      setPersona(key);
     }
+    if (stored.phase) setPhase(stored.phase);
+    if (stored.needs) setNeeds(stored.needs);
   }, []);
+
+  useEffect(() => {
+    if (!persona && needs.length === 0) return;
+
+    writePlanDraft({
+      persona: persona ? personaLabels[persona] : undefined,
+      phase,
+      needs,
+    });
+    if (!isAuthenticated) {
+      markPlanPendingSync();
+    }
+  }, [persona, phase, needs, isAuthenticated]);
 
   const personaDisplay = useMemo(
     () => (persona ? personaLabels[persona] : 'Ikke valgt'),
@@ -97,7 +105,7 @@ export default function WizardPage(): React.ReactElement {
     setStatus(null);
 
     if (!persona) {
-      setStatus('Velg en rolle/persona for å fortsette.');
+      setStatus('Velg en rolle/persona for † fortsette.');
       return;
     }
 
@@ -107,8 +115,7 @@ export default function WizardPage(): React.ReactElement {
       needs,
     };
 
-    localStorage.setItem('myPlan', JSON.stringify(plan));
-    localStorage.setItem('personaLabel', personaLabels[persona]);
+    writePlanDraft(plan);
 
     if (isAuthenticated) {
       try {
@@ -120,12 +127,14 @@ export default function WizardPage(): React.ReactElement {
             needs: plan.needs,
           },
         });
-        setStatus('Planen er lagret på brukeren din.');
+        localStorage.removeItem(DRAFT_KEYS.planPending);
+        setStatus('Planen er lagret p† brukeren din.');
       } catch {
         setStatus('Kunne ikke lagre hos serveren, men planen er lagret lokalt.');
       }
     } else {
-      setStatus('Planen er lagret lokalt.');
+      markPlanPendingSync();
+      setStatus('Planen er lagret lokalt og flyttes til brukeren din n†r du logger inn.');
     }
 
     navigate(`/plan?phase=${encodeURIComponent(plan.phase ?? '')}`);
@@ -134,11 +143,11 @@ export default function WizardPage(): React.ReactElement {
   return (
     <PageLayout
       title="Veiviser"
-      subtitle="Tre raske valg. Ferdig plan og journal starter på 3 minutter."
+      subtitle="Tre raske valg. Ferdig plan og journal starter p† 3 minutter."
       maxWidthClassName="max-w-5xl"
       actions={
         <Button to="/plan" variant="secondary">
-          Gå til plan
+          G† til plan
         </Button>
       }
     >
@@ -188,7 +197,7 @@ export default function WizardPage(): React.ReactElement {
           </div>
         </Card>
 
-        <Card title="3. Hva trenger du mest akkurat nå?">
+        <Card title="3. Hva trenger du mest akkurat n†?">
           <div className="grid md:grid-cols-2 gap-3">
             {needOptions.map((need) => {
               const active = needs.includes(need);
@@ -220,13 +229,13 @@ export default function WizardPage(): React.ReactElement {
             </p>
             <p>
               <strong>Behov:</strong>{' '}
-              {needs.length > 0 ? needs.join(' • ') : 'Ingen valgt ennå. Du kan hoppe over.'}
+              {needs.length > 0 ? needs.join('  ') : 'Ingen valgt enn†. Du kan hoppe over.'}
             </p>
             {status && <p className="text-emerald-200">{status}</p>}
           </div>
 
           <div className="flex gap-3 flex-wrap mt-4">
-            <Button onClick={handleSave}>Lagre og gå til plan</Button>
+            <Button onClick={handleSave}>Lagre og g† til plan</Button>
             <Button to="/" variant="secondary">
               Tilbake til start
             </Button>

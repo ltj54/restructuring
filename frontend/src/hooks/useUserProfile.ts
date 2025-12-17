@@ -6,12 +6,14 @@ export interface UserProfileForm {
   firstName: string;
   lastName: string;
   ssn: string;
+  phone: string;
 }
 
 interface UserProfileResponse {
   firstName?: string | null;
   lastName?: string | null;
   ssn?: string | null;
+  phone?: string | null;
 }
 
 export function useUserProfile() {
@@ -21,6 +23,7 @@ export function useUserProfile() {
     firstName: '',
     lastName: '',
     ssn: '',
+    phone: '',
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -40,6 +43,7 @@ export function useUserProfile() {
         firstName: data.firstName ?? '',
         lastName: data.lastName ?? '',
         ssn: data.ssn ?? '',
+        phone: data.phone ?? '',
       });
     } catch (err) {
       setError(getErrorMessage(err, 'Klarte ikke å hente brukerdata.'));
@@ -58,9 +62,10 @@ export function useUserProfile() {
         firstName: values.firstName.trim(),
         lastName: values.lastName.trim(),
         ssn: values.ssn.trim(),
+        phone: values.phone.trim(),
       };
 
-      if (!payload.firstName || !payload.lastName || !payload.ssn) {
+      if (!payload.firstName || !payload.lastName || !payload.ssn || !payload.phone) {
         throw new ApiError('Fyll inn alle feltene før du lagrer.', 400);
       }
 
@@ -84,8 +89,12 @@ export function useUserProfile() {
   );
 
   const needsInfo = useMemo(
-    () => !profile.firstName.trim() || !profile.lastName.trim() || !profile.ssn.trim(),
-    [profile.firstName, profile.lastName, profile.ssn]
+    () =>
+      !profile.firstName.trim() ||
+      !profile.lastName.trim() ||
+      !profile.ssn.trim() ||
+      !profile.phone.trim(),
+    [profile.firstName, profile.lastName, profile.ssn, profile.phone]
   );
 
   return {

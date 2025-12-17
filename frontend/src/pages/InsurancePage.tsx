@@ -1,6 +1,14 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { InsuranceSource, InsuranceType, saveInsuranceSnapshot } from '@/api/insuranceApi';
+import { useAuth } from '@/hooks/useAuth';
 import { useInsurance } from '@/hooks/useInsurance';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import {
+  DRAFT_KEYS,
+  markInsurancePendingSync,
+  readInsuranceDraft,
+  writeInsuranceDraft,
+} from '@/utils/draftSync';
 
 type StatusVariant = 'info' | 'success' | 'error';
 
@@ -13,12 +21,67 @@ const INSURANCE_OPTIONS: { type: InsuranceType; label: string; hint: string }[] 
   { type: 'UNKNOWN', label: 'Usikker / vet ikke', hint: 'Helt greit - vi hjelper deg uansett' },
 ];
 
+type ContactForm = {
+  firstName: string;
+  lastName: string;
+  ssn: string;
+  phone: string;
+};
+
+type BannerMessage = { variant: StatusVariant; message: string };
+
 export default function InsurancePage() {
-  const [source, setSource] = useState<InsuranceSource | null>('EMPLOYER');
-  const [types, setTypes] = useState<Set<InsuranceType>>(new Set(['TREATMENT', 'DISABILITY']));
+  const draft = readInsuranceDraft();
+  const [source, setSource] = useState<InsuranceSource | null>(draft?.source ?? 'EMPLOYER');
+  const [types, setTypes] = useState<Set<InsuranceType>>(
+    new Set(draft?.types ?? ['TREATMENT', 'DISABILITY'])
+  );
+
+  const {
+    profile,
+    isLoading: isProfileLoading,
+    isSaving: isProfileSaving,
+    error: profileError,
+    saveProfile,
+  } = useUserProfile();
+
+  const [contact, setContact] = useState<ContactForm>({
+    firstName: '',
+    lastName: '',
+    ssn: '',
+    phone: '',
+  });
+
+  const [contactMessage, setContactMessage] = useState<BannerMessage | null>({
+    variant: 'info',
+    message: 'Fyll inn navn, fødselsnummer og telefon før du sender.',
+  });
+
   const [status, setStatus] = useState<{ variant: StatusVariant; message: string } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const { isAuthenticated } = useAuth();
   const { isSending, sendInsurance } = useInsurance();
+
+  useEffect(() => {
+    setContact({
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      ssn: profile.ssn,
+      phone: profile.phone,
+    });
+  }, [profile]);
+
+  useEffect(() => {
+    writeInsuranceDraft({
+      source,
+      types: Array.from(types),
+      uncertain: source === 'UNKNOWN' || types.has('UNKNOWN'),
+    });
+
+    if (!isAuthenticated) {
+      markInsurancePendingSync();
+    }
+  }, [source, types, isAuthenticated]);
 
   const toggleType = (type: InsuranceType) => {
     setTypes((prev) => {
@@ -51,9 +114,40 @@ export default function InsurancePage() {
     );
   }, [source, types]);
 
+  const handleSaveContact = async () => {
+    setContactMessage(null);
+    try {
+      await saveProfile(contact);
+      setContactMessage({ variant: 'success', message: 'Kontaktinfo lagret.' });
+    } catch (err) {
+      setContactMessage({
+        variant: 'error',
+        message: 'Kunne ikke lagre kontaktinfo. Prøv igjen.',
+      });
+    }
+  };
+
   const handleSend = async () => {
     if (!source) {
       setStatus({ variant: 'error', message: 'Velg hvor forsikringen din kommer fra.' });
+      return;
+    }
+
+    if (!isContactValid(contact)) {
+      setStatus({
+        variant: 'error',
+        message: 'Fyll ut navn, fødselsnummer (11 siffer) og telefon før du sender.',
+      });
+      return;
+    }
+
+    try {
+      await saveProfile(contact);
+    } catch (err) {
+      setStatus({
+        variant: 'error',
+        message: 'Kunne ikke lagre kontaktinfo. Prøv igjen.',
+      });
       return;
     }
 
@@ -68,12 +162,13 @@ export default function InsurancePage() {
       });
 
       const message = await sendInsurance().catch((err: unknown) => {
-        // Hvis nedlasting feiler (f.eks. ikke innlogget), la brukeren fortsette med manuell kontakt
         console.warn('Kunne ikke generere forespørsel', err);
         return 'Valgene er lagret. Du kan kontakte Gjensidige direkte med teksten under.';
       });
 
       setStatus({ variant: 'success', message });
+      localStorage.removeItem(DRAFT_KEYS.insurance);
+      localStorage.removeItem(DRAFT_KEYS.insurancePending);
     } catch {
       setStatus({
         variant: 'error',
@@ -84,6 +179,9 @@ export default function InsurancePage() {
     }
   };
 
+  const contactBusy = isProfileLoading || isProfileSaving;
+  const sendBusy = isSaving || isSending || contactBusy;
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 space-y-8">
       <header className="space-y-2">
@@ -91,10 +189,79 @@ export default function InsurancePage() {
         <h1 className="text-3xl font-bold">Få tilbud på forsikring</h1>
         <p className="text-slate-600 max-w-2xl">
           En konsentrert forespørsel for omstilling: velg hva du trenger, så hjelper vi deg videre
-          med Gjensidige. Du kan sende en forespørsel direkte eller kopiere teksten under og
-          kontakte dem selv.
+          med Gjensidige. Du kan sende en forespørsel direkte eller kopiere teksten under og kontakte
+          dem selv.
         </p>
       </header>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold mb-1">Kontaktinformasjon</h2>
+            <p className="text-sm text-slate-600">
+              Vi trenger navn, fødselsnummer og telefon før vi sender til Gjensidige.
+            </p>
+          </div>
+          {contactMessage && (
+            <span
+              className={`text-xs ${
+                contactMessage.variant === 'success'
+                  ? 'text-emerald-700'
+                  : contactMessage.variant === 'error'
+                    ? 'text-red-700'
+                    : 'text-slate-700'
+              }`}
+            >
+              {contactMessage.message}
+            </span>
+          )}
+        </div>
+
+        {profileError && (
+          <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+            {profileError}
+          </div>
+        )}
+
+        <div className="grid gap-3 md:grid-cols-2">
+          <LabeledInput
+            label="Fornavn"
+            value={contact.firstName}
+            onChange={(e) => setContact((c) => ({ ...c, firstName: e.target.value }))}
+            disabled={contactBusy}
+          />
+          <LabeledInput
+            label="Etternavn"
+            value={contact.lastName}
+            onChange={(e) => setContact((c) => ({ ...c, lastName: e.target.value }))}
+            disabled={contactBusy}
+          />
+          <LabeledInput
+            label="Fødselsnummer"
+            value={contact.ssn}
+            onChange={(e) => setContact((c) => ({ ...c, ssn: e.target.value }))}
+            disabled={contactBusy}
+            placeholder="11 siffer"
+          />
+          <LabeledInput
+            label="Telefon"
+            value={contact.phone}
+            onChange={(e) => setContact((c) => ({ ...c, phone: e.target.value }))}
+            disabled={contactBusy}
+            placeholder="+4799999999"
+          />
+        </div>
+
+        <div className="flex flex-wrap gap-3">
+          <button
+            onClick={handleSaveContact}
+            disabled={contactBusy}
+            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:opacity-60"
+          >
+            {contactBusy ? 'Lagrer...' : 'Lagre kontaktinfo'}
+          </button>
+        </div>
+      </section>
 
       <section className="grid gap-6 md:grid-cols-2">
         <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-5 shadow-sm">
@@ -145,10 +312,10 @@ export default function InsurancePage() {
           <div className="mt-4 flex flex-wrap gap-3">
             <button
               onClick={handleSend}
-              disabled={isSaving || isSending}
+              disabled={sendBusy}
               className="rounded-lg bg-emerald-700 px-4 py-2 text-white shadow hover:bg-emerald-800 disabled:opacity-60"
             >
-              {isSaving || isSending ? 'Sender forespørsel...' : 'Send forespørsel til Gjensidige'}
+              {sendBusy ? 'Sender forespørsel...' : 'Send forespørsel til Gjensidige'}
             </button>
             <a
               href="https://www.gjensidige.no/privat/kundeservice/kontakt-oss"
@@ -220,7 +387,45 @@ function Radio({
   );
 }
 
+function LabeledInput({
+  label,
+  value,
+  onChange,
+  disabled,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  disabled?: boolean;
+  placeholder?: string;
+}) {
+  return (
+    <label className="text-sm text-slate-800 space-y-1">
+      <span className="block font-medium">{label}</span>
+      <input
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
+        placeholder={placeholder}
+        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-emerald-400 focus:outline-none disabled:bg-slate-100"
+      />
+    </label>
+  );
+}
+
 function labelForType(type: InsuranceType): string {
   const item = INSURANCE_OPTIONS.find((opt) => opt.type === type);
   return item?.label ?? type;
+}
+
+function isContactValid(contact: ContactForm): boolean {
+  const ssnOk = /^\d{11}$/.test(contact.ssn.trim());
+  const phoneOk = /^[+]?\d{8,15}$/.test(contact.phone.trim());
+  return (
+    contact.firstName.trim().length > 0 &&
+    contact.lastName.trim().length > 0 &&
+    ssnOk &&
+    phoneOk
+  );
 }

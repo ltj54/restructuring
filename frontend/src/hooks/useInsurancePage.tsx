@@ -36,6 +36,7 @@ export function useInsurancePage() {
       firstName: profile.firstName,
       lastName: profile.lastName,
       ssn: profile.ssn,
+      phone: profile.phone,
     },
     mode: 'onTouched',
   });
@@ -46,6 +47,7 @@ export function useInsurancePage() {
       firstName: profile.firstName,
       lastName: profile.lastName,
       ssn: profile.ssn,
+      phone: profile.phone,
     });
   }, [form, profile]);
 
