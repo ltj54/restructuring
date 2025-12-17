@@ -95,6 +95,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             } catch (JwtException | IllegalArgumentException ex) {
                 log.atWarn()
                         .addKeyValue("reason", ex.getMessage())
+                        .addKeyValue("method", request.getMethod())
+                        .addKeyValue("path", request.getRequestURI())
+                        .addKeyValue("forwardedFor", request.getHeader("X-Forwarded-For"))
+                        .addKeyValue("remoteAddr", request.getRemoteAddr())
+                        .addKeyValue("userAgent", request.getHeader("User-Agent"))
                         .log("Invalid JWT token");
             }
         }
