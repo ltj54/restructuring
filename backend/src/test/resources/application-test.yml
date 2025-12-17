@@ -9,17 +9,18 @@ spring:
     hibernate:
       ddl-auto: none
     open-in-view: false
+    defer-datasource-initialization: false
 
-  # Viktig: Bruk schema.sql i test -> deterministisk og enkelt
+  # Flyway disabled in tests to avoid H2 incompatibilities.
+  flyway:
+    enabled: false
+
+  # Use schema.sql + data-test.sql for deterministic test setup.
   sql:
     init:
       mode: always
       schema-locations: classpath:schema.sql
       data-locations: classpath:data-test.sql
-
-  # Viktig: Slå av Flyway i test for å unngå sirkulær flyway<->JPA
-  flyway:
-    enabled: false
 
 jwt:
   secret: MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=
