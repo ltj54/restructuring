@@ -1,19 +1,21 @@
 package io.ltj.restructuring;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Locale;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.testcontainers.containers.PostgreSQLContainer;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Locale;
+
 /**
  * Runs Flyway migrations against a real PostgreSQL instance.
  * Enabled only when -Dit.postgres=true is set.
+ * bla bla bla
  */
 @EnabledIfSystemProperty(named = "it.postgres", matches = "true")
 class FlywayPostgresIntegrationTest {
