@@ -28,6 +28,9 @@ public class UserEntity {
     @Column(length = 20, nullable = true)
     private String ssn;
 
+    @Column(length = 32, nullable = true)
+    private String phone;
+
     @Column(length = 30, nullable = false)
     private String role = "USER";
 
@@ -109,8 +112,16 @@ public class UserEntity {
         return role;
     }
 
+    public String getPhone() {
+        return phone;
+    }
+
     public void setRole(String role) {
         this.role = role == null ? "USER" : role.toUpperCase();
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     public Instant getCreatedAt() {

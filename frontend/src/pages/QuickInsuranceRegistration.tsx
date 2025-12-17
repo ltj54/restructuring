@@ -1,8 +1,15 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
 import { InsuranceSource, InsuranceType, saveInsuranceSnapshot } from '@/api/insuranceApi';
+import { useAuth } from '@/hooks/useAuth';
+import {
+  DRAFT_KEYS,
+  markInsurancePendingSync,
+  readInsuranceDraft,
+  writeInsuranceDraft,
+} from '@/utils/draftSync';
 
 /**
  * Forsikring (kort) av forsikringer i omstilling
@@ -51,10 +58,24 @@ const INSURANCE_OPTIONS: { type: InsuranceType; label: string; hint: string }[] 
 ];
 
 export default function QuickInsuranceRegistration({ onSubmit }: QuickInsuranceRegistrationProps) {
-  const [source, setSource] = useState<InsuranceSource | null>(null);
-  const [types, setTypes] = useState<Set<InsuranceType>>(new Set());
+  const draft = readInsuranceDraft();
+  const [source, setSource] = useState<InsuranceSource | null>(draft?.source ?? null);
+  const [types, setTypes] = useState<Set<InsuranceType>>(new Set(draft?.types ?? []));
   const [saving, setSaving] = useState(false);
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    writeInsuranceDraft({
+      source,
+      types: Array.from(types),
+      uncertain: (source ?? undefined) === 'UNKNOWN' || types.has('UNKNOWN'),
+    });
+
+    if (!isAuthenticated) {
+      markInsurancePendingSync();
+    }
+  }, [source, types, isAuthenticated]);
 
   const toggleType = (type: InsuranceType) => {
     setTypes((prev) => {
@@ -78,9 +99,20 @@ export default function QuickInsuranceRegistration({ onSubmit }: QuickInsuranceR
     };
 
     setSaving(true);
+
+    if (!isAuthenticated) {
+      markInsurancePendingSync();
+      onSubmit?.(payload);
+      navigate('/insurance');
+      setSaving(false);
+      return;
+    }
+
     try {
       await saveInsuranceSnapshot(payload);
       onSubmit?.(payload);
+      localStorage.removeItem(DRAFT_KEYS.insurance);
+      localStorage.removeItem(DRAFT_KEYS.insurancePending);
       navigate('/insurance');
     } catch (e) {
       console.error('Kunne ikke lagre snapshot', e);

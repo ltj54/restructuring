@@ -17,8 +17,8 @@ describe('InsurancePage', () => {
   it('renders Gjensidige-focused headline and actions', () => {
     const html = renderPage();
 
-    expect(html).toContain('F\u00e5 tilbud p\u00e5 forsikring');
-    expect(html).toContain('Send foresp\u00f8rsel til Gjensidige');
+    expect(html).toContain('Få tilbud på forsikring');
+    expect(html).toContain('Send forespørsel til Gjensidige');
     expect(html).toContain('Tekst du kan sende');
   });
 
@@ -26,6 +26,6 @@ describe('InsurancePage', () => {
     const html = renderPage();
 
     expect(html).toContain('Hvor kommer forsikringene dine fra?');
-    expect(html).toContain('Hva \u00f8nsker du tilbud p\u00e5?');
+    expect(html).toContain('Hva ønsker du tilbud på?');
   });
 });

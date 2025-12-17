@@ -15,6 +15,10 @@ public record UserUpdateRequestDto(
 
         @NotBlank(message = "ssn.required")
         @Pattern(regexp = "^\\d{11}$", message = "ssn.invalid")
-        String ssn
+        String ssn,
+
+        @NotBlank(message = "phone.required")
+        @Pattern(regexp = "^[+]?\\d{8,15}$", message = "phone.invalid")
+        String phone
 ) {
 }

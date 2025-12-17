@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
     first_name VARCHAR(100),
     last_name VARCHAR(100),
     ssn VARCHAR(11),
+    phone VARCHAR(32),
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
     role varchar(30) not null default 'USER'

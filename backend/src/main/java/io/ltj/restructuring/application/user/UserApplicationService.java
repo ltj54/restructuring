@@ -54,6 +54,7 @@ public class UserApplicationService {
         user.setFirstName(request.firstName());
         user.setLastName(request.lastName());
         user.setSsn(request.ssn());
+        user.setPhone(request.phone());
         user.setUpdatedAt(Instant.now(clock));
 
         UserEntity saved = userRepository.save(user);
@@ -69,7 +70,8 @@ public class UserApplicationService {
                 user.getEmail(),
                 user.getFirstName(),
                 user.getLastName(),
-                user.getSsn()
+                user.getSsn(),
+                user.getPhone()
         );
     }
 }

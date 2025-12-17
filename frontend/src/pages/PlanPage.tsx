@@ -5,6 +5,14 @@ import PageLayout from '@/components/PageLayout';
 import { useAuth } from '@/hooks/useAuth';
 import { fetchJson } from '@/utils/api';
 import { API_BASE_URL } from '@/utils/config';
+import {
+  DRAFT_KEYS,
+  markPlanPendingSync,
+  readPlanDiariesDraft,
+  readPlanDraft,
+  writePlanDiariesDraft,
+  writePlanDraft,
+} from '@/utils/draftSync';
 
 /* -----------------------------------------------------------
    FASETEKSTER
@@ -112,11 +120,30 @@ type UserPlanResponse = {
 export default function PlanPage(): React.ReactElement {
   const { isAuthenticated, token, userId } = useAuth();
 
-  const [plan, setPlan] = useState<PlanState | null>(null);
-  const [selectedPhase, setSelectedPhase] = useState(PHASE_OPTIONS[0]);
-  const [selectedNeeds, setSelectedNeeds] = useState<string[]>([]);
-  const [diariesByPhase, setDiariesByPhase] = useState<Record<string, string>>({});
-  const [activeDiaryPhase, setActiveDiaryPhase] = useState('');
+  const planDraft = readPlanDraft();
+  const planDiariesDraft = readPlanDiariesDraft();
+  const initialPhase = normalizePhase(planDraft?.phase ?? null);
+  const initialNeeds = planDraft?.needs ?? [];
+  const initialPersona = planDraft?.persona ?? 'Annet';
+  const hasDraftDiaries = Object.values(planDiariesDraft).some(
+    (entry) => typeof entry === 'string' && entry.trim().length > 0
+  );
+  const hasExistingDraft = Boolean(planDraft || hasDraftDiaries);
+
+  const [plan, setPlan] = useState<PlanState | null>(
+    planDraft
+      ? {
+          persona: initialPersona,
+          fase: initialPhase,
+          behov: initialNeeds,
+          createdAt: new Date().toISOString(),
+        }
+      : null
+  );
+  const [selectedPhase, setSelectedPhase] = useState(initialPhase);
+  const [selectedNeeds, setSelectedNeeds] = useState<string[]>(initialNeeds);
+  const [diariesByPhase, setDiariesByPhase] = useState<Record<string, string>>(planDiariesDraft);
+  const [activeDiaryPhase, setActiveDiaryPhase] = useState(initialPhase);
 
   const [isSavingPlan, setIsSavingPlan] = useState(false);
   const [isSavingDiary, setIsSavingDiary] = useState(false);
@@ -146,12 +173,48 @@ export default function PlanPage(): React.ReactElement {
     });
 
     setDiariesByPhase(remote.diaries ?? {});
+
+    writePlanDraft({
+      persona: remote.persona ?? 'Annet',
+      phase,
+      needs: remote.needs ?? [],
+    });
+    writePlanDiariesDraft(remote.diaries ?? {});
+    localStorage.removeItem(DRAFT_KEYS.planPending);
   }, []);
 
   useEffect(() => {
     if (!isAuthenticated) return;
     fetchJson<UserPlanResponse>('/plan/me').then(applyRemotePlan);
   }, [isAuthenticated, applyRemotePlan]);
+
+  // Hold alltid et lokalt utkast oppdatert slik at gjester kan fortsette etter innlogging
+  useEffect(() => {
+    const persona = plan?.persona ?? 'Annet';
+    const hasContent =
+      hasExistingDraft ||
+      selectedNeeds.length > 0 ||
+      selectedPhase !== initialPhase ||
+      (persona && persona !== 'Annet');
+
+    if (!hasContent) return;
+
+    writePlanDraft({
+      persona,
+      phase: selectedPhase,
+      needs: selectedNeeds,
+    });
+    if (!isAuthenticated) {
+      markPlanPendingSync();
+    }
+  }, [
+    plan?.persona,
+    selectedPhase,
+    selectedNeeds,
+    isAuthenticated,
+    hasExistingDraft,
+    initialPhase,
+  ]);
 
   /* -----------------------------------------------------------
      HANDLERE
@@ -170,10 +233,13 @@ export default function PlanPage(): React.ReactElement {
       needs: selectedNeeds,
     };
 
-    localStorage.setItem('myPlan', JSON.stringify(next));
+    writePlanDraft(next);
 
     if (isAuthenticated) {
       await fetchJson('/plan/me', { method: 'PUT', body: next });
+      localStorage.removeItem(DRAFT_KEYS.planPending);
+    } else {
+      markPlanPendingSync();
     }
 
     setPlanSaveMessage('Planen er lagret');
@@ -183,9 +249,16 @@ export default function PlanPage(): React.ReactElement {
   const handleDiaryChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
 
-    setDiariesByPhase((d) => ({ ...d, [activeDiaryPhase]: value }));
+    setDiariesByPhase((d) => {
+      const next = { ...d, [activeDiaryPhase]: value };
+      writePlanDiariesDraft(next);
+      return next;
+    });
 
-    if (!isAuthenticated) return;
+    if (!isAuthenticated) {
+      markPlanPendingSync();
+      return;
+    }
 
     setIsSavingDiary(true);
     fetchJson('/plan/me', {
