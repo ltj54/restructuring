@@ -1,10 +1,11 @@
 -- V13__add_user_role.sql
--- Legger til rolle på users-tabellen og sikrer default-verdi
+-- Legger til rolle på res_users-tabellen og sikrer default-verdi
 
-ALTER TABLE users
-ADD COLUMN role VARCHAR(30) NOT NULL DEFAULT 'USER';
+ALTER TABLE res_users
+ADD COLUMN IF NOT EXISTS role VARCHAR(30) NOT NULL DEFAULT 'USER';
 
 -- Ekstra sikkerhet hvis tabellen allerede har rader (defensivt)
-UPDATE users
+UPDATE res_users
 SET role = 'USER'
 WHERE role IS NULL;
+

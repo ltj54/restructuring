@@ -1,18 +1,18 @@
--- Align users table with current actual schema
+-- Align res_users table with current actual schema
 -- Adds missing columns and adjusts datatypes
 -- Does NOT remove data
 
 -- Drop dependent view so we can alter column types safely.
 DROP VIEW IF EXISTS user_profile_view;
 
-ALTER TABLE users
+ALTER TABLE res_users
     ADD COLUMN IF NOT EXISTS first_name VARCHAR(255),
     ADD COLUMN IF NOT EXISTS last_name VARCHAR(255),
     ADD COLUMN IF NOT EXISTS ssn VARCHAR(20),
     ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ;
 
 -- Ensure email and password types match actual usage
-ALTER TABLE users
+ALTER TABLE res_users
     ALTER COLUMN email TYPE VARCHAR(255),
     ALTER COLUMN password TYPE VARCHAR(255);
 
@@ -21,7 +21,7 @@ CREATE OR REPLACE VIEW user_profile_view AS
 WITH latest_plan AS (
     SELECT p.*,
            ROW_NUMBER() OVER (PARTITION BY p.user_id ORDER BY COALESCE(p.updated_at, p.created_at) DESC) AS rn
-    FROM user_plans p
+    FROM res_user_plans p
 ),
 journal AS (
     SELECT j.user_id,
@@ -34,7 +34,7 @@ journal AS (
                )
                ORDER BY j.created_at DESC
            ) AS journal_entries
-    FROM journal_entry j
+    FROM res_journal_entry j
     GROUP BY j.user_id
 ),
 insurance_requests AS (
@@ -48,7 +48,7 @@ insurance_requests AS (
                )
                ORDER BY i.created_at DESC
            ) AS requests
-    FROM insurance_request i
+    FROM res_insurance_request i
     GROUP BY i.user_id
 ),
 user_insurances AS (
@@ -66,7 +66,7 @@ user_insurances AS (
                )
                ORDER BY up.id DESC
            ) AS insurances
-    FROM user_insurance_profile up
+    FROM res_user_insurance_profile up
     GROUP BY up.user_id
 ),
 snapshot AS (
@@ -78,12 +78,12 @@ snapshot AS (
                'created_at', s.created_at,
                'types', (
                    SELECT array_agg(t.type ORDER BY t.type)
-                   FROM insurance_snapshot_types t
+                   FROM res_insurance_snapshot_types t
                    WHERE t.snapshot_id = s.id
                )
            ) AS snapshot,
            ROW_NUMBER() OVER (PARTITION BY s.user_id ORDER BY s.created_at DESC) AS rn
-    FROM insurance_snapshot s
+    FROM res_insurance_snapshot s
 )
 SELECT
     u.id            AS user_id,
@@ -100,7 +100,7 @@ SELECT
     ir.requests,
     ui.insurances,
     sn.snapshot
-FROM users u
+FROM res_users u
 LEFT JOIN latest_plan lp ON lp.user_id = u.id AND lp.rn = 1
 LEFT JOIN journal j ON j.user_id = u.id
 LEFT JOIN insurance_requests ir ON ir.user_id = u.id
@@ -109,5 +109,6 @@ LEFT JOIN snapshot sn ON sn.user_id = u.id AND sn.rn = 1;
 
 -- Optional safety: ensure NOT NULL where expected
 -- (commented out until verified everywhere)
--- ALTER TABLE users ALTER COLUMN email SET NOT NULL;
--- ALTER TABLE users ALTER COLUMN password SET NOT NULL;
+-- ALTER TABLE res_users ALTER COLUMN email SET NOT NULL;
+-- ALTER TABLE res_users ALTER COLUMN password SET NOT NULL;
+

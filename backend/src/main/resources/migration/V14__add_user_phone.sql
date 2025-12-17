@@ -2,5 +2,6 @@
 SET LOCAL lock_timeout = '10s';
 SET LOCAL statement_timeout = '30s';
 
-ALTER TABLE users
+ALTER TABLE res_users
     ADD COLUMN IF NOT EXISTS phone VARCHAR(32);
+

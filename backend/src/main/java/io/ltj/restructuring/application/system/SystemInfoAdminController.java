@@ -95,11 +95,11 @@ public class SystemInfoAdminController {
         int safeLimit = Math.max(1, Math.min(200, limit)); // begrens hvor mye som kan hentes
 
         try {
-            long total = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM users", Long.class);
+            long total = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM res_users", Long.class);
 
             List<Map<String, Object>> users = jdbcTemplate.queryForList(
                     "SELECT id, email, first_name, last_name, ssn, role " +
-                            "FROM users " +
+                            "FROM res_users " +
                             "ORDER BY id " +
                             "LIMIT ? OFFSET ?",
                     safeLimit + 1, // hent ett ekstra for å se om det finnes flere

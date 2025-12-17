@@ -1,4 +1,4 @@
-CREATE TABLE insurance_snapshot (
+CREATE TABLE res_insurance_snapshot (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL,
     source VARCHAR(30) NOT NULL,
@@ -6,11 +6,12 @@ CREATE TABLE insurance_snapshot (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE TABLE insurance_snapshot_types (
+CREATE TABLE res_insurance_snapshot_types (
     snapshot_id BIGINT NOT NULL,
     type VARCHAR(30) NOT NULL,
     CONSTRAINT fk_snapshot
         FOREIGN KEY (snapshot_id)
-        REFERENCES insurance_snapshot (id)
+        REFERENCES res_insurance_snapshot (id)
         ON DELETE CASCADE
 );
+

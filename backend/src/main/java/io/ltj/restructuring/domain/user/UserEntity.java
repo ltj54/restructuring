@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.time.Instant;
 
 @Entity
-@Table(name = "users", indexes = {
+@Table(name = "res_users", indexes = {
         @Index(name = "ix_users_email", columnList = "email", unique = true)
 })
 public class UserEntity {

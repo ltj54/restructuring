@@ -5,7 +5,7 @@ LANGUAGE sql
 AS $$
 WITH plan AS (
     SELECT p.*
-    FROM user_plans p
+    FROM res_user_plans p
     WHERE p.user_id = p_user_id
     ORDER BY COALESCE(p.updated_at, p.created_at) DESC
     LIMIT 1
@@ -20,7 +20,7 @@ journal AS (
                )
                ORDER BY j.created_at DESC
            ) AS journal_entries
-    FROM journal_entry j
+    FROM res_journal_entry j
     WHERE j.user_id = p_user_id
 ),
 insurance_requests AS (
@@ -33,7 +33,7 @@ insurance_requests AS (
                )
                ORDER BY i.created_at DESC
            ) AS requests
-    FROM insurance_request i
+    FROM res_insurance_request i
     WHERE i.user_id = p_user_id
 ),
 user_insurances AS (
@@ -50,7 +50,7 @@ user_insurances AS (
                )
                ORDER BY up.id DESC
            ) AS insurances
-    FROM user_insurance_profile up
+    FROM res_user_insurance_profile up
     WHERE up.user_id = p_user_id
 ),
 snapshot AS (
@@ -61,11 +61,11 @@ snapshot AS (
                'created_at', s.created_at,
                'types', (
                    SELECT array_agg(t.type ORDER BY t.type)
-                   FROM insurance_snapshot_types t
+                   FROM res_insurance_snapshot_types t
                    WHERE t.snapshot_id = s.id
                )
            ) AS snapshot
-    FROM insurance_snapshot s
+    FROM res_insurance_snapshot s
     WHERE s.user_id = p_user_id
     ORDER BY s.created_at DESC
     LIMIT 1
@@ -87,7 +87,7 @@ FROM (
         insurance_requests.requests,
         user_insurances.insurances,
         snapshot.snapshot
-    FROM users u
+    FROM res_users u
     LEFT JOIN plan ON TRUE
     LEFT JOIN journal ON TRUE
     LEFT JOIN insurance_requests ON TRUE
@@ -96,3 +96,4 @@ FROM (
     WHERE u.id = p_user_id
 ) row;
 $$;
+

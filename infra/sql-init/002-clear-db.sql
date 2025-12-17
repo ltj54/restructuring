@@ -1,4 +1,5 @@
 -- Slett alle data uten å ødelegge skjemaet
-TRUNCATE TABLE insurance_request CASCADE;
-TRUNCATE TABLE app_user CASCADE;
-TRUNCATE TABLE log_entry CASCADE;
+TRUNCATE TABLE res_insurance_request CASCADE;
+TRUNCATE TABLE res_app_user CASCADE;
+TRUNCATE TABLE res_log_entry CASCADE;
+

@@ -8,3 +8,4 @@
 
 -- Ingen schema-endringer her med vilje.
 -- Alle reelle endringer ligger i ordinære migreringer.
+

@@ -1,4 +1,4 @@
--- Recreate Flyway tracking for insurance_request table
+-- Recreate Flyway tracking for res_insurance_request table
 -- Ensures schema is aligned with application expectation but without dropping existing data.
 
 DO $$
@@ -8,17 +8,15 @@ BEGIN
         SELECT 1
         FROM information_schema.tables
         WHERE table_schema = 'public'
-          AND table_name = 'insurance_request'
+          AND table_name = 'res_insurance_request'
     ) THEN
-        CREATE TABLE insurance_request (
+        CREATE TABLE res_insurance_request (
             id SERIAL PRIMARY KEY,
-            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            full_name VARCHAR(255),
-            email VARCHAR(255),
-            phone VARCHAR(50),
-            insurance_type VARCHAR(100),
-            explanation TEXT,
+            user_id INTEGER NOT NULL REFERENCES res_users(id) ON DELETE CASCADE,
+            xml_content TEXT NOT NULL,
+            status VARCHAR(50),
             created_at TIMESTAMP NOT NULL DEFAULT NOW()
         );
     END IF;
 END $$;
+

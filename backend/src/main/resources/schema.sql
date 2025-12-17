@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE IF NOT EXISTS res_users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
@@ -11,9 +11,9 @@ CREATE TABLE IF NOT EXISTS users (
     role varchar(30) not null default 'USER'
 );
 
-CREATE TABLE IF NOT EXISTS user_plans (
+CREATE TABLE IF NOT EXISTS res_user_plans (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES res_users(id) ON DELETE CASCADE,
     phase VARCHAR(50),
     persona VARCHAR(255),
     needs TEXT,
@@ -22,21 +22,22 @@ CREATE TABLE IF NOT EXISTS user_plans (
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS insurance_request (
+CREATE TABLE IF NOT EXISTS res_insurance_request (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES res_users(id) ON DELETE CASCADE,
     xml_content TEXT NOT NULL,
     status VARCHAR(50),
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS journal_entry (
+CREATE TABLE IF NOT EXISTS res_journal_entry (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES res_users(id) ON DELETE CASCADE,
     phase INTEGER NOT NULL,
     content TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS ix_journal_entry_user_created
-    ON journal_entry (user_id, created_at DESC);
+    ON res_journal_entry (user_id, created_at DESC);
+
