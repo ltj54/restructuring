@@ -5,6 +5,9 @@
         </encoder>
     </appender>
 
+    <logger name="org.testcontainers" level="WARN"/>
+    <logger name="org.testcontainers.dockerclient.DockerClientProviderStrategy" level="OFF"/>
+
     <root level="INFO">
         <appender-ref ref="STDOUT"/>
     </root>
