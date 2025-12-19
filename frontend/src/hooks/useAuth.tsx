@@ -169,14 +169,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const response = await fetchJson<LoginResponse>('/auth/login', {
           method: 'POST',
-          body: credentials,
+          body: JSON.stringify(credentials),
           skipAuth: true,
         });
 
         setToken(response.token);
         localStorage.setItem('token', response.token);
 
-        await loadUser(response.token);
+        const loadedUser = await loadUser(response.token);
+        if (!loadedUser) {
+          console.warn('Innlogging mislyktes: 401 ved lasting av brukerprofil.');
+          return response;
+        }
 
         const redirectTarget =
           options?.redirectTo ??
@@ -237,3 +241,4 @@ export function useAuth(): AuthContextValue {
   }
   return context;
 }
+

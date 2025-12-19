@@ -1,11 +1,16 @@
 # ============================================================================
-# make-dev-package.ps1 – interactive version
-# Lets the user pick: frontend, backend, or both.
-# Creates a clean ZIP without staging folders, preserving structure.
+# make-dev-package.ps1 – FINAL, ROBUST, NON-FLAT VERSION
+# Interactive: frontend, backend, or both.
+# Creates a clean ZIP with preserved folder structure.
 # ============================================================================
 
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$repoRoot = Resolve-Path (Join-Path $scriptDir "..")
+$repoRoot = (Join-Path $scriptDir "..")
+$repoRoot = [System.IO.Path]::GetFullPath($repoRoot)
+
 Set-Location $repoRoot
 
 # ---------------------------------------------------------------------------
@@ -23,10 +28,20 @@ Write-Host ""
 
 $choice = Read-Host "Enter 1, 2 or 3"
 
-switch ($choice) {
-    "1" { $includeFrontend = $true;  $includeBackend = $false }
-    "2" { $includeFrontend = $false; $includeBackend = $true  }
-    "3" { $includeFrontend = $true;  $includeBackend = $true  }
+$includeFrontend = $false
+$includeBackend = $false
+
+switch ($choice)
+{
+    "1" {
+        $includeFrontend = $true
+    }
+    "2" {
+        $includeBackend = $true
+    }
+    "3" {
+        $includeFrontend = $true; $includeBackend = $true
+    }
     default {
         Write-Host "Invalid choice." -ForegroundColor Red
         exit 1
@@ -42,13 +57,13 @@ Write-Host "============================================" -ForegroundColor Cyan
 Write-Host " Creating ZIP: $zipName" -ForegroundColor Cyan
 Write-Host "============================================" -ForegroundColor Cyan
 
-# Remove old ZIP if exists
-if (Test-Path $zipPath) {
+if (Test-Path $zipPath)
+{
     Remove-Item $zipPath -Force
 }
 
 # ---------------------------------------------------------------------------
-# 2. Exclusions
+# 2. Excluded directory names
 # ---------------------------------------------------------------------------
 $excludeDirs = @(
     "node_modules",
@@ -67,33 +82,39 @@ $excludeDirs = @(
 )
 
 # ---------------------------------------------------------------------------
-# 3. Include patterns
+# 3. Include patterns (relative paths)
 # ---------------------------------------------------------------------------
 $includePatterns = @()
 
-if ($includeFrontend) {
+if ($includeFrontend)
+{
     $includePatterns += @(
         "frontend/src/*",
+        "frontend/src/**",
         "frontend/public/*",
+        "frontend/public/**",
         "frontend/package.json",
         "frontend/package-lock.json",
         "frontend/pnpm-lock.yaml",
         "frontend/vite.config.*",
+        "frontend/tsconfig*.json",
         "frontend/*.env*"
     )
 }
 
-if ($includeBackend) {
+if ($includeBackend)
+{
     $includePatterns += @(
         "backend/src/*",
+        "backend/src/**",
         "backend/pom.xml",
         "backend/*.env*",
         "backend/Dockerfile*",
-        "backend/*.properties"
+        "backend/*.properties",
+        "backend/src/main/resources/**"
     )
 }
 
-# Common files for all options
 $includePatterns += @(
     "docker-compose*",
     "compose*",
@@ -104,45 +125,112 @@ $includePatterns += @(
     "LICENSE"
 )
 
-Write-Host ""
-Write-Host "Collecting matching files..." -ForegroundColor Yellow
-
-function Get-Relative([string] $fullPath) {
-    return $fullPath.Substring($repoRoot.ProviderPath.Length).TrimStart('\', '/')
+# ---------------------------------------------------------------------------
+# 4. Helper functions (NO Resolve-Path)
+# ---------------------------------------------------------------------------
+function To-RelativePath([string]$fullPath)
+{
+    $full = [System.IO.Path]::GetFullPath($fullPath)
+    $rel = $full.Substring($repoRoot.Length).TrimStart('\', '/')
+    return ($rel -replace '\\', '/')
 }
 
-# ---------------------------------------------------------------------------
-# 4. Build file list
-# ---------------------------------------------------------------------------
-$fileList = Get-ChildItem -Path $repoRoot -Recurse -File | Where-Object {
-    $rel = Get-Relative $_.FullName
-    $parts = $rel -split '/'
-
-    # Ignore excluded directories
-    if ($excludeDirs | Where-Object { $parts -contains $_ }) { return $false }
-
-    # Match include patterns
-    foreach ($pattern in $includePatterns) {
-        if ($rel -like $pattern) { return $true }
+function Is-Excluded([string]$relPath)
+{
+    $parts = $relPath -split '/'
+    foreach ($d in $excludeDirs)
+    {
+        if ($parts -contains $d)
+        {
+            return $true
+        }
     }
     return $false
 }
 
-if ($fileList.Count -eq 0) {
+function Matches-Include([string]$relPath)
+{
+    foreach ($pattern in $includePatterns)
+    {
+        if ($relPath -like $pattern)
+        {
+            return $true
+        }
+    }
+    return $false
+}
+
+# ---------------------------------------------------------------------------
+# 5. Collect files
+# ---------------------------------------------------------------------------
+Write-Host ""
+Write-Host "Collecting matching files..." -ForegroundColor Yellow
+
+$allFiles = Get-ChildItem -Path $repoRoot -Recurse -File -Force
+
+$fileList = New-Object System.Collections.Generic.List[string]
+
+foreach ($file in $allFiles)
+{
+    $rel = To-RelativePath $file.FullName
+    if ( [string]::IsNullOrWhiteSpace($rel))
+    {
+        continue
+    }
+
+    if (Is-Excluded $rel)
+    {
+        continue
+    }
+    if (Matches-Include $rel)
+    {
+        $fileList.Add($file.FullName) | Out-Null
+    }
+}
+
+if ($fileList.Count -eq 0)
+{
     Write-Host "ERROR: No files matched patterns." -ForegroundColor Red
     exit 1
 }
 
-Write-Host "Found $($fileList.Count) files." -ForegroundColor Green
+Write-Host "Found $( $fileList.Count ) files." -ForegroundColor Green
 
 # ---------------------------------------------------------------------------
-# 5. Create ZIP directly from file list
+# 6. Create ZIP (NON-FLAT, correct paths)
 # ---------------------------------------------------------------------------
-Compress-Archive -Path $fileList.FullName -DestinationPath $zipPath -CompressionLevel Optimal
+Add-Type -AssemblyName System.IO.Compression
+Add-Type -AssemblyName System.IO.Compression.FileSystem
 
+$zip = [System.IO.Compression.ZipFile]::Open(
+        $zipPath,
+        [System.IO.Compression.ZipArchiveMode]::Create
+)
+
+try
+{
+    foreach ($fullPath in $fileList)
+    {
+        $entryName = To-RelativePath $fullPath
+        [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
+                $zip,
+                $fullPath,
+                $entryName,
+                [System.IO.Compression.CompressionLevel]::Optimal
+        ) | Out-Null
+    }
+}
+finally
+{
+    $zip.Dispose()
+}
+
+# ---------------------------------------------------------------------------
+# 7. Done
+# ---------------------------------------------------------------------------
 Write-Host ""
-Write-Host "ZIP created successfully:" -ForegroundColor Green
+Write-Host "ZIP created successfully (structure preserved):" -ForegroundColor Green
 Write-Host "  $zipPath" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "Upload the ZIP to ChatGPT." -ForegroundColor Yellow
+Write-Host "This ZIP is NOT flat and safe to upload to ChatGPT." -ForegroundColor Yellow
 Write-Host ""

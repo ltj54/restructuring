@@ -11,8 +11,8 @@ $DB_NAME = "postgres"
 $DB_USER = "restructuring"
 
 # Paths til SQL
-$SCHEMA = "C:/Prosjekt/restructuring-idea-ce-setup/backend/src/main/resources/schema.sql"
-$DATA = "C:/Prosjekt/restructuring-idea-ce-setup/backend/src/main/resources/data-test.sql"
+$SCHEMA = "C:/Prosjekt/restructuring/backend/src/main/resources/schema.sql"
+$DATA = "C:/Prosjekt/restructuring/backend/src/main/resources/data-test.sql"
 
 Write-Host ""
 Write-Host "=========================================================" -ForegroundColor Cyan
