@@ -15,6 +15,12 @@
     "skipLibCheck": true,
 
     /* ============================================================
+       🐞 DEBUG / SOURCEMAPS (KRITISK FOR VS CODE DEBUGGING)
+       ============================================================ */
+    "sourceMap": true,
+    "inlineSources": true,
+
+    /* ============================================================
        ⚛️ JSX og typer
        ============================================================ */
     "jsx": "react-jsx",
@@ -40,7 +46,12 @@
   /* ============================================================
      🌍 Inkluder kun kildekode og konfigurasjon
      ============================================================ */
-  "include": ["src", "vite.config.ts", "tailwind.config.js", "postcss.config.js"],
+  "include": [
+    "src",
+    "vite.config.ts",
+    "tailwind.config.js",
+    "postcss.config.js"
+  ],
 
   /* ============================================================
      🚫 Ekskluder midlertidige byggfiler

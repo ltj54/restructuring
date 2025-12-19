@@ -64,11 +64,11 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
   const navSections = useNavSections(navLinks, isAuthenticated);
 
   const displayName: string =
-    (user && (user.fullName || user.name || user.displayName || user.email)) || 'Ikke pålogget';
+    (user && (user.name || user.displayName || user.email)) || 'Ikke pålogget';
 
   const initials = useMemo(() => {
     if (!user) return '--';
-    const source = user.fullName || user.name || user.displayName || user.email || '';
+    const source = user.name || user.displayName || user.email || '';
     const parts = String(source).split('@')[0].split(' ');
     const letters = parts
       .filter((p: string) => p.trim().length > 0)
