@@ -79,9 +79,7 @@ export default function JournalPage(): React.ReactElement {
           {[1, 2, 3, 4].map((phase) => (
             <Card key={phase} title={phases[phase]}>
               {grouped[phase].length === 0 && (
-                <div className="text-slate-500 text-sm">
-                  Ingen notater i denne fasen enn†.
-                </div>
+                <div className="text-slate-500 text-sm">Ingen notater i denne fasen enn†.</div>
               )}
 
               <div className="space-y-4">
@@ -89,9 +87,7 @@ export default function JournalPage(): React.ReactElement {
                   <div key={entry.id} className="relative pl-5 border-l border-slate-200">
                     <div className="absolute -left-1 top-1 h-3 w-3 rounded-full bg-emerald-600"></div>
 
-                    <div className="text-xs text-slate-500 mb-1">
-                      {formatDate(entry.createdAt)}
-                    </div>
+                    <div className="text-xs text-slate-500 mb-1">{formatDate(entry.createdAt)}</div>
 
                     <div className="whitespace-pre-wrap text-sm text-slate-800">
                       {entry.content}

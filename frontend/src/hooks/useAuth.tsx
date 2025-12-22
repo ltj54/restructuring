@@ -1,19 +1,7 @@
 // src/hooks/useAuth.tsx
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import {
-  ApiError,
-  configureApiClient,
-  fetchJson,
-  isApiError,
-} from '@/utils/api';
+import { ApiError, configureApiClient, fetchJson, isApiError } from '@/utils/api';
 import { syncAnonymousDrafts } from '@/utils/draftSync';
 
 /* =========================
@@ -91,9 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const locationState = (location.state ?? null) as AuthRedirectState;
 
-  const [token, setToken] = useState<string | null>(
-    localStorage.getItem('token')
-  );
+  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [isLoadingUser, setIsLoadingUser] = useState(Boolean(token));
@@ -145,9 +131,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setIsLoadingUser(true);
       try {
-        const headers = tokenOverride
-          ? { Authorization: `Bearer ${tokenOverride}` }
-          : undefined;
+        const headers = tokenOverride ? { Authorization: `Bearer ${tokenOverride}` } : undefined;
 
         const response = await fetchJson<MeResponse>('/me', { headers });
 
@@ -209,9 +193,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         const loadedUser = await loadUser(response.token);
         if (!loadedUser) {
-          console.warn(
-            'Innlogging mislyktes: 401 ved lasting av brukerprofil.'
-          );
+          console.warn('Innlogging mislyktes: 401 ved lasting av brukerprofil.');
           return response;
         }
 
@@ -265,9 +247,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [token, user, isAuthenticating, isLoadingUser, isAdmin, login, logout, loadUser]
   );
 
-  return (
-    <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 /* =========================

@@ -164,9 +164,7 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
                 {initials}
               </div>
               <div className="min-w-0">
-                <div className="truncate text-sm font-semibold text-slate-900">
-                  {displayName}
-                </div>
+                <div className="truncate text-sm font-semibold text-slate-900">{displayName}</div>
                 <div className="text-xs text-slate-500">
                   {isAuthenticated ? (isAdmin ? 'ADMIN' : 'Innlogget') : 'Gjest'}
                 </div>
@@ -176,9 +174,7 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
             <nav className="p-3 space-y-4">
               {navSections.map((section) => (
                 <div key={section.title}>
-                  <div className="px-2 text-xs font-semibold text-slate-500">
-                    {section.title}
-                  </div>
+                  <div className="px-2 text-xs font-semibold text-slate-500">{section.title}</div>
 
                   <div className="mt-2 space-y-1">
                     {section.items.map((l) => {
@@ -215,4 +211,3 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
     </div>
   );
 }
-

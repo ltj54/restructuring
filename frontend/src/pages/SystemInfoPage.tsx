@@ -265,9 +265,7 @@ export default function SystemInfoPage() {
             </div>
             <div>
               <div className="text-sm text-slate-500">HTTP (health)</div>
-              <div className="text-lg font-semibold text-slate-900">
-                {healthHttpCode ?? '-'}
-              </div>
+              <div className="text-lg font-semibold text-slate-900">{healthHttpCode ?? '-'}</div>
             </div>
             <div>
               <div className="text-sm text-slate-500">Responstid</div>
@@ -288,9 +286,7 @@ export default function SystemInfoPage() {
             <div className="mt-2 grid gap-4 md:grid-cols-2">
               <div className="rounded-xl border border-slate-200 bg-white p-3 text-sm">
                 <div className="text-slate-500">Status</div>
-                <div className="font-semibold text-slate-900">
-                  {healthDetails?.status ?? '-'}
-                </div>
+                <div className="font-semibold text-slate-900">{healthDetails?.status ?? '-'}</div>
               </div>
               <div className="rounded-xl border border-slate-200 bg-white p-3 text-sm">
                 <div className="text-slate-500">Timestamp</div>
@@ -330,9 +326,7 @@ export default function SystemInfoPage() {
             </div>
             <div>
               <div className="text-sm text-slate-500">Responstid</div>
-              <div className="text-lg font-semibold text-slate-900">
-                {dbDurationMs ?? '-'} ms
-              </div>
+              <div className="text-lg font-semibold text-slate-900">{dbDurationMs ?? '-'} ms</div>
             </div>
             <div className="md:col-span-2">
               <div className="text-sm text-slate-500">Melding</div>
@@ -349,9 +343,7 @@ export default function SystemInfoPage() {
                 className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2"
               >
                 <div className="text-slate-700">{h.time.toLocaleTimeString()}</div>
-                <div className="text-slate-600">
-                  {h.durationMs} ms
-                </div>
+                <div className="text-slate-600">{h.durationMs} ms</div>
                 <span
                   className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${badgeClass(
                     h.status
@@ -435,9 +427,7 @@ export default function SystemInfoPage() {
               {userProfileLoading ? 'Henter...' : 'Hent profil'}
             </Button>
           </div>
-          {userProfileError && (
-            <div className="mt-2 text-sm text-red-600">{userProfileError}</div>
-          )}
+          {userProfileError && <div className="mt-2 text-sm text-red-600">{userProfileError}</div>}
           {userProfileRaw && (
             <pre className="mt-4 rounded-xl bg-slate-900 text-slate-50 p-4 text-xs overflow-auto">
               {userProfileRaw}

@@ -24,9 +24,7 @@ export default function HomePage(): React.ReactElement {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
 
-  const redirectParam = encodeURIComponent(
-    location.pathname + location.search + location.hash
-  );
+  const redirectParam = encodeURIComponent(location.pathname + location.search + location.hash);
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
@@ -51,8 +49,8 @@ export default function HomePage(): React.ReactElement {
                 </h1>
 
                 <p className="text-lg text-slate-600">
-                  Få oversikt over situasjonen din og hva som bør gjøres videre.
-                  Alt samlet på ett sted.
+                  Få oversikt over situasjonen din og hva som bør gjøres videre. Alt samlet på ett
+                  sted.
                 </p>
 
                 <div className="flex flex-wrap gap-3 pt-2">

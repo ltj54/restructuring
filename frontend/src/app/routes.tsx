@@ -72,9 +72,7 @@ export const appRoutes: RouteObject[] = [
       // -----------------------------
       {
         element: <ProtectedLayout />,
-        children: [
-          { path: 'me', element: <MePage /> },
-        ],
+        children: [{ path: 'me', element: <MePage /> }],
       },
 
       // -----------------------------

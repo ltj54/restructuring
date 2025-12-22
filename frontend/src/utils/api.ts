@@ -56,10 +56,7 @@ export function configureApiClient(config: {
   onUnauthorized = config.onUnauthorized;
 }
 
-export async function fetchJson<T>(
-  path: string,
-  options: RequestOptions = {}
-): Promise<T> {
+export async function fetchJson<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...(options.headers || {}),
@@ -67,14 +64,11 @@ export async function fetchJson<T>(
 
   const body = options.body;
   const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
-  const isUrlParams =
-    typeof URLSearchParams !== 'undefined' && body instanceof URLSearchParams;
+  const isUrlParams = typeof URLSearchParams !== 'undefined' && body instanceof URLSearchParams;
   const isBlob = typeof Blob !== 'undefined' && body instanceof Blob;
   const isArrayBuffer = typeof ArrayBuffer !== 'undefined' && body instanceof ArrayBuffer;
-  const isArrayBufferView =
-    typeof ArrayBuffer !== 'undefined' && ArrayBuffer.isView(body);
-  const isReadableStream =
-    typeof ReadableStream !== 'undefined' && body instanceof ReadableStream;
+  const isArrayBufferView = typeof ArrayBuffer !== 'undefined' && ArrayBuffer.isView(body);
+  const isReadableStream = typeof ReadableStream !== 'undefined' && body instanceof ReadableStream;
 
   let preparedBody = body;
   if (

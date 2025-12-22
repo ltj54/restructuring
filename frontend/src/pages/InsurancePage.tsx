@@ -96,36 +96,39 @@ export default function InsurancePage() {
      SAVE CONTACT
   ========================= */
 
-  const saveContact = useCallback(async (options?: { silent?: boolean }) => {
-    if (!isAuthenticated) {
-      if (!options?.silent) {
-        setContactStatus('Kontaktinfo lagres forst n+r du er innlogget.');
+  const saveContact = useCallback(
+    async (options?: { silent?: boolean }) => {
+      if (!isAuthenticated) {
+        if (!options?.silent) {
+          setContactStatus('Kontaktinfo lagres forst n+r du er innlogget.');
+        }
+        return;
       }
-      return;
-    }
 
-    const payload = buildContactPayload(contact);
-    if (!isContactComplete(payload)) {
-      if (!options?.silent) {
-        setContactStatus('Fyll inn alle feltene for + lagre.');
+      const payload = buildContactPayload(contact);
+      if (!isContactComplete(payload)) {
+        if (!options?.silent) {
+          setContactStatus('Fyll inn alle feltene for + lagre.');
+        }
+        return;
       }
-      return;
-    }
 
-    try {
-      await fetchJson('/user/me', {
-        method: 'PUT',
-        body: payload,
-      });
-      if (!options?.silent) {
-        setContactStatus('Kontaktinfo lagret.');
+      try {
+        await fetchJson('/user/me', {
+          method: 'PUT',
+          body: payload,
+        });
+        if (!options?.silent) {
+          setContactStatus('Kontaktinfo lagret.');
+        }
+      } catch (err) {
+        if (!options?.silent) {
+          setContactStatus(getErrorMessage(err, 'Kunne ikke lagre kontaktinfo.'));
+        }
       }
-    } catch (err) {
-      if (!options?.silent) {
-        setContactStatus(getErrorMessage(err, 'Kunne ikke lagre kontaktinfo.'));
-      }
-    }
-  }, [contact, isAuthenticated, saveContact]);
+    },
+    [contact, isAuthenticated]
+  );
 
   const saveSnapshot = async () => {
     setSnapshotStatus(null);
@@ -149,9 +152,7 @@ export default function InsurancePage() {
     };
 
     const source = origin ? sourceMap[origin] : 'UNKNOWN';
-    const types = Array.from(
-      new Set(offers.map((offer) => typeMap[offer]).filter(Boolean))
-    );
+    const types = Array.from(new Set(offers.map((offer) => typeMap[offer]).filter(Boolean)));
     const uncertain = origin === 'unsure' || offers.includes('unknown');
 
     try {
@@ -181,9 +182,7 @@ export default function InsurancePage() {
       };
 
       const source = origin ? sourceMap[origin] : 'UNKNOWN';
-      const types = Array.from(
-        new Set(offers.map((offer) => typeMap[offer]).filter(Boolean))
-      );
+      const types = Array.from(new Set(offers.map((offer) => typeMap[offer]).filter(Boolean)));
       const uncertain = origin === 'unsure' || offers.includes('unknown');
 
       saveInsuranceSnapshot({ source, types, uncertain })
@@ -256,9 +255,7 @@ export default function InsurancePage() {
   const offerSummary = useMemo(() => {
     const selected = offerOptions.filter((option) => offers.includes(option.id));
     if (selected.length === 0) return '';
-    return `---\nValgte tilbud:\n${selected
-      .map((option) => `- ${option.title}`)
-      .join('\n')}`;
+    return `---\nValgte tilbud:\n${selected.map((option) => `- ${option.title}`).join('\n')}`;
   }, [offers]);
 
   const stripOfferSummary = (value: string) => {
@@ -338,9 +335,7 @@ export default function InsurancePage() {
             <Button onClick={handleSendRequest} variant="secondary" disabled={isSending}>
               {isSending ? 'Sender...' : 'Send forespørsel til Gjensidige'}
             </Button>
-            {snapshotStatus && (
-              <span className="text-xs text-slate-600">{snapshotStatus}</span>
-            )}
+            {snapshotStatus && <span className="text-xs text-slate-600">{snapshotStatus}</span>}
           </div>
         </Card>
 
@@ -350,44 +345,34 @@ export default function InsurancePage() {
               <input
                 placeholder="Fornavn"
                 value={contact.firstName}
-                onChange={(e) =>
-                  setContact({ ...contact, firstName: e.target.value })
-                }
+                onChange={(e) => setContact({ ...contact, firstName: e.target.value })}
                 className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
               />
 
               <input
                 placeholder="Etternavn"
                 value={contact.lastName}
-                onChange={(e) =>
-                  setContact({ ...contact, lastName: e.target.value })
-                }
+                onChange={(e) => setContact({ ...contact, lastName: e.target.value })}
                 className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
               />
 
               <input
                 placeholder="Fødselsnummer"
                 value={contact.ssn}
-                onChange={(e) =>
-                  setContact({ ...contact, ssn: e.target.value })
-                }
+                onChange={(e) => setContact({ ...contact, ssn: e.target.value })}
                 className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
               />
 
               <input
                 placeholder="Telefon"
                 value={contact.phone}
-                onChange={(e) =>
-                  setContact({ ...contact, phone: e.target.value })
-                }
+                onChange={(e) => setContact({ ...contact, phone: e.target.value })}
                 className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
               />
 
               <div className="flex items-center gap-3">
                 <Button onClick={saveContact}>Lagre kontaktinfo</Button>
-                {contactStatus && (
-                  <span className="text-xs text-slate-600">{contactStatus}</span>
-                )}
+                {contactStatus && <span className="text-xs text-slate-600">{contactStatus}</span>}
               </div>
             </div>
           </Card>
@@ -406,8 +391,3 @@ export default function InsurancePage() {
     </PageLayout>
   );
 }
-
-
-
-
-
