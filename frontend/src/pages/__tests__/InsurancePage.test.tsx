@@ -29,9 +29,3 @@ describe('InsurancePage', () => {
     expect(html).toContain('Hva ønsker du tilbud på?');
   });
 });
-
-
-
-
-
-
