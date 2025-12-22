@@ -1,5 +1,5 @@
 import { expect, test, vi } from 'vitest';
-import { api } from '@/utils/api';
+import { fetchJson } from '@/utils/api';
 
 test('api helper bygger riktig request', async () => {
   const mockJson = vi.fn().mockResolvedValue({ ok: true });
@@ -15,7 +15,7 @@ test('api helper bygger riktig request', async () => {
 
   globalThis.fetch = vi.fn().mockResolvedValue(mockResponse);
 
-  const result = await api('/hello');
+  const result = await fetchJson('/hello');
 
   expect(fetch).toHaveBeenCalled();
   expect(result).toEqual({ ok: true });
