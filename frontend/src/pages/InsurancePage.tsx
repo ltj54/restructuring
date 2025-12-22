@@ -1,429 +1,412 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { InsuranceSource, InsuranceType, saveInsuranceSnapshot } from '@/api/insuranceApi';
+import Button from '@/components/Button';
+import Card from '@/components/Card';
+import PageLayout from '@/components/PageLayout';
 import { useAuth } from '@/hooks/useAuth';
-import { useInsurance } from '@/hooks/useInsurance';
-import { useUserProfile } from '@/hooks/useUserProfile';
-import {
-  DRAFT_KEYS,
-  markInsurancePendingSync,
-  readInsuranceDraft,
-  writeInsuranceDraft,
-} from '@/utils/draftSync';
+import { InsuranceSource, InsuranceType, saveInsuranceSnapshot } from '@/api/insuranceApi';
+import { API_BASE_URL, fetchJson, getErrorMessage } from '@/utils/api';
 
-type StatusVariant = 'info' | 'success' | 'error';
-
-const INSURANCE_OPTIONS: { type: InsuranceType; label: string; hint: string }[] = [
-  { type: 'TREATMENT', label: 'Behandlingsforsikring', hint: 'Privat behandling uten ventetid' },
-  { type: 'INCOME', label: 'Inntektsforsikring', hint: 'Ekstra inntekt hvis du mister jobben' },
-  { type: 'DISABILITY', label: 'Uføreforsikring', hint: 'Økonomisk trygghet ved sykdom' },
-  { type: 'LIFE', label: 'Livsforsikring', hint: 'Utbetaling til etterlatte' },
-  { type: 'PENSION', label: 'Pensjon', hint: 'Tjenestepensjon du vil videreføre' },
-  { type: 'UNKNOWN', label: 'Usikker / vet ikke', hint: 'Helt greit - vi hjelper deg uansett' },
-];
-
-type ContactForm = {
+type ContactInfo = {
   firstName: string;
   lastName: string;
   ssn: string;
   phone: string;
 };
 
-type BannerMessage = { variant: StatusVariant; message: string };
+type Option = {
+  id: string;
+  title: string;
+  description?: string;
+};
+
+const EMPTY_CONTACT: ContactInfo = {
+  firstName: '',
+  lastName: '',
+  ssn: '',
+  phone: '',
+};
+
+const buildContactPayload = (contact: ContactInfo) => ({
+  firstName: contact.firstName.trim(),
+  lastName: contact.lastName.trim(),
+  ssn: contact.ssn.trim(),
+  phone: contact.phone.trim(),
+});
+
+const isContactComplete = (contact: ContactInfo) =>
+  Boolean(
+    contact.firstName.trim() &&
+      contact.lastName.trim() &&
+      contact.ssn.trim() &&
+      contact.phone.trim()
+  );
+
+const originOptions: Option[] = [
+  { id: 'employer', title: 'Via arbeidsgiver (slutter snart)' },
+  { id: 'private', title: 'KUN privat' },
+  { id: 'unsure', title: 'Usikker' },
+];
+
+const offerOptions: Option[] = [
+  {
+    id: 'treatment',
+    title: 'Behandlingsforsikring',
+    description: 'Privat behandling uten ventetid',
+  },
+  {
+    id: 'income',
+    title: 'Inntektsforsikring',
+    description: 'Ekstra inntekt hvis du mister jobben',
+  },
+  {
+    id: 'disability',
+    title: 'Uføreforsikring',
+    description: 'Økonomisk trygghet ved sykdom',
+  },
+  {
+    id: 'life',
+    title: 'Livsforsikring',
+    description: 'Utbetaling til etterlatte',
+  },
+  {
+    id: 'pension',
+    title: 'Pensjon',
+    description: 'Tjenestepensjon du vil videreføre',
+  },
+  {
+    id: 'unknown',
+    title: 'Usikker / vet ikke',
+    description: 'Helt greit - vi hjelper deg uansett',
+  },
+];
 
 export default function InsurancePage() {
-  const draft = readInsuranceDraft();
-  const [source, setSource] = useState<InsuranceSource | null>(draft?.source ?? 'EMPLOYER');
-  const [types, setTypes] = useState<Set<InsuranceType>>(
-    new Set(draft?.types ?? ['TREATMENT', 'DISABILITY'])
-  );
-
-  const {
-    profile,
-    isLoading: isProfileLoading,
-    isSaving: isProfileSaving,
-    error: profileError,
-    saveProfile,
-  } = useUserProfile();
-
-  const [contact, setContact] = useState<ContactForm>({
-    firstName: '',
-    lastName: '',
-    ssn: '',
-    phone: '',
-  });
-
-  const [contactMessage, setContactMessage] = useState<BannerMessage | null>({
-    variant: 'info',
-    message: 'Fyll inn navn, fødselsnummer og telefon før du sender.',
-  });
-
-  const [status, setStatus] = useState<{ variant: StatusVariant; message: string } | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
   const { isAuthenticated } = useAuth();
-  const { isSending, sendInsurance } = useInsurance();
+  const [contact, setContact] = useState<ContactInfo>(EMPTY_CONTACT);
+  const [contactStatus, setContactStatus] = useState<string | null>(null);
+  const [snapshotStatus, setSnapshotStatus] = useState<string | null>(null);
+  const [origin, setOrigin] = useState<string | null>(null);
+  const [offers, setOffers] = useState<string[]>([]);
+  const [message, setMessage] = useState<string>(
+    'Hei Gjensidige,\nKan dere kontakte meg for et tilbud?'
+  );
+  const [isSending, setIsSending] = useState(false);
 
-  useEffect(() => {
-    setContact({
-      firstName: profile.firstName,
-      lastName: profile.lastName,
-      ssn: profile.ssn,
-      phone: profile.phone,
-    });
-  }, [profile]);
+  /* =========================
+     SAVE CONTACT
+  ========================= */
 
-  useEffect(() => {
-    writeInsuranceDraft({
-      source,
-      types: Array.from(types),
-      uncertain: source === 'UNKNOWN' || types.has('UNKNOWN'),
-    });
-
+  const saveContact = async (options?: { silent?: boolean }) => {
     if (!isAuthenticated) {
-      markInsurancePendingSync();
-    }
-  }, [source, types, isAuthenticated]);
-
-  const toggleType = (type: InsuranceType) => {
-    setTypes((prev) => {
-      const next = new Set(prev);
-      if (next.has(type)) {
-        next.delete(type);
-      } else {
-        next.add(type);
+      if (!options?.silent) {
+        setContactStatus('Kontaktinfo lagres forst n†r du er innlogget.');
       }
-      return next;
-    });
+      return;
+    }
+
+    const payload = buildContactPayload(contact);
+    if (!isContactComplete(payload)) {
+      if (!options?.silent) {
+        setContactStatus('Fyll inn alle feltene for † lagre.');
+      }
+      return;
+    }
+
+    try {
+      await fetchJson('/user/me', {
+        method: 'PUT',
+        body: payload,
+      });
+      if (!options?.silent) {
+        setContactStatus('Kontaktinfo lagret.');
+      }
+    } catch (err) {
+      if (!options?.silent) {
+        setContactStatus(getErrorMessage(err, 'Kunne ikke lagre kontaktinfo.'));
+      }
+    }
   };
 
-  const inquiryText = useMemo(() => {
-    const chosen = Array.from(types);
-    const products =
-      chosen.length === 0
-        ? 'Jeg er usikker på hvilke produkter jeg trenger.'
-        : `Jeg ønsker tilbud/råd på: ${chosen.map((t) => labelForType(t)).join(', ')}.`;
+  const saveSnapshot = async () => {
+    setSnapshotStatus(null);
+    if (!isAuthenticated) {
+      setSnapshotStatus('Logg inn for å lagre forsikringsvalgene.');
+      return;
+    }
 
-    const sourceText =
-      source === 'EMPLOYER'
-        ? 'Jeg mister dagens dekninger via arbeidsgiver.'
-        : source === 'PRIVATE'
-          ? 'Jeg har kun private forsikringer i dag.'
-          : 'Jeg er usikker på hvilke dekninger jeg har.';
+    const sourceMap: Record<string, InsuranceSource> = {
+      employer: 'EMPLOYER',
+      private: 'PRIVATE',
+      unsure: 'UNKNOWN',
+    };
+    const typeMap: Record<string, InsuranceType> = {
+      treatment: 'TREATMENT',
+      income: 'INCOME',
+      disability: 'DISABILITY',
+      life: 'LIFE',
+      pension: 'PENSION',
+      unknown: 'UNKNOWN',
+    };
 
-    return ['Hei Gjensidige,', sourceText, products, 'Kan dere kontakte meg for et tilbud?'].join(
-      '\n'
+    const source = origin ? sourceMap[origin] : 'UNKNOWN';
+    const types = Array.from(
+      new Set(offers.map((offer) => typeMap[offer]).filter(Boolean))
     );
-  }, [source, types]);
+    const uncertain = origin === 'unsure' || offers.includes('unknown');
 
-  const handleSaveContact = async () => {
-    setContactMessage(null);
     try {
-      await saveProfile(contact);
-      setContactMessage({ variant: 'success', message: 'Kontaktinfo lagret.' });
+      await saveInsuranceSnapshot({ source, types, uncertain });
+      setSnapshotStatus('Forsikringsvalg lagret.');
     } catch {
-      setContactMessage({
-        variant: 'error',
-        message: 'Kunne ikke lagre kontaktinfo. Prøv igjen.',
-      });
+      setSnapshotStatus('Kunne ikke lagre forsikringsvalgene.');
     }
   };
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    if (!origin && offers.length === 0) return;
 
-  const handleSend = async () => {
-    if (!source) {
-      setStatus({ variant: 'error', message: 'Velg hvor forsikringen din kommer fra.' });
+    const handle = window.setTimeout(() => {
+      const sourceMap: Record<string, InsuranceSource> = {
+        employer: 'EMPLOYER',
+        private: 'PRIVATE',
+        unsure: 'UNKNOWN',
+      };
+      const typeMap: Record<string, InsuranceType> = {
+        treatment: 'TREATMENT',
+        income: 'INCOME',
+        disability: 'DISABILITY',
+        life: 'LIFE',
+        pension: 'PENSION',
+        unknown: 'UNKNOWN',
+      };
+
+      const source = origin ? sourceMap[origin] : 'UNKNOWN';
+      const types = Array.from(
+        new Set(offers.map((offer) => typeMap[offer]).filter(Boolean))
+      );
+      const uncertain = origin === 'unsure' || offers.includes('unknown');
+
+      saveInsuranceSnapshot({ source, types, uncertain })
+        .then(() => {
+          setSnapshotStatus('Forsikringsvalg lagret.');
+        })
+        .catch(() => {
+          setSnapshotStatus('Kunne ikke lagre forsikringsvalgene.');
+        });
+    }, 600);
+
+    return () => window.clearTimeout(handle);
+  }, [isAuthenticated, origin, offers]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    if (!isContactComplete(contact)) return;
+
+    const handle = window.setTimeout(() => {
+      saveContact({ silent: true });
+    }, 600);
+
+    return () => window.clearTimeout(handle);
+  }, [contact, isAuthenticated]);
+
+  const handleSendRequest = async () => {
+    setSnapshotStatus(null);
+    if (!isAuthenticated) {
+      setSnapshotStatus('Logg inn for å sende forespørselen.');
       return;
     }
 
-    if (!isContactValid(contact)) {
-      setStatus({
-        variant: 'error',
-        message: 'Fyll ut navn, fødselsnummer (11 siffer) og telefon før du sender.',
-      });
-      return;
-    }
-
+    setIsSending(true);
     try {
-      await saveProfile(contact);
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE_URL}/insurance/send`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      if (!res.ok) {
+        setSnapshotStatus('Kunne ikke sende forespørselen.');
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'insurance_request.xml';
+      link.click();
+      URL.revokeObjectURL(url);
+
+      await fetch(`${API_BASE_URL}/insurance/request`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      }).catch(() => undefined);
+
+      setSnapshotStatus('Forespørsel sendt. Filen er lastet ned.');
     } catch {
-      setStatus({
-        variant: 'error',
-        message: 'Kunne ikke lagre kontaktinfo. Prøv igjen.',
-      });
-      return;
-    }
-
-    setStatus(null);
-    setIsSaving(true);
-
-    try {
-      await saveInsuranceSnapshot({
-        source,
-        types: Array.from(types),
-        uncertain: source === 'UNKNOWN' || types.has('UNKNOWN'),
-      });
-
-      const message = await sendInsurance().catch((err: unknown) => {
-        console.warn('Kunne ikke generere forespørsel', err);
-        return 'Valgene er lagret. Du kan kontakte Gjensidige direkte med teksten under.';
-      });
-
-      setStatus({ variant: 'success', message });
-      localStorage.removeItem(DRAFT_KEYS.insurance);
-      localStorage.removeItem(DRAFT_KEYS.insurancePending);
-    } catch {
-      setStatus({
-        variant: 'error',
-        message: 'Kunne ikke lagre forespørsel. Prøv igjen eller kontakt Gjensidige direkte.',
-      });
+      setSnapshotStatus('Kunne ikke sende forespørselen.');
     } finally {
-      setIsSaving(false);
+      setIsSending(false);
     }
   };
 
-  const contactBusy = isProfileLoading || isProfileSaving;
-  const sendBusy = isSaving || isSending;
-  const sendDisabled = sendBusy || contactBusy;
+  /* =========================
+     GENERATED TEXT
+  ========================= */
+
+  const offerSummary = useMemo(() => {
+    const selected = offerOptions.filter((option) => offers.includes(option.id));
+    if (selected.length === 0) return '';
+    return `---\nValgte tilbud:\n${selected
+      .map((option) => `- ${option.title}`)
+      .join('\n')}`;
+  }, [offers]);
+
+  const stripOfferSummary = (value: string) => {
+    const marker = '\n---\nValgte tilbud:\n';
+    const markerIndex = value.indexOf(marker);
+    return markerIndex === -1 ? value : value.slice(0, markerIndex);
+  };
+
+  const renderedMessage = useMemo(() => {
+    const base = stripOfferSummary(message).trimEnd();
+    if (!offerSummary) return base;
+    return `${base}\n\n${offerSummary}`;
+  }, [message, offerSummary]);
+
+  const toggleOffer = (id: string) => {
+    setOffers((list) => (list.includes(id) ? list.filter((o) => o !== id) : [...list, id]));
+  };
+
+  /* =========================
+     RENDER
+  ========================= */
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 space-y-8">
-      <header className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Gjensidige</p>
-        <h1 className="text-3xl font-bold">Få tilbud på forsikring</h1>
-        <p className="text-slate-600 max-w-2xl">
-          En konsentrert forespørsel for omstilling: velg hva du trenger, så hjelper vi deg videre
-          med Gjensidige. Du kan sende en forespørsel direkte eller kopiere teksten under og
-          kontakte dem selv.
-        </p>
-      </header>
-
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-3">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold mb-1">Kontaktinformasjon</h2>
-            <p className="text-sm text-slate-600">
-              Vi trenger navn, fødselsnummer og telefon før vi sender til Gjensidige.
-            </p>
+    <PageLayout
+      title="Forsikring"
+      subtitle="Svar på noen korte spørsmål og fyll inn kontaktinfo."
+      maxWidthClassName="max-w-5xl"
+    >
+      <div className="space-y-6">
+        <Card title="Hvor kommer forsikringene dine fra?">
+          <div className="flex flex-wrap gap-3">
+            {originOptions.map((option) => {
+              const active = origin === option.id;
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => setOrigin(option.id)}
+                  className={`rounded-full px-4 py-2 text-sm border transition ${
+                    active
+                      ? 'bg-emerald-600 text-white border-emerald-600'
+                      : 'bg-white border-slate-200 text-slate-800 hover:border-emerald-200'
+                  }`}
+                >
+                  {option.title}
+                </button>
+              );
+            })}
           </div>
-          {contactMessage && (
-            <span
-              className={`text-xs ${
-                contactMessage.variant === 'success'
-                  ? 'text-emerald-700'
-                  : contactMessage.variant === 'error'
-                    ? 'text-red-700'
-                    : 'text-slate-700'
-              }`}
-            >
-              {contactMessage.message}
-            </span>
-          )}
-        </div>
+        </Card>
 
-        {profileError && (
-          <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
-            {profileError}
+        <Card title="Hva ønsker du tilbud på?">
+          <div className="grid md:grid-cols-2 gap-3">
+            {offerOptions.map((option) => {
+              const active = offers.includes(option.id);
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => toggleOffer(option.id)}
+                  className={`rounded-xl border px-4 py-3 text-left text-sm transition ${
+                    active
+                      ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                      : 'bg-white border-slate-200 text-slate-800 hover:border-emerald-200'
+                  }`}
+                >
+                  <div className="font-semibold text-sm">{option.title}</div>
+                  {option.description && (
+                    <div className="mt-1 text-xs opacity-90">{option.description}</div>
+                  )}
+                </button>
+              );
+            })}
           </div>
-        )}
+          <div className="mt-4 flex items-center gap-3 flex-wrap">
+            <Button onClick={saveSnapshot}>Lagre forsikringsvalg</Button>
+            <Button onClick={handleSendRequest} variant="secondary" disabled={isSending}>
+              {isSending ? 'Sender...' : 'Send forespørsel til Gjensidige'}
+            </Button>
+            {snapshotStatus && (
+              <span className="text-xs text-slate-600">{snapshotStatus}</span>
+            )}
+          </div>
+        </Card>
 
-        <div className="grid gap-3 md:grid-cols-2">
-          <LabeledInput
-            label="Fornavn"
-            value={contact.firstName}
-            onChange={(e) => setContact((c) => ({ ...c, firstName: e.target.value }))}
-            disabled={contactBusy}
-          />
-          <LabeledInput
-            label="Etternavn"
-            value={contact.lastName}
-            onChange={(e) => setContact((c) => ({ ...c, lastName: e.target.value }))}
-            disabled={contactBusy}
-          />
-          <LabeledInput
-            label="Fødselsnummer"
-            value={contact.ssn}
-            onChange={(e) => setContact((c) => ({ ...c, ssn: e.target.value }))}
-            disabled={contactBusy}
-            placeholder="11 siffer"
-          />
-          <LabeledInput
-            label="Telefon"
-            value={contact.phone}
-            onChange={(e) => setContact((c) => ({ ...c, phone: e.target.value }))}
-            disabled={contactBusy}
-            placeholder="+4799999999"
-          />
-        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card title="Kontaktinformasjon">
+            <div className="space-y-3">
+              <input
+                placeholder="Fornavn"
+                value={contact.firstName}
+                onChange={(e) =>
+                  setContact({ ...contact, firstName: e.target.value })
+                }
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+              />
 
-        <div className="flex flex-wrap gap-3">
-          <button
-            onClick={handleSaveContact}
-            disabled={contactBusy}
-            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:opacity-60"
-          >
-            {contactBusy ? 'Lagrer...' : 'Lagre kontaktinfo'}
-          </button>
-        </div>
-      </section>
+              <input
+                placeholder="Etternavn"
+                value={contact.lastName}
+                onChange={(e) =>
+                  setContact({ ...contact, lastName: e.target.value })
+                }
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+              />
 
-      <section className="grid gap-6 md:grid-cols-2">
-        <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-5 shadow-sm">
-          <h2 className="text-lg font-semibold mb-3">Hva gjelder deg?</h2>
+              <input
+                placeholder="Fødselsnummer"
+                value={contact.ssn}
+                onChange={(e) =>
+                  setContact({ ...contact, ssn: e.target.value })
+                }
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+              />
 
-          <div className="space-y-3">
-            <div>
-              <p className="text-sm font-medium mb-2">Hvor kommer forsikringene dine fra?</p>
-              <div className="space-y-2">
-                <Radio
-                  label="Via arbeidsgiver (slutter snart)"
-                  checked={source === 'EMPLOYER'}
-                  onChange={() => setSource('EMPLOYER')}
-                />
-                <Radio
-                  label="KUN privat"
-                  checked={source === 'PRIVATE'}
-                  onChange={() => setSource('PRIVATE')}
-                />
-                <Radio
-                  label="Usikker"
-                  checked={source === 'UNKNOWN'}
-                  onChange={() => setSource('UNKNOWN')}
-                />
+              <input
+                placeholder="Telefon"
+                value={contact.phone}
+                onChange={(e) =>
+                  setContact({ ...contact, phone: e.target.value })
+                }
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+              />
+
+              <div className="flex items-center gap-3">
+                <Button onClick={saveContact}>Lagre kontaktinfo</Button>
+                {contactStatus && (
+                  <span className="text-xs text-slate-600">{contactStatus}</span>
+                )}
               </div>
             </div>
+          </Card>
 
-            <div>
-              <p className="text-sm font-medium mb-2">Hva ønsker du tilbud på?</p>
-              <div className="space-y-2">
-                {INSURANCE_OPTIONS.map((opt) => (
-                  <label key={opt.type} className="flex items-start gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={types.has(opt.type)}
-                      onChange={() => toggleType(opt.type)}
-                    />
-                    <span>
-                      <span className="font-medium">{opt.label}</span>
-                      <div className="text-xs text-slate-600">{opt.hint}</div>
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-4 flex flex-wrap gap-3">
-            <button
-              onClick={handleSend}
-              disabled={sendDisabled}
-              className="rounded-lg bg-emerald-700 px-4 py-2 text-white shadow hover:bg-emerald-800 disabled:opacity-60"
-            >
-              {sendBusy ? 'Sender forespørsel...' : 'Send forespørsel til Gjensidige'}
-            </button>
-            <a
-              href="https://www.gjensidige.no/privat/kundeservice/kontakt-oss"
-              target="_blank"
-              rel="noreferrer"
-              className="rounded-lg border border-emerald-200 px-4 py-2 text-emerald-800 hover:bg-white"
-            >
-              Kontakt Gjensidige nå
-            </a>
-          </div>
-
-          {status && (
-            <p
-              className={`mt-4 text-sm ${
-                status.variant === 'success'
-                  ? 'text-emerald-800'
-                  : status.variant === 'error'
-                    ? 'text-red-700'
-                    : 'text-slate-700'
-              }`}
-            >
-              {status.message}
-            </p>
-          )}
-        </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
-          <div>
-            <h2 className="text-lg font-semibold mb-2">Tekst du kan sende</h2>
-            <p className="text-sm text-slate-600 mb-3">
-              Kopier teksten under og send via telefon, chat eller e-post til Gjensidige.
-            </p>
+          <Card title="Meldingsmal">
             <textarea
-              readOnly
-              value={inquiryText}
-              className="w-full rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-800"
-              rows={8}
+              value={renderedMessage}
+              onChange={(e) => {
+                setMessage(stripOfferSummary(e.target.value));
+              }}
+              className="w-full h-48 rounded-xl border border-slate-200 p-3 text-sm"
             />
-          </div>
-
-          <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 space-y-3">
-            <h3 className="text-sm font-semibold text-slate-800">Hurtigvalg</h3>
-            <ul className="text-sm text-slate-700 space-y-1">
-              <li>- Telefon: 915 03 100</li>
-              <li>- Chat / skjema: gjensidige.no - Kundeservice - Kontakt oss (lenke over)</li>
-              <li>- Åpningstider varierer - legg igjen nummer, så ringer de deg opp.</li>
-            </ul>
-          </div>
+          </Card>
         </div>
-      </section>
-    </div>
+      </div>
+    </PageLayout>
   );
 }
 
-function Radio({
-  label,
-  checked,
-  onChange,
-}: {
-  label: string;
-  checked: boolean;
-  onChange: () => void;
-}) {
-  return (
-    <label className="flex items-center gap-2 cursor-pointer">
-      <input type="radio" checked={checked} onChange={onChange} />
-      <span className="text-sm text-slate-800">{label}</span>
-    </label>
-  );
-}
 
-function LabeledInput({
-  label,
-  value,
-  onChange,
-  disabled,
-  placeholder,
-}: {
-  label: string;
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  disabled?: boolean;
-  placeholder?: string;
-}) {
-  return (
-    <label className="text-sm text-slate-800 space-y-1">
-      <span className="block font-medium">{label}</span>
-      <input
-        value={value}
-        onChange={onChange}
-        disabled={disabled}
-        placeholder={placeholder}
-        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-emerald-400 focus:outline-none disabled:bg-slate-100"
-      />
-    </label>
-  );
-}
 
-function labelForType(type: InsuranceType): string {
-  const item = INSURANCE_OPTIONS.find((opt) => opt.type === type);
-  return item?.label ?? type;
-}
 
-function isContactValid(contact: ContactForm): boolean {
-  const ssnOk = /^\d{11}$/.test(contact.ssn.trim());
-  const phoneOk = /^[+]?\d{8,15}$/.test(contact.phone.trim());
-  return (
-    contact.firstName.trim().length > 0 && contact.lastName.trim().length > 0 && ssnOk && phoneOk
-  );
-}

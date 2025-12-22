@@ -3,12 +3,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
 
-import { API_BASE_URL } from '@/utils/config';
 import { FormFeedback } from '@/components/form/types';
 
 import { RegisterFormValues, registerSchema } from '@/utils/validation/authSchemas';
 
-import { getErrorMessage } from '@/utils/api';
+import { API_BASE_URL, fetchJson, getErrorMessage } from '@/utils/api';
 
 export function useRegisterForm() {
   const [feedback, setFeedback] = useState<FormFeedback | null>(null);
@@ -63,27 +62,14 @@ export function useRegisterForm() {
         setIsSubmitting(true);
 
         try {
-          const response = await fetch(`${API_BASE_URL}/auth/register`, {
+          await fetchJson('/auth/register', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               email: values.email,
               password: values.password,
             }),
+            skipAuth: true,
           });
-
-          const data = await response.json().catch(() => ({}));
-
-          if (!response.ok) {
-            setFeedback({
-              variant: 'error',
-              message:
-                typeof (data as { message?: unknown }).message === 'string'
-                  ? (data as { message: string }).message
-                  : 'Noe gikk galt ved registrering.',
-            });
-            return;
-          }
 
           setFeedback({
             variant: 'success',

@@ -3,18 +3,18 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 
 /**
- * ProtectedLayout
+ * AdminLayout
  *
- * - Viser innhold hvis bruker er innlogget
+ * - Krever at bruker er innlogget
+ * - Krever ROLE_ADMIN
  * - Sender til /login hvis ikke innlogget
- * - Laster først til vi vet auth-status
- * - Hindrer redirect-bugs og open-redirect
+ * - Sender til / hvis innlogget men ikke admin
  */
-export default function ProtectedLayout() {
-  const { isAuthenticated, isLoadingUser } = useAuth();
+export default function AdminLayout() {
+  const { isAuthenticated, isLoadingUser, isAdmin } = useAuth();
   const location = useLocation();
 
-  // 1) Ikke ferdig lastet → vis ingenting for å unngå redirect-flimmer
+  // 1) Ikke ferdig lastet → unngå redirect-flimmer
   if (isLoadingUser) {
     return null;
   }
@@ -22,15 +22,16 @@ export default function ProtectedLayout() {
   // 2) Ikke logget inn → send til login med trygg redirect tilbake
   if (!isAuthenticated) {
     const raw = location.pathname + location.search + location.hash;
-
-    // 🚨 Sikkerhet: hindre redirect til eksterne adresser
     const safe = raw.startsWith('/') ? raw : '/';
-
     const redirectTo = encodeURIComponent(safe);
-
     return <Navigate to={`/login?redirect=${redirectTo}`} replace />;
   }
 
-  // 3) Logget inn → vis siden
+  // 3) Logget inn men ikke admin → tilbake til hjem
+  if (!isAdmin) {
+    return <Navigate to="/" replace />;
+  }
+
+  // 4) Admin → vis innhold
   return <Outlet />;
 }

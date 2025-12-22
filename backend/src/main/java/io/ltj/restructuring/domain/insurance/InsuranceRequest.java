@@ -1,15 +1,11 @@
 package io.ltj.restructuring.domain.insurance;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "res_insurance_request")
-@Getter
-@Setter
+@Table(name = "insurance_request")
 public class InsuranceRequest {
 
     @Id
@@ -19,33 +15,57 @@ public class InsuranceRequest {
     @Column(nullable = false)
     private Long userId;
 
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
     @Enumerated(EnumType.STRING)
-    @Column(length = 50, nullable = false)
+    @Column(nullable = false)
     private InsuranceRequestStatus status;
 
-    @Lob
-    @Column(name = "xml_content", columnDefinition = "TEXT", nullable = false)
+    @Column(columnDefinition = "text")
     private String xmlContent;
 
-    public static InsuranceRequest submitted(Long userId, LocalDateTime createdAt, String xmlContent) {
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
+
+    private LocalDateTime submittedAt;
+
+    protected InsuranceRequest() {
+        // JPA
+    }
+
+    public static InsuranceRequest submitted(
+            Long userId,
+            LocalDateTime submittedAt,
+            String xmlContent
+    ) {
         InsuranceRequest request = new InsuranceRequest();
-        request.setUserId(userId);
-        request.setCreatedAt(createdAt);
-        request.setStatus(InsuranceRequestStatus.SENT);
-        request.setXmlContent(xmlContent);
+        request.userId = userId;
+        request.status = InsuranceRequestStatus.SENT; // eksisterende enum
+        request.createdAt = LocalDateTime.now();
+        request.submittedAt = submittedAt;
+        request.xmlContent = xmlContent;
         return request;
     }
 
-    @PrePersist
-    void ensureAuditFields() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
-        if (status == null) {
-            status = InsuranceRequestStatus.SENT;
-        }
+    public Long getId() {
+        return id;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public InsuranceRequestStatus getStatus() {
+        return status;
+    }
+
+    public String getXmlContent() {
+        return xmlContent;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getSubmittedAt() {
+        return submittedAt;
     }
 }

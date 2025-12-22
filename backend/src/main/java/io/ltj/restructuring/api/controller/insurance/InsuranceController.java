@@ -1,4 +1,4 @@
-package io.ltj.restructuring.api.controller;
+package io.ltj.restructuring.api.controller.insurance;
 
 import io.ltj.restructuring.api.dto.insurance.InsuranceProductDto;
 import io.ltj.restructuring.api.dto.insurance.InsuranceRequestCreateDto;

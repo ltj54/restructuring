@@ -94,6 +94,28 @@ export default function WizardPage(): React.ReactElement {
     }
   }, [persona, phase, needs, isAuthenticated]);
 
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    if (!persona) return;
+
+    const handle = window.setTimeout(() => {
+      fetchJson('/plan/me', {
+        method: 'PUT',
+        body: {
+          persona: personaLabels[persona],
+          phase,
+          needs,
+        },
+      })
+        .then(() => {
+          localStorage.removeItem(DRAFT_KEYS.planPending);
+        })
+        .catch(() => undefined);
+    }, 600);
+
+    return () => window.clearTimeout(handle);
+  }, [persona, phase, needs, isAuthenticated]);
+
   const personaDisplay = useMemo(
     () => (persona ? personaLabels[persona] : 'Ikke valgt'),
     [persona]

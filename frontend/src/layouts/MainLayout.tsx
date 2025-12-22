@@ -1,5 +1,5 @@
 import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useStructuredLogger } from '@/logging/useStructuredLogger';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -18,7 +18,11 @@ interface NavSection {
   items: MainNavLink[];
 }
 
-function useNavSections(navLinks: MainNavLink[], isAuthenticated: boolean): NavSection[] {
+function useNavSections(
+  navLinks: MainNavLink[],
+  isAuthenticated: boolean,
+  isAdmin: boolean
+): NavSection[] {
   const hovedmeny = [
     navLinks.find((l) => l.path === '/'),
     navLinks.find((l) => l.path === '/wizard'),
@@ -26,11 +30,10 @@ function useNavSections(navLinks: MainNavLink[], isAuthenticated: boolean): NavS
     navLinks.find((l) => l.path === '/resources'),
     navLinks.find((l) => l.path === '/journal'),
     navLinks.find((l) => l.path === '/insurance'),
-    navLinks.find((l) => l.path === '/purchase'),
   ].filter(Boolean) as MainNavLink[];
 
   const system = [
-    navLinks.find((l) => l.path === '/systeminfo'),
+    isAdmin ? navLinks.find((l) => l.path === '/systeminfo') : null,
     navLinks.find((l) => l.path === '/last-ned'),
   ].filter(Boolean) as MainNavLink[];
 
@@ -46,178 +49,170 @@ function useNavSections(navLinks: MainNavLink[], isAuthenticated: boolean): NavS
     sections.push({ title: 'PROFIL', items: [profileLink] });
   }
 
-  if (!isAuthenticated) {
-    sections.push({ title: 'AUTENTISERING', items: authLinks });
+  if (!isAuthenticated && authLinks.length > 0) {
+    sections.push({ title: 'KONTO', items: authLinks });
   }
 
   return sections;
 }
 
+/**
+ * Konsekvent aktiv-markering:
+ * - "/" skal kun være aktiv på nøyaktig "/"
+ * - ellers: aktiv hvis pathname === to eller pathname starter med `${to}/`
+ */
+function isPathActive(pathname: string, to: string): boolean {
+  if (to === '/') return pathname === '/';
+  return pathname === to || pathname.startsWith(`${to}/`);
+}
+
 export default function MainLayout({ navLinks }: MainLayoutProps) {
   const location = useLocation();
+  const navigate = useNavigate();
   const { logEvent } = useStructuredLogger('MainLayout');
+  const { user, isAdmin } = useAuth();
 
-  const auth = useAuth();
-  const user = auth?.user;
   const isAuthenticated = !!user;
+  const navSections = useNavSections(navLinks, isAuthenticated, isAdmin ?? false);
 
-  const navSections = useNavSections(navLinks, isAuthenticated);
-
-  const displayName: string =
-    (user && (user.name || user.displayName || user.email)) || 'Ikke pålogget';
+  const displayName = user?.email ?? 'Gjest';
 
   const initials = useMemo(() => {
-    if (!user) return '--';
-    const source = user.name || user.displayName || user.email || '';
-    const parts = String(source).split('@')[0].split(' ');
-    const letters = parts
-      .filter((p: string) => p.trim().length > 0)
-      .slice(0, 2)
-      .map((p: string) => p.trim().charAt(0).toUpperCase());
-    return letters.join('') || '--';
+    if (!user?.email) return '👤';
+    return user.email.charAt(0).toUpperCase();
   }, [user]);
 
   const [menuOpen, setMenuOpen] = useState(false);
-  const menuButtonRef = useRef<HTMLButtonElement | null>(null);
-  const menuPanelRef = useRef<HTMLDivElement | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
 
+  // Click outside = lukk meny (mobil/off-canvas)
   useEffect(() => {
-    logEvent('navigation_change', { meta: { path: location.pathname } });
-  }, [location.pathname, logEvent]);
-
-  useEffect(() => {
-    if (!menuOpen) return;
-
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Node;
-      if (menuPanelRef.current?.contains(target) || menuButtonRef.current?.contains(target)) {
-        return;
+    const onClick = (e: MouseEvent) => {
+      if (!menuOpen) return;
+      if (!menuRef.current) return;
+      if (!menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
       }
-      setMenuOpen(false);
     };
-
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
   }, [menuOpen]);
 
-  const handleLogout = () => {
-    auth?.logout?.();
+  // Route change = logg + lukk meny
+  useEffect(() => {
+    logEvent('route_change');
     setMenuOpen(false);
-  };
+  }, [location.pathname, logEvent]);
+  // Click outside → lukk meny (mobil/off-canvas)
+  useEffect(() => {
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = 'Det kan hende endringene dine ikke er lagret.';
+      return 'Det kan hende endringene dine ikke er lagret.';
+    };
 
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', onBeforeUnload);
+    };
+  }, []);
   return (
-    <div className="min-h-screen text-slate-900 flex flex-col">
-      <header className="w-full sticky top-0 z-40 backdrop-blur-lg bg-white/90 border-b border-slate-200 shadow-sm">
-        <nav className="relative max-w-5xl mx-auto flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-emerald-300 to-sky-300 text-slate-900 flex items-center justify-center rounded-xl font-bold shadow">
-              {isAuthenticated ? initials : '--'}
+    <div className="min-h-screen bg-slate-50">
+      {/* MOBIL TOPPBAR */}
+      <div className="md:hidden sticky top-0 z-30 flex items-center justify-between gap-3 bg-white border-b border-slate-200 px-4 h-14">
+        <button
+          type="button"
+          onClick={() => setMenuOpen(true)}
+          aria-label="Åpne meny"
+          className="text-2xl leading-none text-slate-900"
+        >
+          ☰
+        </button>
+
+        <div className="text-sm font-semibold text-slate-900">Restructuring</div>
+
+        <button
+          type="button"
+          onClick={() => navigate(isAuthenticated ? '/me' : '/login')}
+          className="text-sm text-slate-700 hover:text-slate-900"
+        >
+          {isAuthenticated ? 'Profil' : 'Logg inn'}
+        </button>
+      </div>
+
+      {menuOpen && (
+        <div
+          className="fixed inset-0 z-20 bg-black/30 md:hidden"
+          onClick={() => setMenuOpen(false)}
+        />
+      )}
+
+      <div className="mx-auto max-w-7xl px-4 py-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-[260px_1fr]">
+          <aside
+            ref={menuRef}
+            className={[
+              'rounded-2xl border border-slate-200 bg-white shadow-sm',
+              'md:relative md:translate-x-0 md:block',
+              'fixed inset-y-0 left-0 z-30 w-[260px]',
+              'transform transition-transform duration-200 ease-in-out',
+              menuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
+            ].join(' ')}
+          >
+            <div className="p-4 border-b border-slate-100 flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-semibold">
+                {initials}
+              </div>
+              <div className="min-w-0">
+                <div className="truncate text-sm font-semibold text-slate-900">
+                  {displayName}
+                </div>
+                <div className="text-xs text-slate-500">
+                  {isAuthenticated ? (isAdmin ? 'ADMIN' : 'Innlogget') : 'Gjest'}
+                </div>
+              </div>
             </div>
 
-            <div className="flex flex-col">
-              <span className="font-medium truncate max-w-[160px] text-slate-900">
-                {displayName}
-              </span>
-              <span className="text-xs text-slate-600">
-                {isAuthenticated ? 'Pålogget' : 'Utforsk fritt'}
-              </span>
-            </div>
+            <nav className="p-3 space-y-4">
+              {navSections.map((section) => (
+                <div key={section.title}>
+                  <div className="px-2 text-xs font-semibold text-slate-500">
+                    {section.title}
+                  </div>
 
-            <div className="hidden sm:flex flex-col pl-4 border-l border-slate-200 ml-2">
-              <span className="text-[11px] uppercase tracking-[0.18em] text-emerald-700">
-                Omstilling
-              </span>
-            </div>
-          </div>
+                  <div className="mt-2 space-y-1">
+                    {section.items.map((l) => {
+                      const active = isPathActive(location.pathname, l.path);
 
-          <div className="relative flex items-center gap-3">
-            {isAuthenticated && (
-              <button
-                onClick={handleLogout}
-                className="text-sm text-emerald-700 hover:text-emerald-800 font-semibold"
-              >
-                Logg ut
-              </button>
-            )}
+                      const className = active
+                        ? 'block rounded-xl px-3 py-2 text-sm bg-slate-200 text-slate-900 font-medium'
+                        : 'block rounded-xl px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-slate-900';
 
-            <button
-              ref={menuButtonRef}
-              onClick={() => setMenuOpen((prev) => !prev)}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white text-slate-800 hover:bg-emerald-50 transition border border-slate-200"
-              aria-expanded={menuOpen}
-              aria-label="Åpne meny"
-            >
-              <span className="text-base">☰</span>
-              <span className="text-sm">Meny</span>
-            </button>
-
-            {menuOpen && (
-              <>
-                <div
-                  onClick={() => setMenuOpen(false)}
-                  className="fixed inset-0 bg-black/10 backdrop-blur-sm z-40"
-                />
-
-                <div
-                  ref={menuPanelRef}
-                  className="
-                    absolute z-50 rounded-2xl shadow-2xl border border-slate-200
-                    menu-panel
-                    right-0 top-12 w-[76vw]
-                    sm:w-72
-                  "
-                >
-                  <div className="py-4">
-                    {navSections.map((section, sectionIdx) => (
-                      <div key={section.title} className="mb-4">
-                        <div className="px-4 pb-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                          {section.title}
-                        </div>
-
-                        {section.items.map((link) => (
-                          <NavLink
-                            key={link.path}
-                            to={link.path}
-                            end={link.path === '/insurance'}
-                            onClick={() => setMenuOpen(false)}
-                            className={({ isActive }) =>
-                              [
-                                'flex items-center gap-2 px-4 py-2 text-sm transition rounded-lg',
-                                'hover:bg-emerald-50',
-                                isActive
-                                  ? 'font-semibold text-emerald-900 bg-emerald-50 border border-emerald-200'
-                                  : 'text-slate-800',
-                              ].join(' ')
-                            }
-                          >
-                            <span>{link.label}</span>
-                          </NavLink>
-                        ))}
-
-                        {sectionIdx < navSections.length - 1 && (
-                          <div className="my-3 mx-4 border-t border-slate-200" />
-                        )}
-                      </div>
-                    ))}
+                      return (
+                        <NavLink
+                          key={l.path}
+                          to={l.path}
+                          className={className}
+                          onClick={() => setMenuOpen(false)}
+                        >
+                          {l.label}
+                        </NavLink>
+                      );
+                    })}
                   </div>
                 </div>
-              </>
-            )}
-          </div>
-        </nav>
-      </header>
+              ))}
+            </nav>
+          </aside>
 
-      <main className="flex-grow">
-        <Suspense
-          fallback={
-            <div className="flex h-full items-center justify-center text-emerald-700">
-              Laster inn side ...
-            </div>
-          }
-        >
-          <Outlet />
-        </Suspense>
-      </main>
+          <main className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <Suspense fallback={<div className="p-6">Laster…</div>}>
+              <Outlet />
+            </Suspense>
+          </main>
+        </div>
+      </div>
     </div>
   );
 }
+

@@ -4,6 +4,17 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
+/**
+ * 🧪 SystemInfoController
+ * <p>
+ * Endpoint: GET /api/dbversion
+ * <p>
+ * IMPORTANT (security):
+ * - This endpoint is intended for ADMIN diagnostics only.
+ * - Keep output minimal (no server details beyond what you need).
+ */
 @RestController
 public class SystemInfoController {
 
@@ -14,7 +25,8 @@ public class SystemInfoController {
     }
 
     @GetMapping("/api/dbversion")
-    public String getDbVersion() {
-        return jdbcTemplate.queryForObject("SELECT version()", String.class);
+    public Map<String, Object> getDbVersion() {
+        String version = jdbcTemplate.queryForObject("SELECT version()", String.class);
+        return Map.of("databaseVersion", version);
     }
 }

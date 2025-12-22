@@ -2,6 +2,7 @@ import React, { lazy } from 'react';
 import { Navigate, RouteObject, useRoutes } from 'react-router-dom';
 import MainLayout, { MainNavLink } from '@/layouts/MainLayout';
 import ProtectedLayout from '@/app/ProtectedLayout';
+import AdminLayout from '@/app/AdminLayout';
 
 // -----------------------------------------------------
 // Lazy-loaded pages
@@ -56,7 +57,6 @@ export const appRoutes: RouteObject[] = [
       { path: 'plan', element: <PlanPage /> },
       { path: 'journal', element: <JournalPage /> },
       { path: 'resources', element: <ResourcesPage /> },
-      { path: 'systeminfo', element: <SystemInfoPage /> },
       { path: 'last-ned', element: <DownloadAppPage /> },
 
       // -----------------------------
@@ -72,7 +72,17 @@ export const appRoutes: RouteObject[] = [
       // -----------------------------
       {
         element: <ProtectedLayout />,
-        children: [{ path: 'me', element: <MePage /> }],
+        children: [
+          { path: 'me', element: <MePage /> },
+        ],
+      },
+
+      // -----------------------------
+      // ADMIN routes
+      // -----------------------------
+      {
+        element: <AdminLayout />,
+        children: [{ path: 'systeminfo', element: <SystemInfoPage /> }],
       },
     ],
   },

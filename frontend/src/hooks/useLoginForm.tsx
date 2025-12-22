@@ -54,10 +54,16 @@ export function useLoginForm() {
               return;
             }
             if (err.status >= 500) {
+              if (err.message.toLowerCase().includes('invalid email or password')) {
+                setFeedback({
+                  variant: 'error',
+                  message: 'Ugyldig e-post eller passord.',
+                });
+                return;
+              }
               setFeedback({
                 variant: 'error',
-                message:
-                  'Kunne ikke logge inn. Brukeren finnes kanskje ikke, eller det oppstod en teknisk feil.',
+                message: 'Kunne ikke logge inn. Sjekk e-post og passord, eller prøv igjen senere.',
                 action: {
                   type: 'link',
                   to: '/register',

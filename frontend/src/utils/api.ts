@@ -1,176 +1,138 @@
-// src/utils/api.ts
-import { API_BASE_URL } from './config';
+import { API_BASE_URL as CONFIG_API_BASE_URL } from '@/utils/config';
 
-export interface ApiClientConfig {
-  getToken?: () => string | null;
-  onUnauthorized?: () => void;
-}
-
-let clientConfig: ApiClientConfig = {};
-
-/**
- * Konfigurerer global API-klient:
- *  - getToken: brukes til å sette Authorization-header
- *  - onUnauthorized: kalles ved 401-respons
- */
-export function configureApiClient(config: ApiClientConfig) {
-  clientConfig = config;
-}
+export const API_BASE_URL = CONFIG_API_BASE_URL;
 
 export class ApiError extends Error {
-  status: number;
-  details?: unknown;
+  status?: number;
 
-  constructor(message: string, status: number, details?: unknown) {
+  constructor(message: string, status?: number) {
     super(message);
-    this.name = 'ApiError';
     this.status = status;
-    this.details = details;
   }
 }
 
+export function getErrorMessage(error: unknown, fallback = 'Noe gikk galt.'): string {
+  if (error instanceof ApiError) {
+    return error.message || fallback;
+  }
+
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  if (typeof error === 'object' && error && 'message' in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === 'string' && message.trim()) {
+      return message;
+    }
+  }
+
+  return fallback;
+}
+
 /**
- * Sjekk om en error er ApiError.
+ * Type guard for ApiError
  */
 export function isApiError(error: unknown): error is ApiError {
   return error instanceof ApiError;
 }
 
-/**
- * Trygger uthenting av feilmelding fra ulike feil-typer.
- * Brukes både i hooks og global error handler.
- */
-export function getErrorMessage(error: unknown, fallback?: string): string {
-  if (!error) return fallback ?? 'Ukjent feil';
-
-  if (error instanceof ApiError) {
-    return error.message || fallback || `Feil: ${error.status}`;
-  }
-
-  if (error instanceof Error) {
-    return error.message || fallback || 'Ukjent feil';
-  }
-
-  if (typeof error === 'object' && error !== null) {
-    const maybeMsg = (error as Record<string, unknown>).message;
-    if (typeof maybeMsg === 'string') return maybeMsg;
-  }
-
-  return fallback ?? 'Ukjent feil';
-}
-
-type FetchJsonOptions = RequestInit & {
-  /**
-   * Hvis true – ikke legg på Authorization-header automatisk
-   */
+type RequestOptions = RequestInit & {
   skipAuth?: boolean;
-  /**
-   * Body kan være objekt - vi JSON.stringify'er hvis nødvendig
-   */
-  body?: unknown;
 };
 
-/**
- * Hoved-API-funksjon for JSON kall.
- *
- * - Prefixer alle kall med API_BASE_URL
- * - Legger på Authorization-header hvis token finnes
- * - Parser JSON-respons (fallback til tekst)
- * - Kaster ApiError ved !ok
- */
-export async function fetchJson<T>(path: string, options: FetchJsonOptions = {}): Promise<T> {
-  const url = `${API_BASE_URL}${path}`;
-  const { skipAuth, headers, body, ...rest } = options;
-  const finalHeaders = buildHeaders(headers, Boolean(skipAuth));
-  const finalBody = serializeBody(body);
+let getToken: (() => string | null) | null = null;
+let onUnauthorized: (() => void) | null = null;
 
-  const response = await executeRequest(url, finalHeaders, finalBody, rest);
-  const data = await parseResponse(response);
-
-  if (!response.ok) {
-    if (response.status === 401 && clientConfig.onUnauthorized) {
-      clientConfig.onUnauthorized();
-    }
-
-    throw new ApiError(extractErrorMessage(data, response.status), response.status, data);
-  }
-
-  return data as T;
+export function configureApiClient(config: {
+  getToken: () => string | null;
+  onUnauthorized: () => void;
+}) {
+  getToken = config.getToken;
+  onUnauthorized = config.onUnauthorized;
 }
 
-/**
- * Enkel alias brukt i tester (bakoverkompatibilitet).
- */
-export function api<T>(path: string, options?: FetchJsonOptions): Promise<T> {
-  return fetchJson<T>(path, options);
-}
-
-async function executeRequest(
-  url: string,
-  headers: HeadersInit,
-  body: BodyInit | null | undefined,
-  rest: RequestInit
-): Promise<Response> {
-  try {
-    return await fetch(url, {
-      ...rest,
-      headers,
-      body,
-    });
-  } catch (networkError) {
-    throw new ApiError('Klarte ikke å kontakte serveren', 0, networkError);
-  }
-}
-
-function buildHeaders(headers: HeadersInit | undefined, skipAuth: boolean): HeadersInit {
-  const finalHeaders: HeadersInit = {
+export async function fetchJson<T>(
+  path: string,
+  options: RequestOptions = {}
+): Promise<T> {
+  const headers: HeadersInit = {
     'Content-Type': 'application/json',
-    ...(headers ?? {}),
+    ...(options.headers || {}),
   };
 
-  if (!skipAuth && clientConfig.getToken) {
-    const token = clientConfig.getToken();
-    if (token) {
-      (finalHeaders as Record<string, string>)['Authorization'] = `Bearer ${token}`;
-    }
-  }
+  const body = options.body;
+  const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+  const isUrlParams =
+    typeof URLSearchParams !== 'undefined' && body instanceof URLSearchParams;
+  const isBlob = typeof Blob !== 'undefined' && body instanceof Blob;
+  const isArrayBuffer = typeof ArrayBuffer !== 'undefined' && body instanceof ArrayBuffer;
+  const isArrayBufferView =
+    typeof ArrayBuffer !== 'undefined' && ArrayBuffer.isView(body);
+  const isReadableStream =
+    typeof ReadableStream !== 'undefined' && body instanceof ReadableStream;
 
-  return finalHeaders;
-}
-
-function serializeBody(body: unknown): BodyInit | null | undefined {
-  if (body == null || typeof body === 'string' || body instanceof FormData) {
-    return body as BodyInit | null | undefined;
-  }
-
-  return JSON.stringify(body);
-}
-
-async function parseResponse(response: Response): Promise<unknown> {
-  const contentType =
-    response.headers && typeof response.headers.get === 'function'
-      ? response.headers.get('Content-Type') || ''
-      : '';
-
-  try {
-    if (contentType.includes('application/json')) {
-      return await response.json();
-    }
-    return await response.text();
-  } catch {
-    return null;
-  }
-}
-
-function extractErrorMessage(data: unknown, status: number): string {
+  let preparedBody = body;
   if (
-    data &&
-    typeof data === 'object' &&
-    'message' in data &&
-    typeof (data as { message?: unknown }).message === 'string'
+    body &&
+    typeof body === 'object' &&
+    !isFormData &&
+    !isUrlParams &&
+    !isBlob &&
+    !isArrayBuffer &&
+    !isArrayBufferView &&
+    !isReadableStream
   ) {
-    return (data as { message: string }).message;
+    preparedBody = JSON.stringify(body);
   }
 
-  return `Request failed with status ${status}`;
+  if (isFormData && 'Content-Type' in headers) {
+    delete (headers as Record<string, string>)['Content-Type'];
+  }
+
+  if (!options.skipAuth && getToken) {
+    const token = getToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+  }
+
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    body: preparedBody,
+    headers,
+  });
+
+  if (response.status === 401 && onUnauthorized) {
+    onUnauthorized();
+    throw new ApiError('Unauthorized', 401);
+  }
+
+  const contentType = response.headers.get('content-type') ?? '';
+  const isJson = contentType.includes('application/json');
+
+  if (!response.ok) {
+    const fallbackMessage = 'Klarte ikke † kontakte serveren';
+    if (!isJson) {
+      const text = await response.text().catch(() => '');
+      throw new ApiError(text || fallbackMessage, response.status);
+    }
+    const errorBody = await response.json().catch(() => ({}));
+    const message =
+      typeof (errorBody as { message?: unknown }).message === 'string'
+        ? (errorBody as { message: string }).message
+        : fallbackMessage;
+    throw new ApiError(message, response.status);
+  }
+
+  if (!isJson) {
+    const text = await response.text().catch(() => '');
+    throw new ApiError(text || 'Ugyldig respons fra serveren', response.status);
+  }
+
+  return response.json();
 }

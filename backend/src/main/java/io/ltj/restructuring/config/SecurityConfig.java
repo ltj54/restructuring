@@ -1,6 +1,7 @@
 package io.ltj.restructuring.config;
 
 import io.ltj.restructuring.security.JwtAuthenticationFilter;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -33,10 +34,21 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
+                // Stateless API -> CSRF off
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                // 🔴 VIKTIG: API-vennlig feilhåndtering (INGEN HTML)
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json");
+                            response.getWriter()
+                                    .write("{\"error\":\"unauthorized\"}");
+                        })
+                )
 
                 .authorizeHttpRequests(auth -> auth
 
@@ -45,30 +57,41 @@ public class SecurityConfig {
                         // =====================
                         .requestMatchers(
                                 "/api/hello",
-                                "/api/config",
-                                "/api/dbinfo",
-                                "/api/log",
                                 "/api/health",
-                                "/api/system/**",
-                                "/favicon.ico",
-                                "/actuator/**"
+                                "/favicon.ico"
                         ).permitAll()
 
+                        // Platform probes
+                        .requestMatchers(
+                                "/actuator/health",
+                                "/actuator/health/**"
+                        ).permitAll()
+
+                        // Frontend logging
+                        .requestMatchers(HttpMethod.POST, "/api/log").permitAll()
+
+                        // Auth endpoints
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/plan/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/journal/**").permitAll()
 
-                        // OPTIONS always open
+                        // OPTIONS for CORS
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                         // =====================
-                        // ADMIN ENDPOINTS
+                        // ADMIN / SYSTEM
                         // =====================
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
+                        .requestMatchers(
+                                "/api/config",
+                                "/api/dbinfo",
+                                "/api/dbversion"
+                        ).hasRole("ADMIN")
+
+                        .requestMatchers("/actuator/**").hasRole("ADMIN")
+
                         // =====================
-                        // AUTHENTICATED USERS
+                        // EVERYTHING ELSE
                         // =====================
                         .anyRequest().authenticated()
                 )
@@ -79,14 +102,15 @@ public class SecurityConfig {
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration configuration
+    ) throws Exception {
+        return configuration.getAuthenticationManager();
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration)
-            throws Exception {
-        return configuration.getAuthenticationManager();
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 
     @Bean
@@ -101,7 +125,9 @@ public class SecurityConfig {
                 "https://ltj54.github.io"
         ));
 
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of(
+                "GET", "POST", "PUT", "DELETE", "OPTIONS"
+        ));
 
         config.setAllowedHeaders(List.of(
                 "Content-Type",
@@ -117,7 +143,8 @@ public class SecurityConfig {
 
         config.setMaxAge(3600L);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
 
         return source;

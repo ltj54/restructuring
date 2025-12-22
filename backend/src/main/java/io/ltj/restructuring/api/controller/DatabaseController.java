@@ -4,44 +4,41 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * 🧪 DatabaseController
+ * <p>
+ * Endpoint: GET /api/dbinfo
+ * <p>
+ * IMPORTANT (security):
+ * - This endpoint is intended for ADMIN diagnostics only.
+ * - Do NOT return full JDBC url/username/password.
+ */
 @RestController
 public class DatabaseController {
 
     private final JdbcTemplate jdbcTemplate;
-    private final DataSource dataSource;
 
-    public DatabaseController(JdbcTemplate jdbcTemplate, DataSource dataSource) {
+    public DatabaseController(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
-        this.dataSource = dataSource;
     }
 
     @GetMapping("/api/dbinfo")
-    public Map<String, Object> getDatabaseInfo() {
+    public Map<String, Object> getDbInfo() {
         Map<String, Object> result = new HashMap<>();
 
-        try (Connection connection = dataSource.getConnection()) {
+        try (Connection conn = jdbcTemplate.getDataSource().getConnection()) {
+            DatabaseMetaData meta = conn.getMetaData();
 
-            DatabaseMetaData meta = connection.getMetaData();
-
-            String version = meta.getDatabaseProductVersion();
-            String product = meta.getDatabaseProductName();
-            String url = meta.getURL();
-            String user = meta.getUserName();
-
-            // PostgreSQL schema
-            String schema = jdbcTemplate.queryForObject("SELECT current_schema()", String.class);
-
-            result.put("database", product);
-            result.put("version", version);
-            result.put("url", url);
-            result.put("username", user);
-            result.put("schema", schema);
+            result.put("database", meta.getDatabaseProductName());
+            result.put("version", meta.getDatabaseProductVersion());
+            result.put("driver", meta.getDriverName());
+            result.put("driverVersion", meta.getDriverVersion());
+            result.put("schema", conn.getSchema());
 
             return result;
 

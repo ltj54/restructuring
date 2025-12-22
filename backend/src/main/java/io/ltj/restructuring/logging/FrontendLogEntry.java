@@ -1,25 +1,21 @@
 package io.ltj.restructuring.logging;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record FrontendLogEntry(
-        String context,
-        String event,
-        FrontendLogLevel level,
-        String message,
-        Map<String, Object> meta,
+        @Size(max = 200) String context,
+        @Size(max = 200) String event,
+        @NotNull FrontendLogLevel level,
+        @Size(max = 2000) String message,
+        @Size(max = 50) Map<String, Object> meta,
         FrontendLogError error,
-        String timestamp
+        @Size(max = 64) String timestamp
 ) {
-    @Override
-    public FrontendLogLevel level() {
-        return level == null ? FrontendLogLevel.INFO : level;
-    }
-
-    @Override
     public Map<String, Object> meta() {
         return meta == null ? Map.of() : meta;
     }

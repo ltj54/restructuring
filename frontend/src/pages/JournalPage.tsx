@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import PageLayout from '@/components/PageLayout';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
-import { API_BASE_URL } from '@/utils/config';
+import { useAuth } from '@/hooks/useAuth';
+import { fetchJson, getErrorMessage } from '@/utils/api';
 
 type JournalEntry = {
   id: number;
@@ -23,37 +24,32 @@ export default function JournalPage(): React.ReactElement {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { isAuthenticated, isLoadingUser } = useAuth();
 
   useEffect(() => {
     async function load() {
       try {
-        const token = localStorage.getItem('token');
-        const res = await fetch(`${API_BASE_URL}/journal/all`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-        });
-        if (!res.ok) {
-          const message =
-            res.status === 401
-              ? 'Du må være logget inn for å se notatene.'
-              : 'Kunne ikke hente notatene.';
-          setError(message);
+        if (isLoadingUser || !isAuthenticated) {
+          setEntries([]);
+          setError(null);
           return;
         }
-        const data = await res.json();
+        setLoading(true);
+        const data = await fetchJson<JournalEntry[]>('/journal/all');
         setEntries(data);
-      } catch {
-        setError('Kunne ikke hente notatene.');
+      } catch (err) {
+        setError(getErrorMessage(err, 'Kunne ikke hente notatene.'));
       } finally {
         setLoading(false);
       }
     }
     load();
-  }, []);
+  }, [isAuthenticated, isLoadingUser]);
 
   const phases = {
     1: 'Fase 1 - Kartlegging',
-    2: 'Fase 2 - Kompetanseløft',
-    3: 'Fase 3 - Aktiv jobbsøking',
+    2: 'Fase 2 - Kompetanseloft',
+    3: 'Fase 3 - Aktiv jobbsoking',
     4: 'Fase 4 - Ny jobb',
   };
 
@@ -70,11 +66,11 @@ export default function JournalPage(): React.ReactElement {
       maxWidthClassName="max-w-4xl"
       actions={
         <Button to="/insurance" variant="secondary">
-          Gå til forsikring
+          G† til forsikring
         </Button>
       }
     >
-      {loading && <div>Laster...</div>}
+      {(loading || isLoadingUser) && <div>Laster...</div>}
 
       {!loading && error && <div className="text-red-600 text-sm">{error}</div>}
 
@@ -83,7 +79,9 @@ export default function JournalPage(): React.ReactElement {
           {[1, 2, 3, 4].map((phase) => (
             <Card key={phase} title={phases[phase]}>
               {grouped[phase].length === 0 && (
-                <div className="text-slate-500 text-sm">Ingen notater i denne fasen ennå.</div>
+                <div className="text-slate-500 text-sm">
+                  Ingen notater i denne fasen enn†.
+                </div>
               )}
 
               <div className="space-y-4">
@@ -91,7 +89,9 @@ export default function JournalPage(): React.ReactElement {
                   <div key={entry.id} className="relative pl-5 border-l border-slate-200">
                     <div className="absolute -left-1 top-1 h-3 w-3 rounded-full bg-emerald-600"></div>
 
-                    <div className="text-xs text-slate-500 mb-1">{formatDate(entry.createdAt)}</div>
+                    <div className="text-xs text-slate-500 mb-1">
+                      {formatDate(entry.createdAt)}
+                    </div>
 
                     <div className="whitespace-pre-wrap text-sm text-slate-800">
                       {entry.content}

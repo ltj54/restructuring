@@ -216,6 +216,35 @@ export default function PlanPage(): React.ReactElement {
     initialPhase,
   ]);
 
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const persona = plan?.persona ?? 'Annet';
+    const hasContent =
+      selectedNeeds.length > 0 ||
+      selectedPhase !== initialPhase ||
+      (persona && persona !== 'Annet');
+
+    if (!hasContent) return;
+
+    const handle = window.setTimeout(() => {
+      fetchJson('/plan/me', {
+        method: 'PUT',
+        body: {
+          persona,
+          phase: selectedPhase,
+          needs: selectedNeeds,
+        },
+      })
+        .then(() => {
+          localStorage.removeItem(DRAFT_KEYS.planPending);
+        })
+        .catch(() => undefined);
+    }, 600);
+
+    return () => window.clearTimeout(handle);
+  }, [isAuthenticated, plan?.persona, selectedNeeds, selectedPhase, initialPhase]);
+
   /* -----------------------------------------------------------
      HANDLERE
   ----------------------------------------------------------- */
@@ -304,7 +333,7 @@ export default function PlanPage(): React.ReactElement {
       actions={
         <>
           <Button to="/resources" variant="secondary">
-            Ressurser
+            Gå til ressurser
           </Button>
           <Button onClick={handleDownloadPdf} variant="secondary">
             Last ned PDF

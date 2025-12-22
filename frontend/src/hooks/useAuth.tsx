@@ -1,7 +1,19 @@
 // src/hooks/useAuth.tsx
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ApiError, configureApiClient, fetchJson, isApiError } from '@/utils/api';
+import {
+  ApiError,
+  configureApiClient,
+  fetchJson,
+  isApiError,
+} from '@/utils/api';
 import { syncAnonymousDrafts } from '@/utils/draftSync';
 
 /* =========================
@@ -51,6 +63,26 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 type AuthRedirectState = { from?: string } | null;
 
 /* =========================
+   GUEST CLEANUP
+========================= */
+
+function clearGuestState() {
+  // Auth
+  localStorage.removeItem('token');
+
+  // Drafts / skjema
+  localStorage.removeItem('wizardDraft');
+  localStorage.removeItem('planDraft');
+  localStorage.removeItem('insuranceDraft');
+  localStorage.removeItem('journalDraft');
+
+  // Eventuelle logger / cache
+  localStorage.removeItem('structuredLogs');
+
+  sessionStorage.clear();
+}
+
+/* =========================
    AUTH PROVIDER
 ========================= */
 
@@ -59,7 +91,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const locationState = (location.state ?? null) as AuthRedirectState;
 
-  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+  const [token, setToken] = useState<string | null>(
+    localStorage.getItem('token')
+  );
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [isLoadingUser, setIsLoadingUser] = useState(Boolean(token));
@@ -71,7 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const clearAuth = useCallback(() => {
     setToken(null);
     setUser(null);
-    localStorage.removeItem('token');
+    clearGuestState();
   }, []);
 
   const handleUnauthorized = useCallback(() => {
@@ -95,12 +129,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   }, [token, handleUnauthorized]);
 
-  // Sync locally saved data (plan/insurance) after login
-  useEffect(() => {
-    if (!token) return;
-    syncAnonymousDrafts().catch((err) => console.warn('Kunne ikke synke lokale data', err));
-  }, [token]);
-
   /* =========================
      LOAD USER
   ========================= */
@@ -111,14 +139,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!activeToken) {
         setUser(null);
         setIsLoadingUser(false);
+        clearGuestState();
         return null;
       }
 
       setIsLoadingUser(true);
       try {
-        const headers = tokenOverride ? { Authorization: `Bearer ${tokenOverride}` } : undefined;
+        const headers = tokenOverride
+          ? { Authorization: `Bearer ${tokenOverride}` }
+          : undefined;
 
-        // 🔥 ENESTE RIKTIGE KALL
         const response = await fetchJson<MeResponse>('/me', { headers });
 
         const normalized: AuthenticatedUser = {
@@ -151,6 +181,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!token) {
       setUser(null);
       setIsLoadingUser(false);
+      clearGuestState();
       return;
     }
     loadUser();
@@ -178,9 +209,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         const loadedUser = await loadUser(response.token);
         if (!loadedUser) {
-          console.warn('Innlogging mislyktes: 401 ved lasting av brukerprofil.');
+          console.warn(
+            'Innlogging mislyktes: 401 ved lasting av brukerprofil.'
+          );
           return response;
         }
+
+        // 🔒 Synk gjestedata FØRST ETTER vellykket login
+        await syncAnonymousDrafts().catch((err) =>
+          console.warn('Kunne ikke synke lokale data', err)
+        );
 
         const redirectTarget =
           options?.redirectTo ??
@@ -216,7 +254,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       token,
       user,
       userId: user?.id ?? null,
-      isAuthenticated: Boolean(token),
+      isAuthenticated: Boolean(user),
       isAuthenticating,
       isLoadingUser,
       isAdmin,
@@ -227,7 +265,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [token, user, isAuthenticating, isLoadingUser, isAdmin, login, logout, loadUser]
   );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  );
 }
 
 /* =========================
@@ -241,4 +281,3 @@ export function useAuth(): AuthContextValue {
   }
   return context;
 }
-

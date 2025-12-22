@@ -1,4 +1,4 @@
-package io.ltj.restructuring.api.controller;
+package io.ltj.restructuring.api.controller.insurance;
 
 import io.ltj.restructuring.api.dto.insurance.CoverageGapAnalysisRequest;
 import io.ltj.restructuring.api.dto.insurance.CoverageGapAnalysisResponse;
@@ -8,7 +8,10 @@ import io.ltj.restructuring.application.insurance.CoverageLossAnalysisService;
 import io.ltj.restructuring.security.JwtUserDetails;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
