@@ -70,6 +70,9 @@ public class SecurityConfig {
                         // Frontend logging
                         .requestMatchers(HttpMethod.POST, "/api/log").permitAll()
 
+                        // Public read of plan (returns 204 when anonymous)
+                        .requestMatchers(HttpMethod.GET, "/api/plan/me").permitAll()
+
                         // Auth endpoints
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
