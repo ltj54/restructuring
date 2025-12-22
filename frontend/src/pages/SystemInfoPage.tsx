@@ -1,5 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useCallback, useEffect, useState } from 'react';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
 import PageLayout from '@/components/PageLayout';
@@ -30,21 +29,8 @@ type UsersResponse = {
   error?: string;
 };
 
-function isAdminFromToken(token: string | null): boolean {
-  if (!token) return false;
-  try {
-    const [, payload] = token.split('.');
-    const json = JSON.parse(atob(payload));
-    const authorities = (json?.authorities ?? []) as string[];
-    return authorities.includes('ROLE_ADMIN');
-  } catch {
-    return false;
-  }
-}
-
 export default function SystemInfoPage() {
   const { token } = useAuth();
-  const isAdmin = useMemo(() => isAdminFromToken(token), [token]);
 
   const [healthStatus, setHealthStatus] = useState<Health>('ukjent');
   const [healthHttpCode, setHealthHttpCode] = useState<number | null>(null);
@@ -75,7 +61,6 @@ export default function SystemInfoPage() {
 
   const healthUrl = `${API_BASE_URL}/system/health`;
   const dbInfoUrl = `${API_BASE_URL}/system/dbinfo`;
-  const usersUrl = `${API_BASE_URL}/system/users`;
   const userProfileBaseUrl = `${API_BASE_URL}/system/user-profile`;
 
   const healthLabel =

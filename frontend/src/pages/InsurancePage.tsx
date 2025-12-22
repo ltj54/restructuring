@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Button from '@/components/Button';
 import Card from '@/components/Card';
 import PageLayout from '@/components/PageLayout';
@@ -96,10 +96,10 @@ export default function InsurancePage() {
      SAVE CONTACT
   ========================= */
 
-  const saveContact = async (options?: { silent?: boolean }) => {
+  const saveContact = useCallback(async (options?: { silent?: boolean }) => {
     if (!isAuthenticated) {
       if (!options?.silent) {
-        setContactStatus('Kontaktinfo lagres forst n†r du er innlogget.');
+        setContactStatus('Kontaktinfo lagres forst n+r du er innlogget.');
       }
       return;
     }
@@ -107,7 +107,7 @@ export default function InsurancePage() {
     const payload = buildContactPayload(contact);
     if (!isContactComplete(payload)) {
       if (!options?.silent) {
-        setContactStatus('Fyll inn alle feltene for † lagre.');
+        setContactStatus('Fyll inn alle feltene for + lagre.');
       }
       return;
     }
@@ -125,7 +125,7 @@ export default function InsurancePage() {
         setContactStatus(getErrorMessage(err, 'Kunne ikke lagre kontaktinfo.'));
       }
     }
-  };
+  }, [contact, isAuthenticated, saveContact]);
 
   const saveSnapshot = async () => {
     setSnapshotStatus(null);
@@ -207,7 +207,7 @@ export default function InsurancePage() {
     }, 600);
 
     return () => window.clearTimeout(handle);
-  }, [contact, isAuthenticated]);
+  }, [contact, isAuthenticated, saveContact]);
 
   const handleSendRequest = async () => {
     setSnapshotStatus(null);
@@ -406,6 +406,7 @@ export default function InsurancePage() {
     </PageLayout>
   );
 }
+
 
 
 
