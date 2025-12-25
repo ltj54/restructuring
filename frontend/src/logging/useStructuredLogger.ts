@@ -1,5 +1,5 @@
 // src/logging/useStructuredLogger.ts
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { sendStructuredLog } from './structuredLogger';
 import type { StructuredLogError, StructuredLogPayload, StructuredLogLevel } from './LoggerTypes';
 
@@ -49,12 +49,21 @@ export function useStructuredLogger(context: string) {
     [context]
   );
 
-  return {
-    logEvent: (event: string, options: LogOptions = {}) => publish('INFO', event, options),
+  const logEvent = useCallback(
+    (event: string, options: LogOptions = {}) => publish('INFO', event, options),
+    [publish]
+  );
 
-    logWarn: (event: string, options: LogOptions = {}) => publish('WARN', event, options),
+  const logWarn = useCallback(
+    (event: string, options: LogOptions = {}) => publish('WARN', event, options),
+    [publish]
+  );
 
-    logError: (event: string, error: ErrorLike, options: LogOptions = {}) =>
+  const logError = useCallback(
+    (event: string, error: ErrorLike, options: LogOptions = {}) =>
       publish('ERROR', event, options, error),
-  };
+    [publish]
+  );
+
+  return useMemo(() => ({ logEvent, logWarn, logError }), [logEvent, logWarn, logError]);
 }

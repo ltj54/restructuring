@@ -83,20 +83,7 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
   }, [user]);
 
   const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement | null>(null);
-
-  // Click outside = lukk meny (mobil/off-canvas)
-  useEffect(() => {
-    const onClick = (e: MouseEvent) => {
-      if (!menuOpen) return;
-      if (!menuRef.current) return;
-      if (!menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', onClick);
-    return () => document.removeEventListener('mousedown', onClick);
-  }, [menuOpen]);
+  const lastOpenAtRef = useRef(0);
 
   // Route change = logg + lukk meny
   useEffect(() => {
@@ -124,27 +111,48 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
         <button
           type="button"
           onClick={() => navigate(isAuthenticated ? '/me' : '/login')}
-          className="text-sm text-slate-700 hover:text-slate-900"
+          className="flex items-center gap-2 text-sm text-slate-700 hover:text-slate-900"
         >
-          {isAuthenticated ? 'Profil' : 'Logg inn'}
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-white text-xs font-semibold">
+            {isAuthenticated ? initials : '??'}
+          </span>
+          <span className="max-w-[140px] truncate">
+            {isAuthenticated ? displayName : 'Logg inn'}
+          </span>
         </button>
 
-        <div className="text-sm font-semibold text-slate-900">Restructuring</div>
+        <div className="text-sm font-semibold text-slate-900">Omstilling</div>
 
         <button
           type="button"
-          onClick={() => setMenuOpen(true)}
+          onClick={(event) => {
+            event.stopPropagation();
+            setMenuOpen((prev) => {
+              const next = !prev;
+              if (next) {
+                lastOpenAtRef.current = Date.now();
+              }
+              return next;
+            });
+          }}
           aria-label="Åpne meny"
-          className="text-2xl leading-none text-slate-900"
+          className="flex h-10 w-10 flex-col items-center justify-center gap-1 rounded-lg border border-slate-200 text-slate-900"
         >
-          ?
+          <span className="block h-0.5 w-5 bg-slate-900" />
+          <span className="block h-0.5 w-5 bg-slate-900" />
+          <span className="block h-0.5 w-5 bg-slate-900" />
         </button>
       </div>
 
       {menuOpen && (
         <div
           className="fixed inset-0 z-20 bg-black/30 md:hidden"
-          onClick={() => setMenuOpen(false)}
+          onClick={() => {
+            if (Date.now() - lastOpenAtRef.current < 350) {
+              return;
+            }
+            setMenuOpen(false);
+          }}
         />
       )}
 
@@ -152,7 +160,6 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
         <div className="grid grid-cols-1 gap-6 md:grid-cols-[260px_1fr]">
           {/* SIDEBAR: desktop = vanlig, mobil = off-canvas */}
           <aside
-            ref={menuRef}
             className={[
               'rounded-2xl border border-slate-200 bg-white shadow-sm',
               'md:relative md:translate-x-0 md:block',
@@ -217,4 +224,3 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
     </div>
   );
 }
-
