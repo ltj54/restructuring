@@ -78,32 +78,19 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
   const displayName = user?.email ?? 'Gjest';
 
   const initials = useMemo(() => {
-    if (!user?.email) return '👤';
+    if (!user?.email) return '??';
     return user.email.charAt(0).toUpperCase();
   }, [user]);
 
   const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement | null>(null);
-
-  // Click outside = lukk meny (mobil/off-canvas)
-  useEffect(() => {
-    const onClick = (e: MouseEvent) => {
-      if (!menuOpen) return;
-      if (!menuRef.current) return;
-      if (!menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', onClick);
-    return () => document.removeEventListener('mousedown', onClick);
-  }, [menuOpen]);
+  const lastOpenAtRef = useRef(0);
 
   // Route change = logg + lukk meny
   useEffect(() => {
     logEvent('route_change');
     setMenuOpen(false);
   }, [location.pathname, logEvent]);
-  // Click outside → lukk meny (mobil/off-canvas)
+
   useEffect(() => {
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
       event.preventDefault();
@@ -116,45 +103,67 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
       window.removeEventListener('beforeunload', onBeforeUnload);
     };
   }, []);
+
   return (
     <div className="min-h-screen bg-slate-50">
       {/* MOBIL TOPPBAR */}
       <div className="md:hidden sticky top-0 z-30 flex items-center justify-between gap-3 bg-white border-b border-slate-200 px-4 h-14">
         <button
           type="button"
-          onClick={() => setMenuOpen(true)}
-          aria-label="Åpne meny"
-          className="text-2xl leading-none text-slate-900"
+          onClick={() => navigate(isAuthenticated ? '/me' : '/login')}
+          className="flex items-center gap-2 text-sm text-slate-700 hover:text-slate-900"
         >
-          ☰
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-white text-xs font-semibold">
+            {isAuthenticated ? initials : '??'}
+          </span>
+          <span className="max-w-[140px] truncate">
+            {isAuthenticated ? displayName : 'Logg inn'}
+          </span>
         </button>
 
-        <div className="text-sm font-semibold text-slate-900">Restructuring</div>
+        <div className="text-sm font-semibold text-slate-900">Omstilling</div>
 
         <button
           type="button"
-          onClick={() => navigate(isAuthenticated ? '/me' : '/login')}
-          className="text-sm text-slate-700 hover:text-slate-900"
+          onClick={(event) => {
+            event.stopPropagation();
+            setMenuOpen((prev) => {
+              const next = !prev;
+              if (next) {
+                lastOpenAtRef.current = Date.now();
+              }
+              return next;
+            });
+          }}
+          aria-label="Åpne meny"
+          className="flex h-10 w-10 flex-col items-center justify-center gap-1 rounded-lg border border-slate-200 text-slate-900"
         >
-          {isAuthenticated ? 'Profil' : 'Logg inn'}
+          <span className="block h-0.5 w-5 bg-slate-900" />
+          <span className="block h-0.5 w-5 bg-slate-900" />
+          <span className="block h-0.5 w-5 bg-slate-900" />
         </button>
       </div>
 
       {menuOpen && (
         <div
           className="fixed inset-0 z-20 bg-black/30 md:hidden"
-          onClick={() => setMenuOpen(false)}
+          onClick={() => {
+            if (Date.now() - lastOpenAtRef.current < 350) {
+              return;
+            }
+            setMenuOpen(false);
+          }}
         />
       )}
 
       <div className="mx-auto max-w-7xl px-4 py-6">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-[260px_1fr]">
+          {/* SIDEBAR: desktop = vanlig, mobil = off-canvas */}
           <aside
-            ref={menuRef}
             className={[
               'rounded-2xl border border-slate-200 bg-white shadow-sm',
               'md:relative md:translate-x-0 md:block',
-              'fixed inset-y-0 left-0 z-30 w-[260px]',
+              'fixed md:static inset-y-0 left-0 z-30 w-[260px] md:z-auto',
               'transform transition-transform duration-200 ease-in-out',
               menuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
             ].join(' ')}
@@ -164,7 +173,9 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
                 {initials}
               </div>
               <div className="min-w-0">
-                <div className="truncate text-sm font-semibold text-slate-900">{displayName}</div>
+                <div className="truncate text-sm font-semibold text-slate-900">
+                  {displayName}
+                </div>
                 <div className="text-xs text-slate-500">
                   {isAuthenticated ? (isAdmin ? 'ADMIN' : 'Innlogget') : 'Gjest'}
                 </div>
@@ -174,7 +185,9 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
             <nav className="p-3 space-y-4">
               {navSections.map((section) => (
                 <div key={section.title}>
-                  <div className="px-2 text-xs font-semibold text-slate-500">{section.title}</div>
+                  <div className="px-2 text-xs font-semibold text-slate-500">
+                    {section.title}
+                  </div>
 
                   <div className="mt-2 space-y-1">
                     {section.items.map((l) => {
@@ -202,7 +215,7 @@ export default function MainLayout({ navLinks }: MainLayoutProps) {
           </aside>
 
           <main className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <Suspense fallback={<div className="p-6">Laster…</div>}>
+            <Suspense fallback={<div className="p-6">Laster.</div>}>
               <Outlet />
             </Suspense>
           </main>
