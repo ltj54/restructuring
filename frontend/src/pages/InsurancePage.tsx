@@ -1,8 +1,9 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Button from '@/components/Button';
 import Card from '@/components/Card';
 import PageLayout from '@/components/PageLayout';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { InsuranceSource, InsuranceType, saveInsuranceSnapshot } from '@/api/insuranceApi';
 import { API_BASE_URL, fetchJson, getErrorMessage } from '@/utils/api';
 
@@ -82,6 +83,7 @@ const offerOptions: Option[] = [
 
 export default function InsurancePage() {
   const { isAuthenticated } = useAuth();
+  const { profile } = useUserProfile();
   const [contact, setContact] = useState<ContactInfo>(EMPTY_CONTACT);
   const [contactStatus, setContactStatus] = useState<string | null>(null);
   const [snapshotStatus, setSnapshotStatus] = useState<string | null>(null);
@@ -91,6 +93,7 @@ export default function InsurancePage() {
     'Hei Gjensidige,\nKan dere kontakte meg for et tilbud?'
   );
   const [isSending, setIsSending] = useState(false);
+  const hasPrefilledContact = useRef(false);
 
   /* =========================
      SAVE CONTACT
@@ -162,6 +165,20 @@ export default function InsurancePage() {
       setSnapshotStatus('Kunne ikke lagre forsikringsvalgene.');
     }
   };
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    if (hasPrefilledContact.current) return;
+    if (!isContactComplete(profile)) return;
+
+    setContact({
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      ssn: profile.ssn,
+      phone: profile.phone,
+    });
+    hasPrefilledContact.current = true;
+  }, [isAuthenticated, profile]);
+
   useEffect(() => {
     if (!isAuthenticated) return;
     if (!origin && offers.length === 0) return;
