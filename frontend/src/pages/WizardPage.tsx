@@ -5,7 +5,12 @@ import Button from '@/components/Button';
 import PageLayout from '@/components/PageLayout';
 import { useAuth } from '@/hooks/useAuth';
 import { fetchJson } from '@/utils/api';
-import { DRAFT_KEYS, markPlanPendingSync, readPlanDraft, writePlanDraft } from '@/utils/draftSync';
+import {
+  DRAFT_KEYS,
+  markPlanPendingSync,
+  readPlanDraft,
+  writePlanDraft,
+} from '@/utils/draftSync';
 
 type PersonaKey =
   | 'it'
@@ -31,22 +36,22 @@ const personaLabels: Record<PersonaKey, string> = {
 };
 
 const personaShort: Record<PersonaKey, string> = {
-  it: 'Outsourcing og oppdatering av kompetanse.',
-  industri: 'Nedbemanning og faglig viderevei.',
-  helse: 'Omorganisering og autorisasjon.',
+  it: 'Outsourcing, endring av kompetanse og roller.',
+  industri: 'Nedbemanning, fagbrev og videre vei.',
+  helse: 'Omorganisering, autorisasjon og turnus.',
   flyger: 'Lisens, helsekrav og omplassering.',
   butikk: 'Arbeidstid, kontrakt og videre karriere.',
-  kontor: 'Digitalisering og nye roller.',
+  kontor: 'Digitalisering og nye arbeidsoppgaver.',
   transport: 'Sertifikater, skift og rettigheter.',
-  salg: 'Kundeansvar, mål og videre muligheter.',
-  annet: 'Generelle råd om avtaler og CV.',
+  salg: 'Mål, provisjon og videre muligheter.',
+  annet: 'Generelle råd om jobb, avtaler og CV.',
 };
 
-const phaseOptions = ['For omstilling', 'Under omstilling', 'Etter omstilling'];
+const phaseOptions = ['Før omstilling', 'Under omstilling', 'Etter omstilling'];
 
 const needOptions = [
   'Få oversikt over rettigheter og avtaler',
-  'Forstå hva omstillingen betyr for lonn og okonomi',
+  'Forstå hva omstillingen betyr for lønn og økonomi',
   'Planlegge neste karrieresteg',
   'Snakke med noen om situasjonen',
   'Få kontroll på forsikringer og inntektssikring',
@@ -67,20 +72,28 @@ export default function WizardPage(): React.ReactElement {
   const [needs, setNeeds] = useState<string[]>([]);
   const [status, setStatus] = useState<string | null>(null);
 
+  /* -------------------------
+     LOAD DRAFT
+  ------------------------- */
   useEffect(() => {
     const stored = readPlanDraft();
     if (!stored) return;
 
     if (stored.persona) {
-      const key = (Object.entries(personaLabels).find(([_, label]) => label === stored.persona) ?? [
-        null,
-      ])[0] as PersonaKey | null;
+      const key = (
+        Object.entries(personaLabels).find(([, label]) => label === stored.persona) ?? [
+          null,
+        ]
+      )[0] as PersonaKey | null;
       setPersona(key);
     }
     if (stored.phase) setPhase(stored.phase);
     if (stored.needs) setNeeds(stored.needs);
   }, []);
 
+  /* -------------------------
+     SAVE DRAFT
+  ------------------------- */
   useEffect(() => {
     if (!persona && needs.length === 0) return;
 
@@ -89,14 +102,17 @@ export default function WizardPage(): React.ReactElement {
       phase,
       needs,
     });
+
     if (!isAuthenticated) {
       markPlanPendingSync();
     }
   }, [persona, phase, needs, isAuthenticated]);
 
+  /* -------------------------
+     AUTO SAVE (AUTH)
+  ------------------------- */
   useEffect(() => {
-    if (!isAuthenticated) return;
-    if (!persona) return;
+    if (!isAuthenticated || !persona) return;
 
     const handle = window.setTimeout(() => {
       fetchJson('/plan/me', {
@@ -122,18 +138,15 @@ export default function WizardPage(): React.ReactElement {
   );
 
   const toggleNeed = (need: string) =>
-    setNeeds((list) => (list.includes(need) ? list.filter((n) => n !== need) : [...list, need]));
+    setNeeds((list) =>
+      list.includes(need) ? list.filter((n) => n !== need) : [...list, need]
+    );
 
   const handleSave = async () => {
     setStatus(null);
 
-    if (!persona) {
-      setStatus('Velg en rolle/persona for å fortsette.');
-      return;
-    }
-
     const plan: UserPlanResponse = {
-      persona: personaLabels[persona],
+      persona: persona ? personaLabels[persona] : null,
       phase,
       needs,
     };
@@ -144,20 +157,14 @@ export default function WizardPage(): React.ReactElement {
       try {
         await fetchJson('/plan/me', {
           method: 'PUT',
-          body: {
-            persona: plan.persona,
-            phase: plan.phase,
-            needs: plan.needs,
-          },
+          body: plan,
         });
         localStorage.removeItem(DRAFT_KEYS.planPending);
-        setStatus('Planen er lagret på brukeren din.');
       } catch {
-        setStatus('Kunne ikke lagre hos serveren, men planen er lagret lokalt.');
+        /* ignore */
       }
     } else {
       markPlanPendingSync();
-      setStatus('Planen er lagret lokalt og flyttes til brukeren din når du logger inn.');
     }
 
     navigate(`/plan?phase=${encodeURIComponent(plan.phase ?? '')}`);
@@ -165,17 +172,18 @@ export default function WizardPage(): React.ReactElement {
 
   return (
     <PageLayout
-      title="Veiviser"
-      subtitle="Tre raske valg. Ferdig plan og journal starter på 3 minutter."
+      title="La oss få oversikt"
+      subtitle="Tre enkle valg. Du kan hoppe over det som ikke passer."
       maxWidthClassName="max-w-5xl"
-      actions={
-        <Button to="/plan" variant="secondary">
-          Gå til plan
-        </Button>
-      }
     >
-      <div className="space-y-6">
-        <Card title="1. Velg situasjonen din">
+      <div className="space-y-8">
+
+        {/* STEP 1 */}
+        <Card title="1. Hva ligner mest på din situasjon nå?">
+          <p className="mb-4 text-sm text-slate-600">
+            Velg det som er nærmest. Dette brukes kun for å tilpasse rådene.
+          </p>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             {(Object.keys(personaLabels) as PersonaKey[]).map((key) => {
               const isSelected = persona === key;
@@ -186,19 +194,26 @@ export default function WizardPage(): React.ReactElement {
                   onClick={() => setPersona(key)}
                   className={`rounded-xl border px-4 py-4 text-left transition ${
                     isSelected
-                      ? 'border-emerald-400 bg-emerald-50 text-emerald-900 shadow-sm'
+                      ? 'border-emerald-400 bg-emerald-50 shadow-sm'
                       : 'border-slate-200 bg-white hover:border-emerald-200'
                   }`}
                 >
-                  <div className="font-semibold text-sm">{personaLabels[key]}</div>
-                  <div className="mt-2 text-xs text-slate-600 opacity-90">{personaShort[key]}</div>
+                  <div className="font-medium">{personaLabels[key]}</div>
+                  <div className="mt-2 text-xs text-slate-600">
+                    {personaShort[key]}
+                  </div>
                 </button>
               );
             })}
           </div>
         </Card>
 
+        {/* STEP 2 */}
         <Card title="2. Hvor er du i prosessen?">
+          <p className="mb-4 text-sm text-slate-600">
+            Det trenger ikke være helt presist.
+          </p>
+
           <div className="flex flex-wrap gap-3">
             {phaseOptions.map((option) => {
               const active = option === phase;
@@ -210,7 +225,7 @@ export default function WizardPage(): React.ReactElement {
                   className={`rounded-full px-4 py-2 text-sm border transition ${
                     active
                       ? 'bg-emerald-600 text-white border-emerald-600'
-                      : 'bg-white border-slate-200 text-slate-800 hover:border-emerald-200'
+                      : 'bg-white border-slate-200 hover:border-emerald-200'
                   }`}
                 >
                   {option}
@@ -220,7 +235,12 @@ export default function WizardPage(): React.ReactElement {
           </div>
         </Card>
 
-        <Card title="3. Hva trenger du mest akkurat nå?">
+        {/* STEP 3 */}
+        <Card title="3. Hva trenger du mest hjelp med nå?">
+          <p className="mb-4 text-sm text-slate-600">
+            Velg én eller flere – eller hopp over.
+          </p>
+
           <div className="grid md:grid-cols-2 gap-3">
             {needOptions.map((need) => {
               const active = needs.includes(need);
@@ -231,8 +251,8 @@ export default function WizardPage(): React.ReactElement {
                   onClick={() => toggleNeed(need)}
                   className={`rounded-xl border px-4 py-3 text-left text-sm transition ${
                     active
-                      ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
-                      : 'bg-white border-slate-200 text-slate-800 hover:border-emerald-200'
+                      ? 'border-emerald-400 bg-emerald-50'
+                      : 'border-slate-200 bg-white hover:border-emerald-200'
                   }`}
                 >
                   {need}
@@ -242,25 +262,26 @@ export default function WizardPage(): React.ReactElement {
           </div>
         </Card>
 
+        {/* SUMMARY */}
         <Card title="Oppsummering">
-          <div className="space-y-2 text-sm text-neutral-100">
+          <div className="space-y-2 text-sm text-slate-700">
             <p>
-              <strong>Rolle:</strong> {personaDisplay}
+              <strong>Situasjon:</strong> {personaDisplay}
             </p>
             <p>
               <strong>Fase:</strong> {phase}
             </p>
             <p>
               <strong>Behov:</strong>{' '}
-              {needs.length > 0 ? needs.join('  ') : 'Ingen valgt ennå. Du kan hoppe over.'}
+              {needs.length > 0 ? needs.join(', ') : 'Ikke spesifisert'}
             </p>
-            {status && <p className="text-emerald-200">{status}</p>}
+            {status && <p className="text-emerald-700">{status}</p>}
           </div>
 
-          <div className="flex gap-3 flex-wrap mt-4">
-            <Button onClick={handleSave}>Lagre og gå til plan</Button>
+          <div className="flex gap-3 flex-wrap mt-5">
+            <Button onClick={handleSave}>Fortsett til planen</Button>
             <Button to="/" variant="secondary">
-              Tilbake til start
+              Tilbake
             </Button>
           </div>
         </Card>

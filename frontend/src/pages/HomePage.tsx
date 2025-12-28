@@ -3,174 +3,96 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Button from '@/components/Button';
 
-const helpCards = [
-  {
-    title: 'Økonomi & buffer',
-    subtitle: 'Hva skal jeg sikre først?',
-    bullets: ['Buffer', 'Faste utgifter', 'Kortsiktig risiko'],
-    to: '/wizard?focus=okonomi',
-  },
-  {
-    title: 'Forsikring',
-    subtitle: 'Hva må jeg ha - og hva kan vente?',
-    bullets: ['Dekning som betyr noe nå', 'Hull / overforsikring', 'Prioritering'],
-    to: '/insurance',
-  },
-  {
-    title: 'Jobb & omstilling',
-    subtitle: 'Hva gjør jeg nå - og hva kan vente?',
-    bullets: ['Rekkefølge', 'Neste praktiske steg', 'Redusere stress'],
-    to: '/wizard?focus=jobb',
-  },
-  {
-    title: 'Min plan',
-    subtitle: 'Samlet oversikt - på ett sted',
-    bullets: ['Gå rett på svaret', 'Neste steg samlet', 'Ingen omveier'],
-    to: '/plan',
-  },
-  {
-    title: 'Tanker & notater',
-    subtitle: 'Få det ut av hodet',
-    bullets: ['Lav terskel', 'Høy verdi', 'Mindre stress nå'],
-    to: '/journal',
-  },
-  {
-    title: 'Jeg er usikker',
-    subtitle: 'Hjelp meg å finne ut av det',
-    bullets: ['Starter veiviseren', 'Ekstra rolig tempo', 'Trygg start nå'],
-    to: '/wizard',
-  },
-];
-
-const steps = [
-  {
-    title: 'Forstå situasjonen',
-    text: 'Noen få spørsmål - hopp over det du vil.',
-  },
-  {
-    title: 'Sorter støy',
-    text: 'Vi filtrerer bort det som ikke er relevant nå.',
-  },
-  {
-    title: 'Få planen',
-    text: 'Konkrete neste steg, ikke lange råd.',
-  },
-];
-
 export default function HomePage(): React.ReactElement {
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
-      <div className="mx-auto max-w-6xl px-6 py-12 space-y-12">
+      <div className="mx-auto max-w-5xl px-6 py-14 space-y-16">
+
         {/* HERO */}
         <motion.section
-          initial={{ opacity: 0, y: 8 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25 }}
+          transition={{ duration: 0.3 }}
           className="rounded-3xl border border-slate-200 bg-white p-10 shadow-sm"
         >
-          <div className="max-w-3xl space-y-4">
+          <div className="max-w-2xl space-y-6">
             <h1 className="text-4xl md:text-5xl font-semibold leading-tight">
-              Hva skal du gjøre nå?
+              Hva er viktigst for deg akkurat nå?
             </h1>
+
             <p className="text-lg text-slate-700">
-              Få klare neste steg når jobb, økonomi eller forsikring er i spill.
+              Når jobb, økonomi eller forsikring er i spill, hjelper vi deg å
+              prioritere riktig – uten stress.
             </p>
-            <p className="text-sm text-slate-600">
-              Tar 2-3 minutter. Du kan hoppe over spørsmål.
-            </p>
+
             <div className="flex flex-wrap gap-3 pt-2">
-              <Button to="/wizard">Finn neste steg nå</Button>
-              <Button to="/plan" variant="secondary">
-                Se planen direkte
+              <Button to="/wizard">Få oversikt nå</Button>
+              <Button to="/wizard/unsure" variant="secondary">
+                Jeg er usikker
               </Button>
             </div>
-            <p className="text-xs text-slate-500">
-              Ikke bytt for å spare - handle riktig når alt er uoversiktlig.
+
+            <p className="text-sm text-slate-600">
+              Tar 2–3 minutter. Ingen salg. Du kan hoppe over spørsmål.
             </p>
           </div>
         </motion.section>
 
-        {/* HELP CARDS */}
+        {/* PRIMARY ACTION BLOCKS */}
         <motion.section
-          initial={{ opacity: 0, y: 8 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25, delay: 0.05 }}
-        >
-          <div className="flex items-end justify-between gap-4">
-            <h2 className="text-2xl md:text-3xl font-semibold">
-              Hva trenger du hjelp med akkurat nå?
-            </h2>
-          </div>
-
-          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {helpCards.map((card) => (
-              <Link
-                key={card.title}
-                to={card.to}
-                className={[
-                  'group rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition',
-                  'hover:border-emerald-300 hover:shadow-md',
-                ].join(' ')}
-              >
-                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  {card.title}
-                </div>
-                <h3 className="mt-2 text-xl font-semibold text-slate-900">{card.title}</h3>
-                <p className="mt-2 text-sm text-slate-600">{card.subtitle}</p>
-                <ul className="mt-4 space-y-1 text-sm text-slate-700">
-                  {card.bullets.map((b) => (
-                    <li key={b}>{b}</li>
-                  ))}
-                </ul>
-                <div className="mt-4 text-sm font-medium text-emerald-700">
-                  Finn neste steg
-                </div>
-              </Link>
-            ))}
-          </div>
-        </motion.section>
-
-        {/* OUTCOME */}
-        <motion.section
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25, delay: 0.08 }}
-          className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm"
+          transition={{ duration: 0.3, delay: 0.05 }}
+          className="space-y-6"
         >
           <h2 className="text-2xl md:text-3xl font-semibold">
-            Dette får du på noen minutter
+            Velg det som føles mest riktig nå
           </h2>
-          <div className="mt-4 space-y-2 text-slate-700">
-            <p>En tydelig prioritering av hva som er viktig nå</p>
-            <p>Hva du trygt kan ignorere foreløpig</p>
-            <p>En enkel plan for de neste dagene</p>
-            <p>Alt samlet - ikke spredt over ti steder</p>
+
+          <div className="grid gap-6 md:grid-cols-3">
+            <Link to="/wizard?focus=jobb" className="group rounded-3xl border border-slate-200 bg-white p-8 shadow-sm hover:shadow-md hover:border-emerald-300">
+              <h3 className="text-xl font-semibold">💼 Jobb & inntekt</h3>
+              <p className="mt-3 text-slate-700">
+                Forstå situasjonen, rettigheter og hva som bør gjøres først.
+              </p>
+              <div className="mt-6 font-medium text-emerald-700">Start her →</div>
+            </Link>
+
+            <Link to="/wizard?focus=okonomi" className="group rounded-3xl border border-slate-200 bg-white p-8 shadow-sm hover:shadow-md hover:border-emerald-300">
+              <h3 className="text-xl font-semibold">🛡️ Økonomi & forsikring</h3>
+              <p className="mt-3 text-slate-700">
+                Sikre det viktigste først – vent med resten.
+              </p>
+              <div className="mt-6 font-medium text-emerald-700">Få oversikt →</div>
+            </Link>
+
+            <Link to="/journal" className="group rounded-3xl border border-slate-200 bg-white p-8 shadow-sm hover:shadow-md hover:border-emerald-300">
+              <h3 className="text-xl font-semibold">🧠 Tanker & støtte</h3>
+              <p className="mt-3 text-slate-700">
+                Få det ut av hodet og ned på ett sted.
+              </p>
+              <div className="mt-6 font-medium text-emerald-700">Skriv litt →</div>
+            </Link>
           </div>
-          <p className="mt-4 text-sm text-slate-600">Ingen salg. Ingen binding.</p>
         </motion.section>
 
-        {/* HOW IT WORKS */}
+        {/* UNSURE SECTION */}
         <motion.section
-          initial={{ opacity: 0, y: 8 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25, delay: 0.1 }}
+          transition={{ duration: 0.3, delay: 0.08 }}
           className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm"
         >
-          <h2 className="text-2xl md:text-3xl font-semibold">Slik fungerer det</h2>
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
-            {steps.map((step, index) => (
-              <div key={step.title} className="rounded-2xl border border-slate-200 p-5">
-                <div className="text-xs font-semibold text-slate-500">
-                  {index + 1}. {step.title}
-                </div>
-                <p className="mt-2 text-sm text-slate-700">{step.text}</p>
-              </div>
-            ))}
+          <h2 className="text-2xl font-semibold">Usikker på hva du trenger?</h2>
+          <p className="mt-3 max-w-2xl text-slate-700">
+            Det er helt normalt. Vi stiller noen enkle spørsmål og hjelper deg
+            å sortere – i ditt tempo.
+          </p>
+          <div className="mt-5">
+            <Button to="/wizard/unsure">Hjelp meg å finne ut av det</Button>
           </div>
         </motion.section>
       </div>
     </main>
   );
 }
-
-

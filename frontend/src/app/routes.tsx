@@ -13,6 +13,7 @@ const PlanPage = lazy(() => import('@/pages/PlanPage'));
 const ResourcesPage = lazy(() => import('@/pages/ResourcesPage'));
 const JournalPage = lazy(() => import('@/pages/JournalPage'));
 const WizardPage = lazy(() => import('@/pages/WizardPage'));
+const UnsureWizardPage = lazy(() => import('@/pages/UnsureWizardPage')); // ✅ NY
 const LoginPage = lazy(() => import('@/pages/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage'));
@@ -22,7 +23,7 @@ const DownloadAppPage = lazy(() => import('@/pages/DownloadAppPage'));
 const MePage = lazy(() => import('@/pages/MePage'));
 
 // -----------------------------------------------------
-// Navigation definition – clean & grouped
+// Navigation definition
 // -----------------------------------------------------
 const mainNavLinks: MainNavLink[] = [
   { path: '/', label: 'Hjem' },
@@ -35,7 +36,7 @@ const mainNavLinks: MainNavLink[] = [
   { path: '/last-ned', label: 'Last ned app' },
   { path: '/me', label: 'Profil' },
 
-  // Auth — vises kun når bruker ER UINNLOGGET
+  // Auth (kun uinnlogget)
   { path: '/login', label: 'Logg inn' },
   { path: '/register', label: 'Registrer' },
 ];
@@ -48,36 +49,29 @@ export const appRoutes: RouteObject[] = [
     path: '/',
     element: <MainLayout navLinks={mainNavLinks} />,
     children: [
-      // -----------------------------
-      // Public routes
-      // -----------------------------
+      // Public
       { index: true, element: <HomePage /> },
       { path: 'wizard', element: <WizardPage /> },
+      { path: 'wizard/unsure', element: <UnsureWizardPage /> }, // ✅ NY
       { path: 'insurance', element: <InsurancePage /> },
       { path: 'plan', element: <PlanPage /> },
       { path: 'journal', element: <JournalPage /> },
       { path: 'resources', element: <ResourcesPage /> },
       { path: 'last-ned', element: <DownloadAppPage /> },
 
-      // -----------------------------
-      // AUTH routes
-      // -----------------------------
+      // Auth
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },
       { path: 'forgot-password', element: <ForgotPasswordPage /> },
       { path: 'reset-password', element: <ResetPasswordPage /> },
 
-      // -----------------------------
-      // PROTECTED routes
-      // -----------------------------
+      // Protected
       {
         element: <ProtectedLayout />,
         children: [{ path: 'me', element: <MePage /> }],
       },
 
-      // -----------------------------
-      // ADMIN routes
-      // -----------------------------
+      // Admin
       {
         element: <AdminLayout />,
         children: [{ path: 'systeminfo', element: <SystemInfoPage /> }],
@@ -85,9 +79,7 @@ export const appRoutes: RouteObject[] = [
     ],
   },
 
-  // -----------------------------------------------------
-  // Catch-all fallback
-  // -----------------------------------------------------
+  // Fallback
   { path: '*', element: <Navigate to="/" replace /> },
 ];
 
