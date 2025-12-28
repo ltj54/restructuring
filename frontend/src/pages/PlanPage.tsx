@@ -90,8 +90,10 @@ const NEED_OPTIONS = [
   'Få kontroll på forsikringer og inntektssikring',
 ];
 
-const normalizePhase = (phase?: string | null) =>
-  phase === 'For omstilling' ? 'Før omstilling' : phase || PHASE_OPTIONS[0];
+const normalizePhase = (phase?: string | null) => {
+  if (!phase) return PHASE_OPTIONS[0];
+  return PHASE_OPTIONS.includes(phase) ? phase : PHASE_OPTIONS[0];
+};
 
 /* -----------------------------------------------------------
    TYPER
@@ -150,7 +152,7 @@ export default function PlanPage(): React.ReactElement {
   const [planSaveMessage, setPlanSaveMessage] = useState<string | null>(null);
 
   const displayedPhase = activeDiaryPhase || selectedPhase;
-  const phaseContent = phaseSections[displayedPhase];
+  const phaseContent = phaseSections[displayedPhase] ?? phaseSections[PHASE_OPTIONS[0]];
 
   /* -----------------------------------------------------------
      LASTE PLAN
@@ -419,3 +421,7 @@ export default function PlanPage(): React.ReactElement {
     </PageLayout>
   );
 }
+
+
+
+
